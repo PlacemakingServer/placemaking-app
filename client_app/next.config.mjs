@@ -14,7 +14,7 @@ export default withPWA({
     {
       // Aplica para todas as requisições HTTP/HTTPS
       urlPattern: /^https?.*/,
-      handler: 'CacheFirst', // Alterado para CacheFirst
+      handler: 'StaleWhileRevalidate', // Estratégia que retorna o cache imediatamente e atualiza em segundo plano
       options: {
         cacheName: 'pages-cache',
         expiration: {
