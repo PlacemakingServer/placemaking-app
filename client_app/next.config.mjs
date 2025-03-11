@@ -1,3 +1,4 @@
+// next.config.mjs
 import withPWA from 'next-pwa';
 
 const nextConfig = {
@@ -11,14 +12,14 @@ export default withPWA({
   skipWaiting: true,
   runtimeCaching: [
     {
+      // Aplica para todas as requisições HTTP/HTTPS
       urlPattern: /^https?.*/,
-      handler: 'NetworkFirst',
+      handler: 'CacheFirst', // Alterado para CacheFirst
       options: {
         cacheName: 'pages-cache',
-        networkTimeoutSeconds: 15,
         expiration: {
           maxEntries: 50,
-          maxAgeSeconds: 7 * 24 * 60 * 60,
+          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 dias
         },
       },
     },
