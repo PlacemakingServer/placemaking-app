@@ -1,4 +1,11 @@
 // pages/index.js
+
+// Usando SSG para gerar HTML estático (pode ser ISR se desejar revalidar)
+export async function getStaticProps() {
+  // Se precisar buscar dados, faça isso aqui; caso contrário, retorne props vazias.
+  return { props: {} };
+}
+
 import { useEffect, useState } from 'react';
 import { openDB } from 'idb';
 
@@ -8,8 +15,8 @@ export default function Home() {
   const [showIosInstallTip, setShowIosInstallTip] = useState(false);
 
   const [name, setName] = useState('');
-  const [serverNames, setServerNames] = useState([]); 
-  const [localNames, setLocalNames] = useState([]);   
+  const [serverNames, setServerNames] = useState([]);
+  const [localNames, setLocalNames] = useState([]);
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
@@ -24,23 +31,19 @@ export default function Home() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Verifica status de conexão
+    // Define o status de conexão
     setIsOnline(navigator.onLine);
 
-    // Se for iOS, não existe 'beforeinstallprompt', mas podemos exibir instruções
+    // Para iOS não há suporte ao 'beforeinstallprompt'
     if (isIos()) {
-      // Exibe um botão para instruir o usuário
       setShowIosInstallTip(true);
     } else {
-      // Caso não seja iOS, tentamos usar o evento nativo (Android/Chrome/Edge, etc.)
       const handleBeforeInstallPrompt = (e) => {
         e.preventDefault();
         setDeferredPrompt(e);
         setShowInstallButton(true);
       };
       window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-      // Cleanup do event listener
       return () => {
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       };
@@ -51,25 +54,24 @@ export default function Home() {
     // Listeners de online/offline
     const handleOnline = () => {
       setIsOnline(true);
-      syncData(); 
+      syncData(); // Sincroniza dados do IndexedDB com o Supabase ao voltar online
     };
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Carrega dados iniciais
+    // Carrega os dados iniciais enquanto online
     fetchNamesFromServer();
     loadLocalNames();
 
-    // Cleanup
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
-  // --- Botão de instalação (funciona em navegadores que suportam beforeinstallprompt) ---
+  // --- Botão de instalação (navegadores que suportam beforeinstallprompt) ---
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
@@ -78,14 +80,14 @@ export default function Home() {
     setShowInstallButton(false);
   };
 
-  // --- Mostrar instruções para iOS ---
+  // --- Instruções para instalação no iOS ---
   const handleIosInstallClick = () => {
     alert(
       'Para instalar no iOS:\n\n1) Abra o menu de compartilhamento no Safari (ícone de compartilhar).\n2) Escolha "Adicionar à Tela de Início".'
     );
   };
 
-  // --- IndexedDB: inicializar DB ---
+  // --- IndexedDB: inicializa o banco ---
   const initDB = async () => {
     return openDB('offlineDB', 1, {
       upgrade(db) {
@@ -96,7 +98,7 @@ export default function Home() {
     });
   };
 
-  // --- Adiciona nome local ---
+  // --- Adiciona nome ao IndexedDB ---
   const addLocalName = async (newName) => {
     const db = await initDB();
     const tx = db.transaction('names', 'readwrite');
@@ -106,7 +108,7 @@ export default function Home() {
     setLocalNames((prev) => [...prev, newName]);
   };
 
-  // --- Carrega nomes do IndexedDB ---
+  // --- Carrega os nomes salvos no IndexedDB ---
   const loadLocalNames = async () => {
     const db = await initDB();
     const tx = db.transaction('names', 'readonly');
@@ -116,7 +118,7 @@ export default function Home() {
     setLocalNames(allNames.map((item) => item.name));
   };
 
-  // --- Sincroniza IndexedDB -> Supabase ---
+  // --- Sincroniza os dados do IndexedDB com o Supabase ---
   const syncData = async () => {
     const db = await initDB();
     const tx = db.transaction('names', 'readonly');
@@ -132,7 +134,7 @@ export default function Home() {
           body: JSON.stringify({ names: allItems.map((item) => item.name) }),
         });
         if (response.ok) {
-          // Limpa o IndexedDB após sincronizar
+          // Após sincronização, limpa o IndexedDB
           const txDelete = db.transaction('names', 'readwrite');
           const storeDelete = txDelete.objectStore('names');
           await storeDelete.clear();
@@ -146,7 +148,7 @@ export default function Home() {
     }
   };
 
-  // --- Busca nomes no Supabase ---
+  // --- Busca nomes do Supabase (rota /api/sync - GET) ---
   const fetchNamesFromServer = async () => {
     try {
       const response = await fetch('/api/sync');
@@ -174,7 +176,7 @@ export default function Home() {
         if (response.ok) {
           fetchNamesFromServer();
         } else {
-          // Se falhar online, salva local
+          // Se houver erro no Supabase, salva localmente
           addLocalName(name);
         }
       } catch (error) {
@@ -182,7 +184,7 @@ export default function Home() {
         addLocalName(name);
       }
     } else {
-      // Offline: salva no IndexedDB
+      // Se offline, salva no IndexedDB
       addLocalName(name);
     }
 
@@ -193,7 +195,7 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white flex flex-col items-center py-6 px-4">
       <h1 className="text-2xl font-semibold mb-4">PWA com Supabase</h1>
 
-      {/* BOTÃO DE INSTALAÇÃO - se suportado (Android / Chrome / Edge etc.) */}
+      {/* Botão de instalação para navegadores que suportam beforeinstallprompt */}
       {showInstallButton && (
         <button
           onClick={handleInstallClick}
@@ -203,7 +205,7 @@ export default function Home() {
         </button>
       )}
 
-      {/* BOTÃO DE INSTRUÇÕES iOS - caso seja iPhone/iPad */}
+      {/* Botão de instruções para instalação no iOS */}
       {showIosInstallTip && (
         <button
           onClick={handleIosInstallClick}
@@ -229,16 +231,13 @@ export default function Home() {
           required
           className="px-2 py-1 text-black rounded-sm"
         />
-        <button
-          type="submit"
-          className="bg-gray-700 py-1 px-3 rounded-sm"
-        >
+        <button type="submit" className="bg-gray-700 py-1 px-3 rounded-sm">
           Adicionar
         </button>
       </form>
 
       <section className="w-full max-w-md flex flex-col gap-6">
-        {/* IndexedDB */}
+        {/* Dados salvos localmente (IndexedDB) */}
         <div className="border border-gray-600 p-3">
           <h2 className="text-lg font-semibold mb-2">Offline (IndexedDB)</h2>
           {localNames.length ? (
@@ -248,11 +247,13 @@ export default function Home() {
               ))}
             </ul>
           ) : (
-            <p className="text-gray-400 text-sm">Nenhum nome salvo offline.</p>
+            <p className="text-gray-400 text-sm">
+              Nenhum nome salvo offline.
+            </p>
           )}
         </div>
 
-        {/* Supabase */}
+        {/* Dados do Supabase */}
         <div className="border border-gray-600 p-3">
           <h2 className="text-lg font-semibold mb-2">Online (Supabase)</h2>
           {serverNames.length ? (
@@ -262,7 +263,9 @@ export default function Home() {
               ))}
             </ul>
           ) : (
-            <p className="text-gray-400 text-sm">Nenhum nome salvo no Supabase.</p>
+            <p className="text-gray-400 text-sm">
+              Nenhum nome salvo no Supabase.
+            </p>
           )}
         </div>
       </section>
