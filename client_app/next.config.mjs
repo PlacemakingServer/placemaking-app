@@ -1,28 +1,52 @@
-// next.config.mjs
 import withPWA from 'next-pwa';
 
 const nextConfig = {
   reactStrictMode: true,
 };
 
-export default withPWA({
+const pwaOptions = {
   dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  register: true,
-  skipWaiting: true,
-  cacheOnFrontEndNav: true, 
+  // Define o fallback para navegações offline
+  fallbacks: {
+    document: '/home_offline',
+  },
   runtimeCaching: [
     {
-      // Aplica para todas as requisições HTTP/HTTPS
-      urlPattern: /^https?.*/,
-      handler: 'StaleWhileRevalidate', // Estratégia que retorna o cache imediatamente e atualiza em segundo plano
+      // Cache para a home
+      urlPattern: /^\/$/,
+      handler: 'NetworkFirst',
       options: {
-        cacheName: 'pages-cache',
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 dias
-        },
+        cacheName: 'home-page',
+        expiration: { maxEntries: 1, maxAgeSeconds: 7 * 24 * 60 * 60 },
+      },
+    },
+    {
+      // Cache para a página offline
+      urlPattern: /^\/home_offline$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'offline-page',
+        expiration: { maxEntries: 1, maxAgeSeconds: 30 * 24 * 60 * 60 },
+      },
+    },
+    {
+      // Cache para componentes estáticos
+      urlPattern: /\/static\/components\/.*\.js$/,
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'components-cache',
+        expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 },
+      },
+    },
+    {
+      // Cache para demais requisições HTTP(S)
+      urlPattern: /^https?.*/,
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'generic-cache',
       },
     },
   ],
-})(nextConfig);
+};
+
+export default withPWA(pwaOptions)(nextConfig);
