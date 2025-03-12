@@ -1,8 +1,7 @@
 const CACHE_NAME = 'pwa-cache-v1';
+
 const urlsToCache = [
   '/',
-  '/offline',
-  '/favicon.ico'
 ];
 
 self.addEventListener('install', event => {
