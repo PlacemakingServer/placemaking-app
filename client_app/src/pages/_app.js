@@ -1,18 +1,15 @@
+'use client';
 import "@/styles/globals.css";
-
-// Em _app.js
 import { useEffect } from 'react';
 
 function MyApp({ Component, pageProps }) {
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then(() => console.log('Service Worker registrado com sucesso.'))
-        .catch((err) => console.error('Erro ao registrar o SW:', err));
-    }
-  }, []);
-
+   useEffect(() => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(reg => console.log('✅ Service Worker registrado!', reg))
+          .catch(err => console.error('❌ Erro ao registrar o Service Worker:', err));
+      }
+    }, []);
   return <Component {...pageProps} />;
 }
 
