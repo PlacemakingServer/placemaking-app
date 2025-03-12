@@ -18,7 +18,7 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(event.request).catch(async () => {
         const cache = await caches.open(CACHE_NAME);
-        return cache.match('/offline') || new Response('Offline', { status: 200, headers: { 'Content-Type': 'text/html' } });
+        return cache.match('/') || new Response('Offline', { status: 200, headers: { 'Content-Type': 'text/html' } });
       })
     );
   } else {
