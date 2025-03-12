@@ -1,43 +1,45 @@
-const CACHE_NAME = "pwa-cache-v1";
-const urlsToCache = ["/", "/offline", "/favicon.ico"];
+const CACHE_NAME = 'pwa-cache-v1';
+const urlsToCache = [
+  '/',
+  '/offline',
+  '/favicon.ico'
+];
 
-self.addEventListener("install", (event) => {
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("Service Worker: Caching Files");
+    caches.open(CACHE_NAME).then(cache => {
       return cache.addAll(urlsToCache);
     })
   );
-  self.skipWaiting();
 });
 
-self.addEventListener("fetch", (event) => {
-  if (event.request.mode === "navigate") {
+self.addEventListener('fetch', event => {
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => Response.redirect("/offline"))
+      fetch(event.request).catch(async () => {
+        const cache = await caches.open(CACHE_NAME);
+        return cache.match('/offline') || new Response('Offline', { status: 200, headers: { 'Content-Type': 'text/html' } });
+      })
     );
   } else {
     event.respondWith(
-      caches.match(event.request).then((response) => {
+      caches.match(event.request).then(response => {
         return response || fetch(event.request);
       })
     );
   }
 });
 
-// Ativa o SW e remove caches antigos
-self.addEventListener("activate", (event) => {
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map((cache) => {
+        cacheNames.map(cache => {
           if (cache !== CACHE_NAME) {
-            console.log("Service Worker: Deleting old cache");
             return caches.delete(cache);
           }
         })
       );
     })
   );
-  self.clients.claim(); // Faz com que o SW comece a controlar imediatamente as páginas abertas
 });
