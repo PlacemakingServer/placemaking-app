@@ -1,5 +1,4 @@
-// components/ui/Loading.jsx
-"use client"; // se estiver usando App Router no Next.js 13+ e quiser animações
+"use client";
 
 import { motion } from "framer-motion";
 
@@ -13,7 +12,7 @@ export default function Loading() {
       transition={{ duration: 0.2, ease: "easeOut" }}
     >
       <motion.div
-        className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"
+        className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
         initial={{ scale: 0.8 }}
         animate={{ scale: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}

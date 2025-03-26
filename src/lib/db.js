@@ -6,9 +6,6 @@ export async function initAuthDB() {
         if (!db.objectStoreNames.contains("auth")) {
           db.createObjectStore("auth", { keyPath: "id" });
         }
-        if (!db.objectStoreNames.contains("user")) {
-          db.createObjectStore("user", { keyPath: "id" });
-        }
       },
     });
   }

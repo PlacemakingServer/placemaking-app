@@ -13,7 +13,7 @@ export default function Button({
     verde: "text-black bg-[rgb(114,227,173)] border-[rgb(80,180,130)] hover:brightness-95",
     vermelho: "text-white bg-red-600 border-transparent hover:bg-red-700",
     vermelho_claro: "text-red-700 bg-red-100 border-red-400 hover:bg-red-200",
-    azul_claro: "text-black bg-blue-200 border-blue-600 hover:bg-blue-300",
+    azul_claro: "text-blue-600 bg-blue-200 border-blue-600 hover:bg-blue-300",
     cinza: "text-black bg-gray-300 border-gray-800 hover:bg-gray-400",
     azul_escuro: "text-white bg-blue-600 border-transparent hover:bg-blue-700"
   };

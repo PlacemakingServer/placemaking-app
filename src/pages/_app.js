@@ -25,7 +25,8 @@ function AppContent({ Component, pageProps }) {
     <>
       <Head>
         <title>{`${pageName} | Minha Aplicação`}</title>
-      </Head>
+        <link rel="icon" type="image/png" sizes="512x512" href="/img/icon-512x512.png" />
+        </Head>
 
       <Layout pageName={pageName}>
         <PageComponent {...pageProps} />

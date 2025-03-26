@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import Button from "@/components/ui/Button";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
 import { initAuthDB } from "@/lib/db";
+import Link from "next/link";
+import { useRouter } from "next/router"; 
+
+
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,6 +16,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { isLoading, setIsLoading } = useLoading(false);
   const { showMessage } = useMessage();
+  const router = useRouter();
+  
 
   const handleLogin = async (e) => {
 
@@ -19,7 +25,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -38,26 +44,28 @@ export default function Login() {
       const db = await initAuthDB();
 
       await db.put("auth", {
-        id: "token-session",
+        id: data.user.id,
         access_token: data.access_token,
         token_type: data.token_type,
         expires_at: data.expires_at,
-      });
-
-      await db.put("user", {
-        id: data.user.id,
-        user: data.user, 
+        user: data.user,
       });
       showMessage("Login efetuado com sucesso", "verde");
     } catch (err) {
       showMessage(err.message, "vermelho_claro")
     } finally {
       setIsLoading(false)
-    }
+      router.push("/");     }
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-white to-red-100 p-8">
+    <div
+    className="
+      h-screen flex items-center justify-center p-8
+      bg-no-repeat bg-cover bg-center bg-black bg-opacity-60 bg-blend-darken
+    "
+    style={{ backgroundImage: "url('/img/bg-login.jpg')"  }}
+  >
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -66,9 +74,9 @@ export default function Login() {
       >
         <div className="flex justify-center mb-4">
           <Image
-            src="/logo-arq.webp"
+            src="/img/logo-no-bg-azul.png"
             alt="Logo"
-            width={300}
+            width={200}
             height={100}
             className="object-contain"
           />
@@ -117,15 +125,17 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <a href="/forgot-password" className="text-sm text-red-500 hover:underline">
-              Esqueceu a senha?
-            </a>
-          </div>
-
+          <div className="flex justify-end p-2">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-blue-500 hover:underline"
+              >
+                Esqueceu a senha?
+              </Link>
+            </div>
           <Button
             type="submit"
-            variant="vermelho"
+            variant="azul_escuro"
             className="w-full text-lg py-3 active:scale-95"
             disabled={isLoading}
           >

@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 const PUBLIC_PAGES = ["/login", "/forgot-password", "/validate-code"];
-const PUBLIC_APIS = ["/api/login", "/api/forgot-password", "/api/validate-code"];
+const PUBLIC_APIS = ["/api/auth/login", "/api/auth/forgot-password", "/api/auth/validate-code"];
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
+
 
   const isPublicPage = PUBLIC_PAGES.includes(pathname);
   const isPublicAPI = PUBLIC_APIS.includes(pathname);
@@ -42,5 +43,5 @@ export async function middleware(request) {
 
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico).*)"]
+  matcher: ["/((?!_next|favicon.ico|img|workers).*)"]
 };
