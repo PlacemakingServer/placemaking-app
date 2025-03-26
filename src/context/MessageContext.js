@@ -29,4 +29,4 @@ export function useMessage() {
   return useContext(MessageContext);
 }
 
-import Messages from "@/components/ui/messages";
+import Messages from "@/components/ui/Messages";
