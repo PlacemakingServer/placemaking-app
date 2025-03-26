@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { LoadingContextProvider, useLoading } from "@/context/LoadingContext";
 import { MessageProvider } from "@/context/MessageContext";
-import Loading from "@/components/ui/Loading";
+import Loading from "@/components/ui/loading";
 import { registerServiceWorker } from "@/services/registerServiceWorker";
 
 import PublicLayout from "@/components/layouts/PublicLayout";

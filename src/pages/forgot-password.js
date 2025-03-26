@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Image from "next/image";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useMessage } from "@/context/MessageContext";
 import { useLoading } from "@/context/LoadingContext";

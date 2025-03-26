@@ -1,5 +1,5 @@
 import { use, useState } from "react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useLoading } from "@/context/LoadingContext";
