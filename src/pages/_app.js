@@ -2,13 +2,12 @@
 import "@/styles/globals.css";
 import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
-import { LoadingContextProvider, useLoading } from "@/context/loadingContext";
-import { MessageProvider } from "@/context/messageContext";
-import Loading from "@/components/ui/loading";
+import { LoadingContextProvider, useLoading } from "@/context/LoadingContext";
+import { MessageProvider } from "@/context/MessageContext";
+import  Loading  from "@/components/ui/Loading";
 import { registerServiceWorker } from "@/services/registerServiceWorker";
-
-import PublicLayout from "@/components/layouts/publicLayout";
-import PrivateLayout from "@/components/layouts/privateLayout";
+import  PublicLayout  from "@/components/layouts/PublicLayout";
+import  PrivateLayout  from "@/components/layouts/PrivateLayout";
 
 import Head from "next/head";
 

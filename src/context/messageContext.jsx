@@ -1,4 +1,6 @@
 import { createContext, useContext, useState } from "react";
+import Message from "@/components/ui/Message";
+
 
 const MessageContext = createContext();
 
@@ -20,7 +22,7 @@ export function MessageProvider({ children }) {
   return (
     <MessageContext.Provider value={{ showMessage }}>
       {children}
-      <Messages message={message} variant={variant} show={show} />
+      <Message message={message} variant={variant} show={show} />
     </MessageContext.Provider>
   );
 }
@@ -29,4 +31,3 @@ export function useMessage() {
   return useContext(MessageContext);
 }
 
-import Messages from "@/components/ui/messages";

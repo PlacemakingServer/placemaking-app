@@ -1,9 +1,9 @@
 import { use, useState } from "react";
-import Button from "@/components/ui/button";
+import Button from "@/components/ui/Button";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useLoading } from "@/context/loadingContext";
-import { useMessage } from "@/context/messageContext";
+import { useLoading } from "@/context/LoadingContext";
+import { useMessage } from "@/context/MessageContext";
 import { initAuthDB } from "@/lib/db";
 import Link from "next/link";
 import { useRouter } from "next/router"; 

@@ -1,4 +1,3 @@
-// /context/LoadingContext.js
 import { createContext, useState, useContext } from "react";
 
 const LoadingContext = createContext();

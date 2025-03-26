@@ -9,7 +9,7 @@ const variantStyles = {
   azul_escuro: "text-white bg-blue-600 border-transparent hover:bg-blue-700"
 };
 
-export default function Messages({ message, variant = "info", show }) {
+export default function Message({ message, variant = "info", show }) {
   return (
     <AnimatePresence>
       {show && (
