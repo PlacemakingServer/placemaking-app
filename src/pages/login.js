@@ -44,7 +44,7 @@ export default function Login() {
       const db = await initAuthDB();
 
       await db.put("auth", {
-        id: data.user.id,
+        id: "user-creds",
         access_token: data.access_token,
         token_type: data.token_type,
         expires_at: data.expires_at,

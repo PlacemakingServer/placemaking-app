@@ -12,13 +12,14 @@ export const TABS = {
     link: "/settings",
     icon: "",
   },
-  Administração: {
-    link: "/admin",
+  Usuários: {
+    link: "/users",
     icon: "",
   },
+  
 };
 
 export const PERMISSION_TABS = {
-  admin: ["Administração"],
+  admin: ["Usuários"],
   research: [],
 };

@@ -81,7 +81,7 @@ export default function Register() {
               inputMode="email"
               autoComplete="email"
               className="mt-1 block w-full px-4 py-3 text-lg border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="seu@email.com"
+              placeholder="email@dominio.com"
               required
             />
           </div>

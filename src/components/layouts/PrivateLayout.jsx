@@ -21,7 +21,7 @@ export default function PrivateLayout({ children, pageName, userRole }) {
         {/* Conteúdo principal */}
         <div className="flex flex-col flex-1 overflow-hidden">
           <TopBar setSidebarOpen={setSidebarOpen} pageName={pageName} />
-          <main className="flex-1 overflow-y-auto p-4 bg-gradient-to-br from-white to-gray-200">
+          <main className="flex-1 overflow-y-auto bg-gradient-to-br from-white to-blue-50">
             {children}
           </main>
         </div>
