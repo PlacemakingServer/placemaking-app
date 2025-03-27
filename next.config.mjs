@@ -1,19 +1,21 @@
-import withPWA from 'next-pwa';
+// next.config.mjs
+import withPWA from "next-pwa";
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const baseConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
   experimental: {
-    serverActions: true
-  }
+    serverActions: true,
+  },
 };
 
-export default withPWA({
-  dest: 'public',
+const nextConfig = withPWA({
+  dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
-  ...nextConfig
-});
+  disable: process.env.NODE_ENV === "development",
+})(baseConfig);
+
+export default nextConfig;
