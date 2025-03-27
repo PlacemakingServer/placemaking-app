@@ -23,8 +23,6 @@ export async function middleware(request) {
       // Token inválido ou expirado: payload continua null
     }
   }
-  console.log(token);
-
   
   if (isPublicRoute) {
     if (payload?.sub) {
