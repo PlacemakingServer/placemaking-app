@@ -8,6 +8,7 @@ export const PUBLIC_APIS = [
 ];
 
 export const AUTHENTICATED_PAGES = [
+  "/create-research",
   "/users",
   "/dashboard",
   "/",
