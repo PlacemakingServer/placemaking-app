@@ -35,11 +35,14 @@ export default function CreateResearch() {
         showMessage("Erro de rede ao buscar tipos de pesquisa", "vermelho_claro");
       }
     };
-    // const fetchUserData = async () => {
-    //   const db = await initAuthDB();
-    //     const user = await db.get("auth", "user");
+    const fetchUserData = async () => {
+      const db = await initAuthDB();
+        const user = await db.get("auth", "user-creds");
+        setUserData(user);
+    };
+    fetchUserData();
     fetchResearchTypes();
-  }, []);
+}, []);
 
   const handleCreateResearch = async (e) => {
     e.preventDefault();
@@ -59,7 +62,7 @@ export default function CreateResearch() {
           title,
           description,
           release_date: releaseDate,
-          created_by: "",
+          created_by: userData.user.id,
           research_type: researchType,
           research_time: researchTime || undefined,
           gap_by_research_time: gapByResearchTime || undefined,
@@ -72,7 +75,6 @@ export default function CreateResearch() {
       }
 
       showMessage("Pesquisa criada com sucesso!", "verde");
-      router.push("/researches"); // Redirecionar para a lista de pesquisas
     } catch (err) {
       showMessage(err.message, "vermelho_claro");
     } finally {

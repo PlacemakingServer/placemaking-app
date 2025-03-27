@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     }
 
     // Envia a requisição para o backend para pegar os tipos de pesquisa
-    const response = await fetch(`${process.env.SERVER_URL}/research/types`, {
+    const response = await fetch(`${process.env.SERVER_URL}/research_types`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
