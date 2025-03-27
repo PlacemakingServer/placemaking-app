@@ -1,46 +1,53 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-
-const PUBLIC_PAGES = ["/login", "/forgot-password", "/validate-code"];
-const PUBLIC_APIS = ["/api/auth/login", "/api/auth/forgot-password", "/api/auth/validate-code"];
+import {
+  PUBLIC_PAGES,
+  PUBLIC_APIS,
+  AUTHENTICATED_PAGES,
+  ROLE_PERMISSIONS,
+} from "@/config/routes";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
+  const token = request.cookies.get("token")?.value;
+  const isPublicRoute = PUBLIC_PAGES.includes(pathname) || PUBLIC_APIS.includes(pathname);
 
-
-  const isPublicPage = PUBLIC_PAGES.includes(pathname);
-  const isPublicAPI = PUBLIC_APIS.includes(pathname);
-  const token = request.cookies.get("token");
-
-  if (isPublicPage || isPublicAPI) {
-    if (token) {
-      try {
-        const { payload } = await jwtVerify(token.value, JWT_SECRET);
-        if (payload?.sub) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-      } catch (err) {
-        return NextResponse.next();
-      }
+  let payload = null;
+  if (token) {
+    try {
+      const { payload: verifiedPayload } = await jwtVerify(token, JWT_SECRET);
+      payload = verifiedPayload;
+    } catch (error) {
+      // Token inválido ou expirado: payload continua null
     }
+  }
 
+  
+  if (isPublicRoute) {
+    if (payload?.sub) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
     return NextResponse.next();
   }
 
-  if (!token) {
+  if (!payload?.sub) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  try {
-    const { payload } = await jwtVerify(token.value, JWT_SECRET);
+
+  if (AUTHENTICATED_PAGES.some((route) => pathname.startsWith(route))) {
     return NextResponse.next();
-  } catch (err) {
-    return NextResponse.redirect(new URL("/login", request.url));
   }
+
+  const allowedRoutes = ROLE_PERMISSIONS[payload.role] || [];
+  if (!allowedRoutes.some((route) => pathname.startsWith(route))) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  return NextResponse.next();
 }
-
 
 export const config = {
   matcher: [
