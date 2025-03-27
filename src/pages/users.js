@@ -1,7 +1,7 @@
 import Button from "@/components/ui/Button";
 import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export default function Users() {
   const [form, setForm] = useState({
@@ -10,6 +10,7 @@ export default function Users() {
     confirmation_email: "",
     role: "",
   });
+
   const { isLoading, setIsLoading } = useLoading(false);
   const { showMessage } = useMessage();
 
@@ -17,25 +18,26 @@ export default function Users() {
   const [editingUserId, setEditingUserId] = useState(null);
   const [editingData, setEditingData] = useState({});
 
-  useEffect(() => {
-    fetchUsers();
-  });
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch("/api/users", {
+        credentials: "include",
+      });
       const data = await res.json();
-  
+
       if (!res.ok) throw new Error(data.error || "Erro ao buscar usuários");
-  
+
       setUsers(data.users);
     } catch (err) {
       showMessage(err.message, "vermelho_claro", 5000);
     } finally {
       setIsLoading(false);
     }
-  };
-  
+  }, [setIsLoading, showMessage]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,10 +70,10 @@ export default function Users() {
         },
       ]);
     } catch (err) {
-        showMessage(err.message, "vermelho_claro", 5000);
+      showMessage(err.message, "vermelho_claro", 5000);
     } finally {
-        setForm({ name: "", email: "", confirmation_email: "", role: "" });
-        setIsLoading(false);
+      setForm({ name: "", email: "", confirmation_email: "", role: "" });
+      setIsLoading(false);
     }
   };
 
@@ -86,20 +88,53 @@ export default function Users() {
   };
 
   const handleSave = async (userId) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, ...editingData } : u))
-    );
-    showMessage("Usuário atualizado com sucesso!", "verde");
-    setEditingUserId(null);
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/users/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: userId, ...editingData }),
+      });
+  
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao atualizar");
+  
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, ...editingData } : u))
+      );
+      showMessage("Usuário atualizado com sucesso!", "verde");
+    } catch (err) {
+      showMessage(err.message, "vermelho_claro", 5000);
+    } finally {
+      setIsLoading(false);
+      setEditingUserId(null);
+    }
   };
+  
 
   const handleCancel = () => {
     setEditingUserId(null);
   };
 
   const handleDelete = async (userId) => {
-    setUsers((prev) => prev.filter((u) => u.id !== userId));
-    showMessage("Usuário deletado", "verde");
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/users/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: userId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao deletar");
+
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      showMessage("Usuário deletado", "verde");
+    } catch (err) {
+      showMessage(err.message, "vermelho_claro", 5000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -152,7 +187,7 @@ export default function Users() {
             <div className="w-full text-md flex justify-center p-4 rounded">
               <Button
                 type="submit"
-                variant="azul_escuro"
+                variant="verde"
                 className="w-full max-w-60 text-md active:scale-95"
                 disabled={isLoading}
               >
@@ -171,7 +206,7 @@ export default function Users() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="text-white bg-blue-600 border-transparent hover:bg-blue-700">
+                  <tr className="text-black bg-[rgb(114,227,173)] border-[rgb(80,180,130)] hover:brightness-95">
                     <th className="p-2">Nome</th>
                     <th className="p-2">E-mail</th>
                     <th className="p-2">Papel</th>

@@ -1,7 +1,9 @@
 // src/components/SidebarDesktop.jsx
 import Link from "next/link";
 import Image from "next/image";
-import { TABS, PERMISSION_TABS } from "@/config/tabs";
+import { TABS, PERMISSION_TABS, TABSTYLES } from "@/config/tabs";
+import { useRouter } from "next/router";
+
 
 function getAllowedTabs(userRole) {
   return Object.entries(TABS).filter(([tabName]) => {
@@ -18,6 +20,8 @@ function getAllowedTabs(userRole) {
 
 export default function SidebarDesktop({ userRole }) {
   const allowedTabs = getAllowedTabs(userRole);
+  const router = useRouter();
+  
 
   return (
     <div className="hidden md:flex md:flex-shrink-0">
@@ -35,15 +39,20 @@ export default function SidebarDesktop({ userRole }) {
           </Link>
         </div>
         <nav className="flex-1 px-2 py-4 space-y-1">
-          {allowedTabs.map(([name, { link }]) => (
-            <Link
-              key={name}
-              href={link}
-              className="block px-4 py-2 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-            >
-              {name}
-            </Link>
-          ))}
+        {allowedTabs.map(([name, { link }]) => {
+            const isActive = router.pathname === link;
+            return (
+              <Link
+                key={name}
+                href={link}
+                className={`block px-4 py-2 rounded ${
+                  isActive ? TABSTYLES.active : TABSTYLES.inactive
+                }`}
+              >
+                {name}
+              </Link>
+            );
+          })}
         </nav>
       </div>
     </div>
