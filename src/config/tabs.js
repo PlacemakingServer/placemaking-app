@@ -4,10 +4,10 @@ export const TABS = {
     link: "/",
     icon: "",
   },
-  Pesquisas: {
-    link: "/researches",
-    icon: "",
-  },
+  // Pesquisas: {
+  //   link: "/researches",
+  //   icon: "",
+  // },
   // Configurações: {
   //   link: "/settings",
   //   icon: "",
