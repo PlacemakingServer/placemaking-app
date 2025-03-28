@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { useMessage } from "@/context/MessageContext";
 import { useLoading } from "@/context/LoadingContext";
 import { useRouter } from "next/router";
-import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+
 
 export default function ValidateCode() {
   const [code, setCode] = useState("");
@@ -13,6 +14,8 @@ export default function ValidateCode() {
   const { showMessage } = useMessage();
   const { isLoading, setIsLoading } = useLoading();
   const router = useRouter();
+  const { saveCredentials, saveUserInfo } = useAuth();
+  
 
   useEffect(() => {
     const storedEmail = localStorage.getItem("recover_email");
@@ -22,28 +25,43 @@ export default function ValidateCode() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
-      const response = await fetch("/api/auth/verify-code", {
+      const response = await fetch("/api/auth/validate-code", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ code }),
       });
-
+  
+      const data = await response.json();
+  
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.message || "Código inválido");
       }
-
-      router.push("/reset-password");
+  
+      const { token, token_type, expires_at } = data.access_token;
+  
+      await saveCredentials({
+        access_token: token,
+        token_type,
+        expires_at,
+      });
+  
+      await saveUserInfo(data.user);
+  
+      showMessage(data.message, "verde");
+      router.push("/profile");
+  
     } catch (err) {
       showMessage(err.message, "vermelho_claro", 7000);
+      console.error("[handleSubmit]", err);
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   const handleResend = async () => {
     try {
@@ -108,7 +126,7 @@ export default function ValidateCode() {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               maxLength={8}
-              className="mt-1 block w-full px-4 py-3 text-lg tracking-widest text-center uppercase border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-4 py-3 text-lg tracking-widest text-center border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500"
               placeholder="XXXXXXXX"
               required
             />

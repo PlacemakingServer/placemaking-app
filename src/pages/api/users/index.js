@@ -5,7 +5,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Parseia os cookies da requisição
   const cookies = req.headers.cookie ? parse(req.headers.cookie) : {};
   const token = cookies.token;
 
@@ -14,7 +13,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Repassa o token no cabeçalho para o servidor FastAPI
     const response = await fetch(`${process.env.SERVER_URL}/users/`, {
       method: "GET",
       headers: {

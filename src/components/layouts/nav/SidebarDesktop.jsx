@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { TABS, PERMISSION_TABS, TABSTYLES } from "@/config/tabs";
 import { useRouter } from "next/router";
-
+import { useEffect } from "react";
 
 function getAllowedTabs(userRole) {
   return Object.entries(TABS).filter(([tabName]) => {
@@ -18,10 +18,13 @@ function getAllowedTabs(userRole) {
   });
 }
 
-export default function SidebarDesktop({ userRole }) {
+export default function SidebarDesktop({userRole}) {
   const allowedTabs = getAllowedTabs(userRole);
   const router = useRouter();
-  
+
+  useEffect(() => {
+
+  }, []);
 
   return (
     <div className="hidden md:flex md:flex-shrink-0">
@@ -29,7 +32,7 @@ export default function SidebarDesktop({ userRole }) {
         <div className="flex flex-row justify-center items-center h-16 px-4">
           <Link href="/">
             <Image
-              src="/img/logo-no-bg-preto.png"
+              src="/img/placemaking.png"
               alt="Logo"
               width={100}
               height={100}
@@ -39,7 +42,7 @@ export default function SidebarDesktop({ userRole }) {
           </Link>
         </div>
         <nav className="flex-1 px-2 py-4 space-y-1">
-        {allowedTabs.map(([name, { link }]) => {
+          {allowedTabs.map(([name, { link }]) => {
             const isActive = router.pathname === link;
             return (
               <Link

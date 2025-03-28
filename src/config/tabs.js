@@ -26,6 +26,6 @@ export const PERMISSION_TABS = {
 
 
 export const TABSTYLES = {
-  active: "text-black bg-[rgb(114,227,173)] border-[rgb(80,180,130)] hover:brightness-95",
-  inactive: "text-gray-700 hover:bg-[rgb(197,255,224)] transition-colors",
+  active: "text-white bg-black border-gray-800 hover:bg-gray-800",
+  inactive: "text-gray-700 border-gray-200 hover:bg-gray-100 shadow-sm transition-colors",
 };

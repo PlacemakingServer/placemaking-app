@@ -4,11 +4,9 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
-import { initAuthDB } from "@/lib/db";
 import Link from "next/link";
-import { useRouter } from "next/router"; 
-
-
+import { useRouter } from "next/router";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -16,11 +14,10 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { isLoading, setIsLoading } = useLoading(false);
   const { showMessage } = useMessage();
+  const { saveCredentials, saveUserInfo } = useAuth();
   const router = useRouter();
-  
 
   const handleLogin = async (e) => {
-
     e.preventDefault();
     setIsLoading(true);
 
@@ -35,37 +32,39 @@ export default function Login() {
 
       if (!res.ok) {
         const errorData = await res.json();
-
         throw new Error(errorData.message || "Erro ao fazer login");
       }
 
       const data = await res.json();
+      
 
-      const db = await initAuthDB();
+      const { token, token_type, expires_at } = data.access_token;
 
-      await db.put("auth", {
-        id: "user-creds",
-        access_token: data.access_token,
-        token_type: data.token_type,
-        expires_at: data.expires_at,
-        user: data.user,
+      await saveCredentials({
+        access_token: token,
+        token_type,
+        expires_at,
       });
-      showMessage("Login efetuado com sucesso", "verde");
+
+      await saveUserInfo(data.user);
+
+      showMessage(data.message, "verde");
+      router.push("/");
     } catch (err) {
-      showMessage(err.message, "vermelho_claro")
+      showMessage(err.message, "vermelho_claro");
     } finally {
-      setIsLoading(false)
-      router.push("/");     }
+      setIsLoading(false);
+    }
   };
 
   return (
     <div
-    className="
+      className="
       h-screen flex items-center justify-center p-8
       bg-no-repeat bg-cover bg-center bg-black bg-opacity-60 bg-blend-darken
     "
-    style={{ backgroundImage: "url('/img/bg-login.jpg')"  }}
-  >
+      style={{ backgroundImage: "url('/img/bg-login.jpg')" }}
+    >
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -84,7 +83,10 @@ export default function Login() {
 
         <form className="space-y-4" onSubmit={handleLogin}>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
               Email
             </label>
             <input
@@ -102,7 +104,10 @@ export default function Login() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
               Senha
             </label>
             <div className="relative">
@@ -126,13 +131,13 @@ export default function Login() {
           </div>
 
           <div className="flex justify-end p-2">
-              <Link
-                href="/forgot-password"
-                className="text-sm text-blue-500 hover:underline"
-              >
-                Esqueceu a senha?
-              </Link>
-            </div>
+            <Link
+              href="/forgot-password"
+              className="text-sm text-blue-500 hover:underline"
+            >
+              Esqueceu a senha?
+            </Link>
+          </div>
           <Button
             type="submit"
             variant="azul_escuro"

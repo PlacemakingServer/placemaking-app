@@ -75,7 +75,7 @@ export default function SidebarMobile({ userRole, sidebarOpen, setSidebarOpen })
             <div className="flex items-center h-16 px-4 bg-white">
               <Link href="/">
                 <Image
-                  src="/img/logo-no-bg-preto.png"
+                  src="/img/placemaking.png"
                   alt="Logo"
                   width={100}
                   height={100}

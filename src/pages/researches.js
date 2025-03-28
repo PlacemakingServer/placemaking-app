@@ -108,7 +108,7 @@ export default function Researchs() {
             </div>
 
             <div className="w-full flex justify-center">
-            <Button type="submit" variant="verde" className="w-full max-w-60 text-md active:scale-95" disabled={isLoading}>
+            <Button type="submit" variant="dark" className="w-full max-w-60 text-md active:scale-95" disabled={isLoading}>
               {isLoading ? "Criando..." : "Criar"}
             </Button>
             </div>
@@ -125,7 +125,7 @@ export default function Researchs() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="text-black bg-[rgb(114,227,173)] border-[rgb(80,180,130)] hover:brightness-95">
+                  <tr className="text-white bg-black border-gray-800 hover:bg-gray-800">
                     <th className="p-2">Título</th>
                     <th className="p-2">Descrição</th>
                     <th className="p-2">Tipo</th>

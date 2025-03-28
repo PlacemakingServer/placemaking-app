@@ -23,22 +23,25 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-  
-    const { access_token, expires_at } = data;
+    const expiresDate = new Date(data.access_token.expires_at);
+    res.setHeader(
+      "Set-Cookie",
+      serialize("token", data.access_token.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        expires: expiresDate,
+      })
+    );
 
-    const expiresDate = new Date(expires_at);
-
-    res.setHeader("Set-Cookie", serialize("token", access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      expires: expiresDate,
-    }));
 
     return res.status(200).json(data);
 
   } catch (err) {
-    return res.status(500).json({ error: "Erro ao conectar com o servidor" });
+    console.error("[Login Error]", err);
+    return res
+      .status(500)
+      .json({ error: "Erro ao conectar com o servidor de autenticação." });
   }
 }

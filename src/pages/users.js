@@ -180,14 +180,14 @@ export default function Users() {
                 required
               >
                 <option value="">Selecione o papel</option>
-                <option value="admin">Admin</option>
-                <option value="viewer">Pesquisador</option>
+                <option value="admin">admin</option>
+                <option value="viewer">research</option>
               </select>
             </div>
             <div className="w-full text-md flex justify-center p-4 rounded">
               <Button
                 type="submit"
-                variant="verde"
+                variant="dark"
                 className="w-full max-w-60 text-md active:scale-95"
                 disabled={isLoading}
               >
@@ -206,7 +206,7 @@ export default function Users() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="text-black bg-[rgb(114,227,173)] border-[rgb(80,180,130)] hover:brightness-95">
+                  <tr className="text-white bg-black border-gray-800 hover:bg-gray-800">
                     <th className="p-2">Nome</th>
                     <th className="p-2">E-mail</th>
                     <th className="p-2">Papel</th>
@@ -251,9 +251,8 @@ export default function Users() {
                             onChange={handleEditChange}
                             className="border p-1 rounded w-full"
                           >
-                            <option value="admin">Admin</option>
-                            <option value="viewer">Visualizador</option>
-                            <option value="editor">Editor</option>
+                            <option value="admin">admin</option>
+                            <option value="viewer">research</option>
                           </select>
                         ) : (
                           u.role
@@ -279,7 +278,7 @@ export default function Users() {
                               type="submit"
                               variant="transparent_verde"
                               onClick={() => handleSave(u.id)}
-                              className="active:scale-95 py-0.5 px-1 rounded-sm justify-center align-middle"
+                              className="active:scale-95 py-0.5 px-1 border-none rounded-sm justify-center align-middle"
                               disabled={isLoading}
                             >
                               <span class="material-symbols-outlined">
@@ -291,7 +290,7 @@ export default function Users() {
                               type="submit"
                               variant="transparent_vermelho"
                               onClick={handleCancel}
-                              className="active:scale-95 py-0.5 px-1 rounded-sm justify-center align-middle"
+                              className="active:scale-95 py-0.5 px-1 border-none rounded-sm justify-center align-middle"
                               disabled={isLoading}
                             >
                               <span class="material-symbols-outlined">
@@ -305,7 +304,7 @@ export default function Users() {
                               type="submit"
                               variant="transparent_cinza"
                               onClick={() => handleEdit(u)}
-                              className="active:scale-95 py-0.5 px-1 rounded-sm justify-center align-middle"
+                              className="active:scale-95 py-0.5 px-1 border-none rounded-sm justify-center align-middle"
                               disabled={isLoading}
                             >
                               <span className="material-symbols-outlined">
@@ -317,7 +316,7 @@ export default function Users() {
                               type="submit"
                               variant="transparent_vermelho"
                               onClick={() => handleDelete(u.id)}
-                              className="active:scale-95 py-0.5 px-1 rounded-sm justify-center align-middle"
+                              className="active:scale-95 py-0.5 px-1 border-none rounded-sm justify-center align-middle"
                               disabled={isLoading}
                             >
                               <span class="material-symbols-outlined">

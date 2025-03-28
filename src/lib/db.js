@@ -3,8 +3,11 @@ import { openDB } from "idb";
 export async function initAuthDB() {
     return openDB("UserCredentialsDB", 1, {
       upgrade(db) {
-        if (!db.objectStoreNames.contains("auth")) {
-          db.createObjectStore("auth", { keyPath: "id" });
+        if (!db.objectStoreNames.contains("user-data")) {
+          db.createObjectStore("user-data", { keyPath: "id" });
+        }
+        if (!db.objectStoreNames.contains("user-creds")) {
+          db.createObjectStore("user-creds", { keyPath: "id" });
         }
       },
     });

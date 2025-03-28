@@ -4,9 +4,11 @@ import Head from "next/head";
 import SidebarDesktop from "./nav/SidebarDesktop";
 import SidebarMobile from "./nav/SidebarMobile";
 import TopBar from "./nav/TopBar";
+import { useAuth } from "@/context/AuthContext";
 
-export default function PrivateLayout({ children, pageName, userRole }) {
+export default function PrivateLayout({ children, pageName}) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { userData } = useAuth();
 
   return (
     <>
@@ -15,9 +17,9 @@ export default function PrivateLayout({ children, pageName, userRole }) {
       </Head>
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar para desktop */}
-        <SidebarDesktop userRole={userRole} />
+        <SidebarDesktop userRole={userData?.role} />
         {/* Sidebar para mobile */}
-        <SidebarMobile userRole={userRole} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <SidebarMobile userRole={userData?.role} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         {/* Conteúdo principal */}
         <div className="flex flex-col flex-1 overflow-hidden">
           <TopBar setSidebarOpen={setSidebarOpen} pageName={pageName} />

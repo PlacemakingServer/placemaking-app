@@ -13,8 +13,9 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Token não fornecido" });
   }
 
-  const { name, email, role, status } = req.body;
+  const { id, name, email, role, status } = req.body;
 
+  console.log("Dados recebidos:", { name, email, role, status });
   try {
     const response = await fetch(`${process.env.SERVER_URL}/users/${id}`, {
       method: "PUT",
