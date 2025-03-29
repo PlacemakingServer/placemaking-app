@@ -1,29 +1,26 @@
-// src/config/tabs.js
 export const TABS = {
   Dashboard: {
     link: "/",
-    icon: "",
+    icon: "dashboard",
+  },
+  Usuários: {
+    link: "/users",
+    icon: "group",
   },
   // Pesquisas: {
   //   link: "/researches",
-  //   icon: "",
+  //   icon: "science",
   // },
   // Configurações: {
   //   link: "/settings",
-  //   icon: "",
+  //   icon: "settings",
   // },
-  Usuários: {
-    link: "/users",
-    icon: "",
-  },
-  
 };
 
 export const PERMISSION_TABS = {
   admin: ["Usuários"],
   research: [],
 };
-
 
 export const TABSTYLES = {
   active: "text-white bg-black border-gray-800 hover:bg-gray-800",

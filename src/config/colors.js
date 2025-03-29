@@ -15,10 +15,10 @@ export const VARIANTS = {
     dark: "text-white bg-black border-gray-800 hover:bg-gray-800",
   
     // Transparentes com identidade
-    transparent_azul: "text-sky-600 bg-transparent border border-sky-100 hover:bg-sky-50",
-    transparent_vermelho: "text-rose-600 bg-transparent border border-rose-100 hover:bg-rose-50",
-    transparent_verde: "text-emerald-600 bg-transparent border border-emerald-100 hover:bg-emerald-50",
-    transparent_cinza: "text-gray-600 bg-transparent border border-gray-200 hover:bg-gray-100",
+    transparent_azul: "text-sky-600 bg-transparent border-none  hover:bg-sky-50",
+    transparent_vermelho: "text-rose-600 bg-transparent border-none  hover:bg-rose-50",
+    transparent_verde: "text-emerald-600 bg-transparent border-none hover:bg-emerald-50",
+    transparent_cinza: "text-gray-600 bg-transparent border-none hover:bg-gray-100",
   
     // Branding e utilidades
     primary: "text-white bg-indigo-600 border-indigo-700 hover:bg-indigo-700 shadow-sm",

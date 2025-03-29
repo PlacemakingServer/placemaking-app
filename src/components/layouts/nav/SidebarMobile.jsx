@@ -5,7 +5,6 @@ import Image from "next/image";
 import { TABS, PERMISSION_TABS, TABSTYLES } from "@/config/tabs";
 import { useRouter } from "next/router";
 
-
 function getAllowedTabs(userRole) {
   return Object.entries(TABS).filter(([tabName]) => {
     let restrictedRoles = [];
@@ -19,14 +18,17 @@ function getAllowedTabs(userRole) {
   });
 }
 
-export default function SidebarMobile({ userRole, sidebarOpen, setSidebarOpen }) {
+export default function SidebarMobile({
+  userRole,
+  sidebarOpen,
+  setSidebarOpen,
+}) {
   const allowedTabs = getAllowedTabs(userRole);
   const sidebarVariants = {
     hidden: { x: "-100%" },
     visible: { x: 0 },
   };
   const router = useRouter();
-
 
   return (
     <>
@@ -68,7 +70,12 @@ export default function SidebarMobile({ userRole, sidebarOpen, setSidebarOpen })
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -85,18 +92,22 @@ export default function SidebarMobile({ userRole, sidebarOpen, setSidebarOpen })
               </Link>
             </div>
             <nav className="mt-5 flex-1 px-2 space-y-1">
-            {allowedTabs.map(([name, { link }]) => {
+              {allowedTabs.map(([name, { link, icon }]) => {
                 const isActive = router.pathname === link;
                 return (
                   <Link
                     key={name}
                     href={link}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`block px-4 py-2 rounded ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded ${
                       isActive ? TABSTYLES.active : TABSTYLES.inactive
                     }`}
                   >
-                    {name}
+                    {icon && (
+                      <span className="material-symbols-outlined text-base">
+                        {icon}
+                      </span>
+                    )}
+                    <span className="text-sm font-medium">{name}</span>
                   </Link>
                 );
               })}
