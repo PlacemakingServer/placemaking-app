@@ -18,32 +18,36 @@ function getAllowedTabs(userRole) {
   });
 }
 
-export default function SidebarMobile({
-  userRole,
-  sidebarOpen,
-  setSidebarOpen,
-}) {
+export default function SidebarMobile({ userRole, sidebarOpen, setSidebarOpen }) {
   const allowedTabs = getAllowedTabs(userRole);
+  const router = useRouter();
+
   const sidebarVariants = {
     hidden: { x: "-100%" },
     visible: { x: 0 },
   };
-  const router = useRouter();
+
+  const handleLogout = () => {
+    console.log("Logout");
+    // Aqui você pode limpar token, redirecionar, etc.
+  };
 
   return (
     <>
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 flex md:hidden">
-          {/* Overlay com animação */}
+          {/* Overlay escuro */}
           <motion.div
             className="fixed inset-0 bg-gray-600 bg-opacity-75"
             onClick={() => setSidebarOpen(false)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-          ></motion.div>
+          />
+
+          {/* Sidebar principal */}
           <motion.div
-            className="relative flex-1 flex flex-col max-w-xs w-full bg-white"
+            className="relative flex flex-col max-w-xs w-full bg-white"
             initial="hidden"
             animate="visible"
             exit="hidden"
@@ -56,6 +60,7 @@ export default function SidebarMobile({
               }
             }}
           >
+            {/* Botão de fechar */}
             <div className="absolute top-0 right-0 -mr-12 pt-2">
               <button
                 type="button"
@@ -79,41 +84,60 @@ export default function SidebarMobile({
                 </svg>
               </button>
             </div>
-            <div className="flex items-center h-16 px-4 bg-white">
-              <Link href="/">
+
+            {/* Logo */}
+            <div className="flex items-center h-16 px-4 bg-white border-b">
+              <Link href="/" onClick={() => setSidebarOpen(false)}>
                 <Image
                   src="/img/placemaking.png"
                   alt="Logo"
                   width={100}
-                  height={100}
+                  height={40}
                   className="object-contain"
                   priority
                 />
               </Link>
             </div>
-            <nav className="mt-5 flex-1 px-2 space-y-1">
+
+            {/* Tabs */}
+            <nav className="flex-1 px-2 py-4 space-y-2 overflow-y-auto">
               {allowedTabs.map(([name, { link, icon }]) => {
                 const isActive = router.pathname === link;
                 return (
                   <Link
                     key={name}
                     href={link}
+                    onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-2 px-4 py-2 rounded ${
                       isActive ? TABSTYLES.active : TABSTYLES.inactive
                     }`}
                   >
-                    {icon && (
-                      <span className="material-symbols-outlined text-base">
-                        {icon}
-                      </span>
-                    )}
+                    <span className="material-symbols-outlined text-base">
+                      {icon}
+                    </span>
                     <span className="text-sm font-medium">{name}</span>
                   </Link>
                 );
               })}
             </nav>
+
+            {/* Botão de logout */}
+            <div className="border-t px-4 py-3">
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setSidebarOpen(false);
+                }}
+                className="w-full flex items-center gap-2 text-red-600 hover:bg-red-50 px-4 py-2 rounded transition"
+              >
+                <span className="material-symbols-outlined text-base">logout</span>
+                <span className="text-sm font-medium">Logout</span>
+              </button>
+            </div>
           </motion.div>
-          <div className="flex-shrink-0 w-14"></div>
+
+          {/* Spacer para scroll travado em fundo */}
+          <div className="flex-shrink-0 w-14" aria-hidden="true" />
         </div>
       )}
     </>

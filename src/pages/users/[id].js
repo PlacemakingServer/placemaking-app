@@ -4,6 +4,11 @@ import { useMessage } from "@/context/MessageContext";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import { formatDateToDDMMYY } from "@/utils/formatDate";
+import {
+  getCachedItemById,
+  updateCachedItemById,
+  syncCachedData,
+} from "@/services/cache";
 
 export default function Profile() {
   const { isLoading, setIsLoading } = useLoading(false);
@@ -26,19 +31,58 @@ export default function Profile() {
     confirm_password: "",
   });
 
+  // 🧠 Carrega dados do cache ao montar
   useEffect(() => {
-    if (userData) {
-      setForm({
-        id: userData.id || "",
-        name: userData.name || "",
-        email: userData.email || "",
-        status: userData.status || "",
-        role: userData.role || "",
-        created_at: formatDateToDDMMYY(userData.created_at) || "",
-        updated_at: formatDateToDDMMYY(userData.updated_at) || "",
-      });
-    }
+    const loadFromCache = async () => {
+      if (!userData?.id) return;
+
+      try {
+        const cachedUserData = await getCachedItemById("users", userData.id);
+        if (cachedUserData) {
+          document.title = `${cachedUserData.name} - Perfil`;
+          setForm({
+            id: cachedUserData.id || "",
+            name: cachedUserData.name || "",
+            email: cachedUserData.email || "",
+            status: cachedUserData.status || "",
+            role: cachedUserData.role || "",
+            created_at: formatDateToDDMMYY(cachedUserData.created_at),
+            updated_at: formatDateToDDMMYY(cachedUserData.updated_at),
+          });
+        }
+      } catch (err) {
+        console.error("Erro ao carregar dados do cache:", err);
+      }
+    };
+
+    loadFromCache();
   }, [userData]);
+
+  const handleSync = async () => {
+    setIsLoading(true);
+    try {
+      await syncCachedData("users");
+
+      const updated = await getCachedItemById("users", userData.id);
+      if (updated) {
+        setForm({
+          id: updated.id,
+          name: updated.name,
+          email: updated.email,
+          status: updated.status,
+          role: updated.role,
+          created_at: formatDateToDDMMYY(updated.created_at),
+          updated_at: formatDateToDDMMYY(updated.updated_at),
+        });
+      }
+
+      showMessage("Dados sincronizados com sucesso!", "azul_claro");
+    } catch (err) {
+      showMessage("Erro ao sincronizar dados do servidor", "vermelho_claro");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,10 +106,18 @@ export default function Profile() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao atualizar perfil");
+
       if (data.user) {
         saveUserInfo(data.user);
+        await updateCachedItemById("users", data.user.id, data.user);
+
+        setForm({
+          ...form,
+          updated_at: formatDateToDDMMYY(data.user.updated_at),
+        });
+
+        showMessage("Perfil atualizado com sucesso!", "verde");
       }
-      showMessage("Perfil atualizado com sucesso!", "verde");
     } catch (err) {
       showMessage(err.message, "vermelho_claro");
     } finally {
@@ -80,6 +132,7 @@ export default function Profile() {
       if (passwordForm.new_password !== passwordForm.confirm_password) {
         throw new Error("As senhas não coincidem");
       }
+
       const res = await fetch("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,10 +143,7 @@ export default function Profile() {
       if (!res.ok) throw new Error(data.error || "Erro ao atualizar senha");
 
       showMessage("Senha atualizada com sucesso!", "verde");
-      setPasswordForm({
-        new_password: "",
-        confirm_password: "",
-      });
+      setPasswordForm({ new_password: "", confirm_password: "" });
     } catch (err) {
       showMessage(err.message, "vermelho_claro");
     } finally {
@@ -107,6 +157,15 @@ export default function Profile() {
         <section className="bg-white p-6 rounded shadow space-y-4">
           <h2 className="text-xl font-semibold mb-4">Dados do Perfil</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+            <div>
+              <span className="font-bold">Nome:</span>
+              <p>{form.name}</p>
+            </div>
+            <div
+              className="hidden md:block">
+              <span className="font-bold">E-mail:</span>
+              <p>{form.email}</p>
+            </div>
             <div>
               <span className="font-bold">ID:</span>
               <p>{form.id}</p>
@@ -127,6 +186,22 @@ export default function Profile() {
               <span className="font-bold">Atualizado em:</span>
               <p>{form.updated_at}</p>
             </div>
+          </div>
+
+          <p className="text-xs text-gray-500 mb-4">
+            Os dados podem estar desatualizados. Clique em “Atualizar” para
+            sincronizar com o servidor.
+          </p>
+          <div className="flex items-center space-x-2 mb-4">
+            <Button
+              onClick={handleSync}
+              disabled={isLoading}
+              className="px-4 py-2 transition flex justify-evenly items-center gap-2"
+              variant="dark"
+            >
+              <span className="material-symbols-outlined">sync</span>
+              <span>Atualizar</span>
+            </Button>
           </div>
         </section>
 
@@ -222,5 +297,4 @@ export default function Profile() {
   );
 }
 
-Profile.pageName = "Meu Perfil";
 Profile.layout = "private";

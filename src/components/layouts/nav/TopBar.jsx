@@ -1,8 +1,11 @@
 // src/components/TopBar.jsx
 import { motion } from "framer-motion";
 import Link from "next/link";
+import {useAuth} from "@/context/AuthContext";
 
 export default function TopBar({ setSidebarOpen, pageName }) {
+
+  const { userData } = useAuth();
   return (
     <header className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-100">
       <div className="flex items-center">
@@ -26,7 +29,7 @@ export default function TopBar({ setSidebarOpen, pageName }) {
         <h2 className="text-xl font-semibold ml-2">{pageName || "Área Logada"}</h2>
       </div>
       <div>
-        <Link href="/profile" className="text-gray-600 hover:text-gray-800">
+        <Link href={`/users/${userData?.id}`} className="text-gray-600 hover:text-gray-800">
           <span className="sr-only">Perfil</span>
           <motion.svg
             className="h-8 w-8 rounded-full border border-gray-300"

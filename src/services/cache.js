@@ -22,6 +22,15 @@ export async function getCachedData(storeName, { paginated = false, page = 1, pe
   };
 }
 
+
+export async function getCachedItemById(storeName, id) {
+  const db = await initCachedDB();
+  const tx = db.transaction(storeName, "readonly");
+  const store = tx.objectStore(storeName);
+  const item = await store.get(id);
+  return item || null;
+}
+
 export async function syncCachedData(storeName) {
   const config = {
     users: {
@@ -84,4 +93,18 @@ export async function updateCachedItemById(storeName, id, updatedData) {
     await tx.done;
     return updatedItem;
   }
+
+export async function deleteCachedItemById(storeName, id) {
+  const db = await initCachedDB();
+  const tx = db.transaction(storeName, "readwrite");
+  const store = tx.objectStore(storeName);
+
+  const existingItem = await store.get(id);
+  if (!existingItem) {
+    throw new Error(`Item com id ${id} não encontrado na store ${storeName}`);
+  }
+
+  await store.delete(id);
+  await tx.done;
+}
   

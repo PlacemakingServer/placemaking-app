@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { TABS, PERMISSION_TABS, TABSTYLES } from "@/config/tabs";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function getAllowedTabs(userRole) {
@@ -24,6 +24,19 @@ export default function SidebarDesktop({ userRole }) {
   const router = useRouter();
   const allowedTabs = getAllowedTabs(userRole);
 
+  // Limpa o tooltip quando o sidebar é expandido
+  useEffect(() => {
+    if (expanded) {
+      setHoveredTab(null);
+    }
+  }, [expanded]);
+
+  // Função de logout (substitua a lógica conforme necessário)
+  const handleLogout = () => {
+    console.log("Logout");
+    // Lógica de logout, como limpar tokens e redirecionar
+  };
+
   return (
     <motion.div
       initial={{ width: 256 }}
@@ -31,8 +44,9 @@ export default function SidebarDesktop({ userRole }) {
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="hidden md:flex md:flex-shrink-0 bg-white border-r border-gray-200 p-4"
     >
-      <div className="flex flex-col h-screen w-full">
-        {/* Top */}
+      {/* Container principal estruturado em 3 partes: header, nav e footer */}
+      <div className="flex flex-col h-full w-full justify-between">
+        {/* Header */}
         <div className="flex items-center justify-between px-4 h-16 border-b">
           {expanded && (
             <Link href="/" onClick={(e) => e.stopPropagation()}>
@@ -59,7 +73,7 @@ export default function SidebarDesktop({ userRole }) {
           </button>
         </div>
 
-        {/* Tabs */}
+        {/* Navegação (tabs) */}
         <nav className="flex-1 overflow-y-auto py-4 space-y-1">
           {allowedTabs.map(([name, { link, icon }]) => (
             <div
@@ -98,6 +112,29 @@ export default function SidebarDesktop({ userRole }) {
             </div>
           ))}
         </nav>
+
+        {/* Footer (botão de Logout) */}
+        <div>
+          <div
+            className="relative"
+            onMouseEnter={() => { if (!expanded) setHoveredTab("Logout"); }}
+            onMouseLeave={() => { if (!expanded) setHoveredTab(null); }}
+          >
+            <button
+              onClick={handleLogout}
+              className={`w-full flex items-center gap-2 text-red-600 hover:bg-red-50 px-4 py-2 rounded transition ${
+                !expanded ? "justify-center" : ""
+              }`}
+            >
+              <span className="material-symbols-outlined text-xl">logout</span>
+              {expanded && (
+                <span className="text-sm font-medium whitespace-nowrap">
+                  Logout
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </motion.div>
   );
