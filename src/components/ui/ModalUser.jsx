@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { updateCachedItemById } from "@/services/cache";
 import Button from "@/components/ui/Button";
 import { USER_ROLES, USER_STATUS } from "@/config/data_types";
+import Link from "next/link";
 
 export default function ModalUser({
   isOpen,
@@ -133,9 +134,7 @@ export default function ModalUser({
                 className="absolute top-3 right-3 text-white hover:text-gray-200"
                 onClick={onClose}
               >
-                <span className="material-symbols-outlined text-xl">
-                  close
-                </span>
+                <span className="material-symbols-outlined text-xl">close</span>
               </button>
             </div>
 
@@ -202,7 +201,7 @@ export default function ModalUser({
             </div>
 
             {/* Botões de ação */}
-            <div className="flex justify-end items-center space-x-2 p-4 border-t">
+            <div className="flex justify-between items-center space-x-2 p-4 border-t">
               <Button
                 onClick={handleDelete}
                 variant="transparent_vermelho"
@@ -219,6 +218,12 @@ export default function ModalUser({
               <Button onClick={handleUpdate} variant="dark" disabled={isProcessing}>
                 {isProcessing ? "Salvando..." : "Salvar"}
               </Button>
+              {/* Botão link para /users/{id} */}
+              <Link href={`/users/${form.id}`} passHref>
+                <Button variant="dark" className="ml-2">
+                  Ver Perfil
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </motion.div>
