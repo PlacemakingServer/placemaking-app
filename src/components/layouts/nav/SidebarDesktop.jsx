@@ -4,6 +4,9 @@ import { TABS, PERMISSION_TABS, TABSTYLES } from "@/config/tabs";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Button from "@/components/ui/Button";
+import { initAuthDB } from "@/lib/db";
+
 
 function getAllowedTabs(userRole) {
   return Object.entries(TABS).filter(([tabName]) => {
@@ -31,10 +34,17 @@ export default function SidebarDesktop({ userRole }) {
     }
   }, [expanded]);
 
-  // Função de logout (substitua a lógica conforme necessário)
-  const handleLogout = () => {
-    console.log("Logout");
-    // Lógica de logout, como limpar tokens e redirecionar
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+
+    try {
+      const db = await initAuthDB();
+      await db.clear("user-data");
+      await db.clear("user-creds");
+    } catch (err) {
+      console.error("Erro ao limpar IndexedDB:", err);
+    }
+    window.location.href = "/login";
   };
 
   return (
@@ -79,17 +89,25 @@ export default function SidebarDesktop({ userRole }) {
             <div
               key={name}
               className="relative"
-              onMouseEnter={() => { if (!expanded) setHoveredTab(name); }}
-              onMouseLeave={() => { if (!expanded) setHoveredTab(null); }}
+              onMouseEnter={() => {
+                if (!expanded) setHoveredTab(name);
+              }}
+              onMouseLeave={() => {
+                if (!expanded) setHoveredTab(null);
+              }}
             >
               <Link
                 href={link}
                 onClick={(e) => e.stopPropagation()}
                 className={`group flex items-center gap-3 px-4 py-2 rounded-md transition-all ${
-                  router.pathname === link ? TABSTYLES.active : TABSTYLES.inactive
+                  router.pathname === link
+                    ? TABSTYLES.active
+                    : TABSTYLES.inactive
                 } ${!expanded ? "justify-center" : ""}`}
               >
-                <span className="material-symbols-outlined text-xl">{icon}</span>
+                <span className="material-symbols-outlined text-xl">
+                  {icon}
+                </span>
                 {expanded && (
                   <span className="text-sm font-medium whitespace-nowrap">
                     {name}
@@ -113,27 +131,29 @@ export default function SidebarDesktop({ userRole }) {
           ))}
         </nav>
 
-        {/* Footer (botão de Logout) */}
-        <div>
-          <div
-            className="relative"
-            onMouseEnter={() => { if (!expanded) setHoveredTab("Logout"); }}
-            onMouseLeave={() => { if (!expanded) setHoveredTab(null); }}
+        <div
+          className="relative"
+          onMouseEnter={() => {
+            if (!expanded) setHoveredTab("Logout");
+          }}
+          onMouseLeave={() => {
+            if (!expanded) setHoveredTab(null);
+          }}
+        >
+          <Button
+            onClick={handleLogout}
+            variant="transparent_vermelho"
+            className={`w-full flex items-center gap-2 px-4 py-2 rounded transition ${
+              !expanded ? "justify-center" : ""
+            }`}
           >
-            <button
-              onClick={handleLogout}
-              className={`w-full flex items-center gap-2 text-red-600 hover:bg-red-50 px-4 py-2 rounded transition ${
-                !expanded ? "justify-center" : ""
-              }`}
-            >
-              <span className="material-symbols-outlined text-xl">logout</span>
-              {expanded && (
-                <span className="text-sm font-medium whitespace-nowrap">
-                  Logout
-                </span>
-              )}
-            </button>
-          </div>
+            <span className="material-symbols-outlined text-xl">logout</span>
+            {expanded && (
+              <span className="text-sm font-medium whitespace-nowrap">
+                Logout
+              </span>
+            )}
+          </Button>
         </div>
       </div>
     </motion.div>

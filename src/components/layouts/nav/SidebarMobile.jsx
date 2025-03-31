@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { TABS, PERMISSION_TABS, TABSTYLES } from "@/config/tabs";
 import { useRouter } from "next/router";
+import { initAuthDB } from "@/lib/db";
+import Button from "@/components/ui/Button";
 
 function getAllowedTabs(userRole) {
   return Object.entries(TABS).filter(([tabName]) => {
@@ -18,7 +20,11 @@ function getAllowedTabs(userRole) {
   });
 }
 
-export default function SidebarMobile({ userRole, sidebarOpen, setSidebarOpen }) {
+export default function SidebarMobile({
+  userRole,
+  sidebarOpen,
+  setSidebarOpen,
+}) {
   const allowedTabs = getAllowedTabs(userRole);
   const router = useRouter();
 
@@ -27,9 +33,20 @@ export default function SidebarMobile({ userRole, sidebarOpen, setSidebarOpen })
     visible: { x: 0 },
   };
 
-  const handleLogout = () => {
-    console.log("Logout");
-    // Aqui você pode limpar token, redirecionar, etc.
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+
+    // 2. Limpar IndexedDB
+    try {
+      const db = await initAuthDB();
+      await db.clear("user-data");
+      await db.clear("user-creds");
+    } catch (err) {
+      console.error("Erro ao limpar IndexedDB:", err);
+    }
+
+    // 3. Redirecionar
+    window.location.href = "/login";
   };
 
   return (
@@ -121,18 +138,20 @@ export default function SidebarMobile({ userRole, sidebarOpen, setSidebarOpen })
               })}
             </nav>
 
-            {/* Botão de logout */}
             <div className="border-t px-4 py-3">
-              <button
-                onClick={() => {
-                  handleLogout();
+              <Button
+                onClick={async () => {
+                  await handleLogout();
                   setSidebarOpen(false);
                 }}
-                className="w-full flex items-center gap-2 text-red-600 hover:bg-red-50 px-4 py-2 rounded transition"
+                variant="transparent_vermelho"
+                className="w-full flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-base">logout</span>
+                <span className="material-symbols-outlined text-base">
+                  logout
+                </span>
                 <span className="text-sm font-medium">Logout</span>
-              </button>
+              </Button>
             </div>
           </motion.div>
 

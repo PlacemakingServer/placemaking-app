@@ -26,7 +26,7 @@ export async function initResearchsDB() {
 
 
 export async function initCachedDB() {
-  return openDB("CachedDB", 2, {
+  return openDB("CachedDB", 1, {
     upgrade(db) {
       const stores = ["users", "researchs", "itemTobeCreated"];
       for (const storeName of stores) {
