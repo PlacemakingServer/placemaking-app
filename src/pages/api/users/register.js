@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Token não fornecido" });
   }
 
-  const { name, email, confirmation_email, role } = req.body;
+  const { name, email, confirmation_email, role, status } = req.body;
 
   try {
     const response = await fetch(`${process.env.SERVER_URL}/auth/register`, {
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       },
-      body: JSON.stringify({ name, email, confirmation_email, role }),
+      body: JSON.stringify({ name, email, confirmation_email, role, status }),
     });
 
     const data = await response.json();

@@ -5,7 +5,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { name, email, confirmation_email, role } = req.body;
+  const { name, email, confirmation_email, role, status } = req.body;
+
 
   try {
     const response = await fetch(`${process.env.SERVER_URL}/auth/register`, {
@@ -13,7 +14,7 @@ export default async function handler(req, res) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name, email, confirmation_email, role }),
+      body: JSON.stringify({ name, email, confirmation_email, role, status }),
     });
 
     if (!response.ok) {

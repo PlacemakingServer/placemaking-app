@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
 import Button from "@/components/ui/Button";
@@ -14,8 +15,10 @@ export default function Profile() {
   const { isLoading, setIsLoading } = useLoading(false);
   const { showMessage } = useMessage();
   const { userData, saveUserInfo } = useAuth();
-  const [showNewPassword, setShowNewPassword] = useState(false);
+  const router = useRouter();
+  const { id: routeUserId } = router.query;
 
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [form, setForm] = useState({
     id: "",
     name: "",
@@ -25,19 +28,19 @@ export default function Profile() {
     created_at: "",
     updated_at: "",
   });
-
   const [passwordForm, setPasswordForm] = useState({
     new_password: "",
     confirm_password: "",
   });
 
-  // 🧠 Carrega dados do cache ao montar
+  const isSelf = userData?.id === routeUserId;
+
   useEffect(() => {
     const loadFromCache = async () => {
-      if (!userData?.id) return;
+      if (!routeUserId) return;
 
       try {
-        const cachedUserData = await getCachedItemById("users", userData.id);
+        const cachedUserData = await getCachedItemById("users", routeUserId);
         if (cachedUserData) {
           document.title = `${cachedUserData.name} - Perfil`;
           setForm({
@@ -56,14 +59,14 @@ export default function Profile() {
     };
 
     loadFromCache();
-  }, [userData]);
+  }, [routeUserId]);
 
   const handleSync = async () => {
     setIsLoading(true);
     try {
       await syncCachedData("users");
 
-      const updated = await getCachedItemById("users", userData.id);
+      const updated = await getCachedItemById("users", routeUserId);
       if (updated) {
         setForm({
           id: updated.id,
@@ -108,13 +111,13 @@ export default function Profile() {
       if (!res.ok) throw new Error(data.error || "Erro ao atualizar perfil");
 
       if (data.user) {
-        saveUserInfo(data.user);
+        if (isSelf) saveUserInfo(data.user);
         await updateCachedItemById("users", data.user.id, data.user);
 
-        setForm({
-          ...form,
+        setForm((prev) => ({
+          ...prev,
           updated_at: formatDateToDDMMYY(data.user.updated_at),
-        });
+        }));
 
         showMessage("Perfil atualizado com sucesso!", "verde");
       }
@@ -161,8 +164,7 @@ export default function Profile() {
               <span className="font-bold">Nome:</span>
               <p>{form.name}</p>
             </div>
-            <div
-              className="hidden md:block">
+            <div>
               <span className="font-bold">E-mail:</span>
               <p>{form.email}</p>
             </div>
@@ -205,93 +207,97 @@ export default function Profile() {
           </div>
         </section>
 
-        {/* Editar nome e e-mail */}
-        <section className="bg-white p-6 rounded shadow space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Editar Informações</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              name="name"
-              placeholder="Nome"
-              value={form.name}
-              onChange={handleChange}
-              className="border p-2 rounded w-full"
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="E-mail"
-              value={form.email}
-              onChange={handleChange}
-              className="border p-2 rounded w-full"
-              required
-            />
-            <div className="flex justify-center">
-              <Button
-                type="submit"
-                variant="dark"
-                className="w-full max-w-60 text-md active:scale-95"
-                disabled={isLoading}
-              >
-                {isLoading ? "Salvando..." : "Salvar Alterações"}
-              </Button>
-            </div>
-          </form>
-        </section>
+        {isSelf && (
+          <>
+            {/* Editar nome e e-mail */}
+            <section className="bg-white p-6 rounded shadow space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Editar Informações</h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Nome"
+                  value={form.name}
+                  onChange={handleChange}
+                  className="border p-2 rounded w-full"
+                  required
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="E-mail"
+                  value={form.email}
+                  onChange={handleChange}
+                  className="border p-2 rounded w-full"
+                  required
+                />
+                <div className="flex justify-center">
+                  <Button
+                    type="submit"
+                    variant="dark"
+                    className="w-full max-w-60 text-md active:scale-95"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Salvando..." : "Salvar Alterações"}
+                  </Button>
+                </div>
+              </form>
+            </section>
 
-        {/* Alterar senha */}
-        <section className="bg-white p-6 rounded shadow space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Alterar Senha</h2>
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <div className="relative">
-              <input
-                type={showNewPassword ? "text" : "password"}
-                name="new_password"
-                placeholder="Nova Senha"
-                value={passwordForm.new_password}
-                onChange={handlePasswordChange}
-                className="border p-2 rounded w-full pr-12"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowNewPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600"
-              >
-                {showNewPassword ? "Ocultar" : "Mostrar"}
-              </button>
-            </div>
-            <div className="relative">
-              <input
-                type={showNewPassword ? "text" : "password"}
-                name="confirm_password"
-                placeholder="Confirme a Nova Senha"
-                value={passwordForm.confirm_password}
-                onChange={handlePasswordChange}
-                className="border p-2 rounded w-full pr-12"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowNewPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600"
-              >
-                {showNewPassword ? "Ocultar" : "Mostrar"}
-              </button>
-            </div>
-            <div className="flex justify-center">
-              <Button
-                type="submit"
-                variant="dark"
-                className="w-full max-w-60 text-md active:scale-95"
-                disabled={isLoading}
-              >
-                {isLoading ? "Atualizando..." : "Alterar Senha"}
-              </Button>
-            </div>
-          </form>
-        </section>
+            {/* Alterar senha */}
+            <section className="bg-white p-6 rounded shadow space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Alterar Senha</h2>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    name="new_password"
+                    placeholder="Nova Senha"
+                    value={passwordForm.new_password}
+                    onChange={handlePasswordChange}
+                    className="border p-2 rounded w-full pr-12"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600"
+                  >
+                    {showNewPassword ? "Ocultar" : "Mostrar"}
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    name="confirm_password"
+                    placeholder="Confirme a Nova Senha"
+                    value={passwordForm.confirm_password}
+                    onChange={handlePasswordChange}
+                    className="border p-2 rounded w-full pr-12"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600"
+                  >
+                    {showNewPassword ? "Ocultar" : "Mostrar"}
+                  </button>
+                </div>
+                <div className="flex justify-center">
+                  <Button
+                    type="submit"
+                    variant="dark"
+                    className="w-full max-w-60 text-md active:scale-95"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Atualizando..." : "Alterar Senha"}
+                  </Button>
+                </div>
+              </form>
+            </section>
+          </>
+        )}
       </main>
     </div>
   );

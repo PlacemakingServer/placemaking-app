@@ -15,7 +15,6 @@ export default async function handler(req, res) {
 
   const { id, name, email, role, status } = req.body;
 
-  console.log("Dados recebidos:", { name, email, role, status });
   try {
     const response = await fetch(`${process.env.SERVER_URL}/users/${id}`, {
       method: "PUT",

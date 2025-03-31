@@ -8,7 +8,7 @@ export default function Button({
   variant = "primary",
   ...props
 }) {
-  const baseStyle = "py-2 px-2 rounded font-medium transition duration-200";
+  const baseStyle = "py-2 px-2 rounded font-medium transition";
 
 
   return (

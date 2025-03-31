@@ -1,7 +1,12 @@
 // src/components/ui/ModalUser.jsx
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { updateCachedItemById } from "@/services/cache";
+import {
+  updateCachedItemById,
+  deleteCachedItemById,
+  markItemForUpdate,
+  markItemForDelete,
+} from "@/services/cache";
 import Button from "@/components/ui/Button";
 import { USER_ROLES, USER_STATUS } from "@/config/data_types";
 import Link from "next/link";
@@ -14,7 +19,6 @@ export default function ModalUser({
   onUserDeleted,
   showMessage,
 }) {
-  // Estados locais para edição e loading
   const [form, setForm] = useState({
     id: "",
     name: "",
@@ -45,40 +49,51 @@ export default function ModalUser({
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Atualiza usuário
+  const cleanStatus = (status) => status.replace(/^["']|["']$/g, "");
+
   const handleUpdate = async () => {
     setIsProcessing(true);
+    const updateData = { ...form, status: cleanStatus(form.status) };
     try {
       const res = await fetch("/api/users/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(updateData),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erro ao atualizar usuário.");
-
-      // Atualiza o IndexedDB
-      await updateCachedItemById("users", form.id, {
-        name: form.name,
-        email: form.email,
-        role: form.role,
-        status: form.status,
-      });
-
-      onUserUpdated({
-        ...form,
-        updated_at: data.updated_at || new Date().toISOString(),
-      });
-      showMessage("Usuário atualizado com sucesso!", "azul_claro");
+      if (!res.ok) {
+        // Se a API falhar, marca para sincronização
+        await markItemForUpdate("users", form.id, updateData);
+        showMessage(
+          "Falha na atualização. Alteração pendente de sincronização.",
+          "vermelho",
+          5000
+        );
+      } else {
+        // Em caso de sucesso, force a atualização removendo o status pendente
+        const updatedDataWithSync = { ...updateData, _syncStatus: "synced" };
+        await updateCachedItemById("users", form.id, updatedDataWithSync);
+        onUserUpdated({
+          ...form,
+          _syncStatus: "synced",
+          updated_at: data.updated_at || new Date().toISOString(),
+        });
+        showMessage("Usuário atualizado com sucesso!", "azul_claro");
+      }
       onClose();
     } catch (err) {
-      showMessage(err.message, "vermelho_claro", 5000);
+      await markItemForUpdate("users", form.id, updateData);
+      showMessage(
+        "Erro ao atualizar. Alteração ficará pendente de sincronização.",
+        "vermelho",
+        5000
+      );
     } finally {
       setIsProcessing(false);
     }
   };
+  
 
-  // Excluir usuário
   const handleDelete = async () => {
     setIsProcessing(true);
     try {
@@ -88,13 +103,27 @@ export default function ModalUser({
         body: JSON.stringify({ id: user.id }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erro ao deletar usuário.");
-
-      onUserDeleted(user.id);
-      showMessage("Usuário deletado com sucesso!", "verde");
+      if (!res.ok) {
+        // Se a exclusão falhar, marca para sincronização
+        await markItemForDelete("users", user.id);
+        showMessage(
+          "Falha ao deletar. Exclusão pendente de sincronização.",
+          "vermelho",
+          5000
+        );
+      } else {
+        await deleteCachedItemById("users", user.id);
+        onUserDeleted(user.id);
+        showMessage("Usuário deletado com sucesso!", "verde");
+      }
       onClose();
     } catch (err) {
-      showMessage(err.message, "vermelho_claro", 5000);
+      await markItemForDelete("users", user.id);
+      showMessage(
+        "Erro ao deletar. Exclusão ficará pendente de sincronização.",
+        "vermelho",
+        5000
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -109,7 +138,6 @@ export default function ModalUser({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          {/* Overlay com fade */}
           <motion.div
             className="absolute inset-0 bg-black bg-opacity-40"
             initial={{ opacity: 0 }}
@@ -117,7 +145,6 @@ export default function ModalUser({
             exit={{ opacity: 0 }}
           />
 
-          {/* Conteúdo do modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -125,8 +152,7 @@ export default function ModalUser({
             transition={{ duration: 0.2 }}
             className="relative bg-white rounded-lg shadow-lg w-full max-w-md mx-2"
           >
-            {/* Header com fundo colorido */}
-            <div className="bg-black rounded-t-lg p-4">
+            <div className="bg-gray-600 rounded-t-lg p-4">
               <h2 className="text-xl font-semibold text-white">
                 Detalhes do Usuário
               </h2>
@@ -134,11 +160,11 @@ export default function ModalUser({
                 className="absolute top-3 right-3 text-white hover:text-gray-200"
                 onClick={onClose}
               >
-                <span className="material-symbols-outlined text-xl">close</span>
+                <span className="material-symbols-outlined text-xl">
+                  close
+                </span>
               </button>
             </div>
-
-            {/* Conteúdo do modal */}
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -174,6 +200,7 @@ export default function ModalUser({
                   onChange={handleChange}
                   className="mt-1 border border-gray-300 rounded w-full p-2 focus:ring-blue-500 focus:border-blue-500"
                 >
+                  <option value="">Selecione um papel</option>
                   {USER_ROLES.map((role) => (
                     <option key={role} value={role}>
                       {role}
@@ -191,6 +218,7 @@ export default function ModalUser({
                   onChange={handleChange}
                   className="mt-1 border border-gray-300 rounded w-full p-2 focus:ring-blue-500 focus:border-blue-500"
                 >
+                  <option value="">Selecione um status</option>
                   {USER_STATUS.map((status) => (
                     <option key={status} value={status}>
                       {status}
@@ -198,9 +226,15 @@ export default function ModalUser({
                   ))}
                 </select>
               </div>
+              <div className="flex flex-row justify-center items-center">
+                <Link href={`/users/${form.id}`} passHref>
+                  <Button variant="dark" className="w-full">
+                    Ver Perfil
+                  </Button>
+                </Link>
+              </div>
             </div>
 
-            {/* Botões de ação */}
             <div className="flex justify-between items-center space-x-2 p-4 border-t">
               <Button
                 onClick={handleDelete}
@@ -210,20 +244,30 @@ export default function ModalUser({
                 {isProcessing ? (
                   "Excluindo..."
                 ) : (
-                  <span className="material-symbols-outlined text-base">
-                    delete
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span>Excluir</span>
+                    <span className="material-symbols-outlined text-base">
+                      delete
+                    </span>
+                  </div>
                 )}
               </Button>
-              <Button onClick={handleUpdate} variant="dark" disabled={isProcessing}>
-                {isProcessing ? "Salvando..." : "Salvar"}
+              <Button
+                onClick={handleUpdate}
+                variant="transparent_verde"
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  "Salvando..."
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <span>Salvar</span>
+                    <span className="material-symbols-outlined text-base">
+                      save
+                    </span>
+                  </div>
+                )}
               </Button>
-              {/* Botão link para /users/{id} */}
-              <Link href={`/users/${form.id}`} passHref>
-                <Button variant="dark" className="ml-2">
-                  Ver Perfil
-                </Button>
-              </Link>
             </div>
           </motion.div>
         </motion.div>
@@ -231,3 +275,7 @@ export default function ModalUser({
     </AnimatePresence>
   );
 }
+
+
+
+

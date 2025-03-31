@@ -26,9 +26,9 @@ export async function initResearchsDB() {
 
 
 export async function initCachedDB() {
-  return openDB("CachedDB", 1, {
+  return openDB("CachedDB", 2, {
     upgrade(db) {
-      const stores = ["users", "researchs"];
+      const stores = ["users", "researchs", "itemTobeCreated"];
       for (const storeName of stores) {
         if (!db.objectStoreNames.contains(storeName)) {
           db.createObjectStore(storeName, { keyPath: "id" });
@@ -37,5 +37,6 @@ export async function initCachedDB() {
     },
   });
 }
+
 
   

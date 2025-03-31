@@ -1,74 +1,94 @@
 import { useState, useEffect, useCallback } from "react";
+import clsx from "clsx"; 
 import Button from "@/components/ui/Button";
-import ModalUser from "@/components/ui/ModalUser"; // Importa o modal
+import ModalUser from "@/components/ui/ModalUser";
+import ModalRegisterUser from "@/components/ui/ModalRegisterUser";
 import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
-import { USER_ROLES } from "@/config/data_types";
-
 import {
   getCachedData,
-  syncCachedData,
+  syncLocalToServer,
+  syncServerToCache,
 } from "@/services/cache";
+import { VARIANTS } from "@/config/colors";
+import { USER_ROLES, USER_STATUS } from "@/config/data_types";
+import { useAuth } from "@/context/AuthContext";
+
 
 export default function Users() {
-  // Estado do formulário de cadastro
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    confirmation_email: "",
-    role: "",
-  });
-
-  // Estados de listagem e paginação
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const perPage = 10;
-
-  // Modal
   const [selectedUser, setSelectedUser] = useState(null);
-
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const { isLoading, setIsLoading } = useLoading();
   const { showMessage } = useMessage();
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [order, setOrder] = useState("desc");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterRole, setFilterRole] = useState("");
+  const { userData } = useAuth();
 
-  // Carrega os dados dos usuários do cache (com paginação)
   const loadCachedUsers = useCallback(async () => {
     setIsLoading(true);
     try {
       const result = await getCachedData("users", {
-        paginated: true,
-        page,
-        perPage,
+        paginated: false,
+        order,
+        search: searchTerm,
+        filterStatus,
+        filterRole,
       });
-      setUsers(result.items);
-      setTotalPages(result.totalPages);
+  
+      const filtered = result.filter(user => user.id !== userData?.id);
+
+      const total = filtered.length;
+      const totalPagesCalc = Math.ceil(total / perPage);
+      const start = (page - 1) * perPage;
+      const paginatedUsers = filtered.slice(start, start + perPage);
+  
+      setUsers(paginatedUsers);
+      setTotalPages(totalPagesCalc);
     } catch (err) {
+      console.error("Erro ao carregar dados do cache:", err);
       showMessage("Erro ao carregar dados do cache.", "vermelho_claro", 5000);
     } finally {
       setIsLoading(false);
     }
-  }, [page, perPage, setIsLoading, showMessage]);
+  }, [
+    page,
+    perPage,
+    order,
+    searchTerm,
+    filterStatus,
+    filterRole,
+    setIsLoading,
+    showMessage,
+    userData?.id,
+  ]);
+  
 
   useEffect(() => {
     loadCachedUsers();
   }, [loadCachedUsers]);
 
-  // Função para sincronizar os dados via cache
   const handleSync = async () => {
     setIsLoading(true);
     try {
-      await syncCachedData("users");
+      await syncLocalToServer("users");
+      await syncServerToCache("users");
       showMessage("Dados sincronizados com sucesso!", "azul_claro");
-      // Recarrega lista
       loadCachedUsers();
     } catch (err) {
+      console.error("Erro ao sincronizar dados:", err);
       showMessage("Erro ao sincronizar dados.", "vermelho_claro", 5000);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Funções de paginação
   const handlePrevious = () => {
     if (page > 1) setPage((prev) => prev - 1);
   };
@@ -76,46 +96,6 @@ export default function Users() {
     if (page < totalPages) setPage((prev) => prev + 1);
   };
 
-  // Criação de usuário
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/users/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erro ao cadastrar");
-
-      showMessage("Usuário cadastrado com sucesso!", "verde");
-
-      // Atualiza a lista localmente (para exibir imediatamente)
-      setUsers((prev) => [
-        ...prev,
-        {
-          id: data.id || Date.now(),
-          name: form.name,
-          email: form.email,
-          role: form.role,
-          status: data.status || "active",
-        },
-      ]);
-    } catch (err) {
-      showMessage(err.message, "vermelho_claro", 5000);
-    } finally {
-      setForm({ name: "", email: "", confirmation_email: "", role: "" });
-      setIsLoading(false);
-    }
-  };
-
-  // Callbacks para atualizar/remover usuário após edição no modal
   const handleUserUpdated = (updatedUser) => {
     setUsers((prev) =>
       prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
@@ -125,69 +105,32 @@ export default function Users() {
     setUsers((prev) => prev.filter((u) => u.id !== userId));
   };
 
+  const getBadgeVariant = (status) => {
+    switch (status) {
+      case "pendingCreate":
+        return VARIANTS.azul_escuro;
+      case "pendingUpdate":
+        return VARIANTS.warning;
+      case "pendingDelete":
+        return VARIANTS.vermelho;
+      default:
+        return VARIANTS.verde;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="p-4 md:p-8 max-w-6xl mx-auto">
-        {/* Seção de Cadastro */}
-        <section className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4">Cadastrar Novo Usuário</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                name="name"
-                placeholder="Nome"
-                value={form.name}
-                onChange={handleChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="E-mail"
-                value={form.email}
-                onChange={handleChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-              <input
-                type="email"
-                name="confirmation_email"
-                placeholder="Confirmar E-mail"
-                value={form.confirmation_email}
-                onChange={handleChange}
-                className="border p-2 rounded w-full"
-                required
-              />
-              <select
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-                className="border p-2 rounded w-full"
-                required
-              >
-                {USER_ROLES.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-              </select>
-            </div>
-            <div className="flex justify-center">
-              <Button
-                type="submit"
-                variant="dark"
-                className="w-full max-w-xs text-md active:scale-95"
-                disabled={isLoading}
-              >
-                {isLoading ? "Cadastrando..." : "Cadastrar"}
-              </Button>
-            </div>
-          </form>
-        </section>
+      <main className="p-2 md:p-8 max-w-7xl mx-auto">
+        {/* Botão de cadastro */}
+        <Button
+          onClick={() => setIsRegisterOpen(true)}
+          variant="dark"
+          className="fixed bottom-4 right-4 w-12 h-12 rounded-full shadow-lg flex justify-center items-center transition"
+        >
+          <span className="material-symbols-outlined text-xl">person_add</span>
+        </Button>
 
-        {/* Seção de Gerenciamento e Listagem */}
+        {/* Seção de Gerenciamento */}
         <section className="bg-white rounded-lg shadow p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
             <h2 className="text-2xl font-bold mb-2 md:mb-0">
@@ -210,74 +153,228 @@ export default function Users() {
             </Button>
           </div>
 
-          {users.length === 0 ? (
-            <p className="text-gray-500">Nenhum usuário cadastrado.</p>
-          ) : (
-            <>
-              {/* Grid de "cartões" (flashcards) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {users.map((u) => (
-                  <div
-                    key={u.id}
-                    className="bg-white rounded-lg shadow p-4 flex flex-col justify-between"
-                  >
-                    {/* Conteúdo principal do card */}
-                    <div className="space-y-2 text-sm">
-                      <h3 className="text-lg font-semibold">{u.name}</h3>
-                      <p className="text-gray-600">Email: {u.email}</p>
-                      <p className="text-gray-600">Papel: {u.role}</p>
-                      <p className="text-gray-600">Status: {u.status}</p>
-                    </div>
-                    {/* Botão de ações (abre modal) */}
-                    <div className="flex justify-end mt-4">
-                      <Button
-                        variant="transparent_cinza"
-                        className="p-1"
-                        onClick={() => setSelectedUser(u)}
-                      >
-                        <span className="material-symbols-outlined">
-                          info
-                        </span>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+          {/* Botão para expandir filtros */}
+          <div className="flex justify-end mb-2">
+            <Button
+              variant="light"
+              onClick={() => setShowFilters((prev) => !prev)}
+              className="text-sm flex items-center gap-1"
+            >
+              <span className="material-symbols-outlined text-base">
+                {showFilters ? "expand_less" : "tune"}
+              </span>
+              {showFilters ? "Esconder filtros" : "Mostrar filtros"}
+            </Button>
+          </div>
+
+          {/* Filtros expandíveis com animação leve */}
+          <div
+            className={clsx(
+              "transition-all overflow-hidden",
+              showFilters ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+            )}
+          >
+            <section className="mb-6 border border-gray-200 rounded-xl shadow-sm p-4 bg-white space-y-5">
+              {/* Campo de busca */}
+              <div>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1">
+                  <span className="material-symbols-outlined text-base">
+                    search
+                  </span>
+                  Buscar por nome ou e-mail
+                </label>
+                <input
+                  type="text"
+                  placeholder="Digite aqui..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
               </div>
 
-              {/* Controles de paginação */}
-              <div className="flex items-center justify-between mt-6">
-                <Button
-                  onClick={handlePrevious}
-                  disabled={page === 1}
-                  className="disabled:opacity-80"
-                  variant="dark"
-                >
-                  Anterior
-                </Button>
-                <span className="text-sm text-gray-700">
-                  Página {page} de {totalPages}
-                </span>
-                <Button
-                  onClick={handleNext}
-                  disabled={page === totalPages}
-                  className="disabled:opacity-80"
-                  variant="dark"
-                >
-                  Próxima
-                </Button>
+              {/* Ordenação */}
+              <div>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1">
+                  <span className="material-symbols-outlined text-base">
+                    sort
+                  </span>
+                  Ordem de cadastro
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setOrder("desc")}
+                    className={clsx(
+                      "px-4 py-1 rounded-full text-sm border",
+                      order === "desc" ? VARIANTS.secondary : VARIANTS.light
+                    )}
+                  >
+                    Mais novo
+                  </button>
+                  <button
+                    onClick={() => setOrder("asc")}
+                    className={clsx(
+                      "px-4 py-1 rounded-full text-sm border",
+                      order === "asc" ? VARIANTS.secondary : VARIANTS.light
+                    )}
+                  >
+                    Mais velho
+                  </button>
+                </div>
               </div>
-            </>
+
+              {/* Status */}
+              <div>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1">
+                  <span className="material-symbols-outlined text-base">
+                    flag
+                  </span>
+                  Filtrar por status
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {["", ...USER_STATUS].map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setFilterStatus(status)}
+                      className={clsx(
+                        "px-4 py-1 rounded-full text-sm border",
+                        filterStatus === status
+                          ? VARIANTS.secondary
+                          : VARIANTS.light
+                      )}
+                    >
+                      {status || "Todos"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Papel */}
+              <div>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1">
+                  <span className="material-symbols-outlined text-base">
+                    groups
+                  </span>
+                  Filtrar por papel
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {["", ...USER_ROLES].map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => setFilterRole(role)}
+                      className={clsx(
+                        "px-4 py-1 rounded-full text-sm border",
+                        filterRole === role
+                          ? VARIANTS.secondary
+                          : VARIANTS.light
+                      )}
+                    >
+                      {role || "Todos"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Limpar filtros */}
+              {(searchTerm ||
+                order !== "desc" ||
+                filterStatus ||
+                filterRole) && (
+                <div className="pt-1">
+                  <Button
+                    onClick={() => {
+                      setSearchTerm("");
+                      setOrder("desc");
+                      setFilterStatus("");
+                      setFilterRole("");
+                    }}
+                    variant="transparent_cinza"
+                    className="text-sm"
+                  >
+                    Limpar Filtros
+                  </Button>
+                </div>
+              )}
+            </section>
+          </div>
+
+          {users.length === 0 ? (
+            <p className="text-gray-500">
+              Nenhum usuário encontrado. Tente alterar os filtros ou clique em
+              “Atualizar”.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {users.map((u) => (
+                <div
+                  key={u.id}
+                  className="rounded-lg shadow p-4 flex flex-col justify-between transition transform hover:scale-105 hover:shadow-xl"
+                >
+                  <div className="space-y-2 text-sm">
+                    <h3 className="text-lg font-semibold truncate">{u.name}</h3>
+                    <p className="text-gray-600 truncate">Email: {u.email}</p>
+                    <p className="text-gray-600 truncate">Papel: {u.role}</p>
+                    <p className="text-gray-600 truncate">Status: {u.status}</p>
+                  </div>
+                  <div className="flex items-center gap-2 mt-4">
+                    {u._syncStatus && (
+                      <span
+                        className={`flex-shrink-0 truncate max-w-[100px] px-2 py-1 text-xs font-semibold rounded ${getBadgeVariant(
+                          u._syncStatus
+                        )}`}
+                      >
+                        {u._syncStatus}
+                      </span>
+                    )}
+                    <Button
+                      variant="transparent_cinza"
+                      className="p-1 flex-shrink-0"
+                      onClick={() => setSelectedUser(u)}
+                    >
+                      <span className="material-symbols-outlined">info</span>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
+
+          <div className="flex items-center justify-between mt-6">
+            <Button
+              onClick={handlePrevious}
+              disabled={page === 1}
+              className="disabled:opacity-80"
+              variant="dark"
+            >
+              Anterior
+            </Button>
+            <span className="text-sm text-gray-700">
+              Página {page} de {totalPages}
+            </span>
+            <Button
+              onClick={handleNext}
+              disabled={page === totalPages}
+              className="disabled:opacity-80"
+              variant="dark"
+            >
+              Próxima
+            </Button>
+          </div>
         </section>
       </main>
 
-      {/* Modal de Detalhes e Edição de Usuário */}
       <ModalUser
         isOpen={!!selectedUser}
         user={selectedUser}
         onClose={() => setSelectedUser(null)}
         onUserUpdated={handleUserUpdated}
         onUserDeleted={handleUserDeleted}
+        showMessage={showMessage}
+      />
+
+      <ModalRegisterUser
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+        onUserCreated={(newUser) => setUsers((prev) => [...prev, newUser])}
         showMessage={showMessage}
       />
     </div>
