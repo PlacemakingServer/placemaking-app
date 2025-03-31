@@ -125,7 +125,7 @@ export default function Users() {
         <Button
           onClick={() => setIsRegisterOpen(true)}
           variant="dark"
-          className="fixed bottom-4 right-4 w-12 h-12 rounded-full shadow-lg flex justify-center items-center transition"
+          className="fixed bottom-4 right-4 w-12 h-12 rounded-full shadow-lg flex justify-center items-center transition lg-hidden"
         >
           <span className="material-symbols-outlined text-xl">person_add</span>
         </Button>

@@ -1,23 +1,38 @@
-// src/components/SidebarMobile.jsx
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { TABS, PERMISSION_TABS, TABSTYLES } from "@/config/tabs";
 import { useRouter } from "next/router";
+import { useState } from "react";
 import { initAuthDB } from "@/lib/db";
 import Button from "@/components/ui/Button";
 
 function getAllowedTabs(userRole) {
-  return Object.entries(TABS).filter(([tabName]) => {
+  const isAllowed = (name) => {
     let restrictedRoles = [];
     for (const role in PERMISSION_TABS) {
-      if (PERMISSION_TABS[role].includes(tabName)) {
+      if (PERMISSION_TABS[role].includes(name)) {
         restrictedRoles.push(role);
       }
     }
-    if (restrictedRoles.length === 0) return true;
-    return restrictedRoles.includes(userRole);
-  });
+    return restrictedRoles.length === 0 || restrictedRoles.includes(userRole);
+  };
+
+  return Object.entries(TABS)
+    .map(([tabName, tabData]) => {
+      if (tabData.subTabs) {
+        const allowedSubTabs = Object.entries(tabData.subTabs).filter(
+          ([subTabName]) => isAllowed(subTabName)
+        );
+        if (allowedSubTabs.length > 0) {
+          return [tabName, { ...tabData, allowedSubTabs }];
+        }
+        return null;
+      } else {
+        return isAllowed(tabName) ? [tabName, tabData] : null;
+      }
+    })
+    .filter(Boolean);
 }
 
 export default function SidebarMobile({
@@ -27,6 +42,7 @@ export default function SidebarMobile({
 }) {
   const allowedTabs = getAllowedTabs(userRole);
   const router = useRouter();
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   const sidebarVariants = {
     hidden: { x: "-100%" },
@@ -35,8 +51,6 @@ export default function SidebarMobile({
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
-
-    // 2. Limpar IndexedDB
     try {
       const db = await initAuthDB();
       await db.clear("user-data");
@@ -44,16 +58,23 @@ export default function SidebarMobile({
     } catch (err) {
       console.error("Erro ao limpar IndexedDB:", err);
     }
-
-    // 3. Redirecionar
     window.location.href = "/login";
+  };
+
+  const handleTabClick = (name, link, hasSubTabs) => {
+    if (hasSubTabs) {
+      setOpenDropdown(openDropdown === name ? null : name);
+    } else {
+      router.push(link);
+      setSidebarOpen(false);
+    }
   };
 
   return (
     <>
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 flex md:hidden">
-          {/* Overlay escuro */}
+          {/* Overlay */}
           <motion.div
             className="fixed inset-0 bg-gray-600 bg-opacity-75"
             onClick={() => setSidebarOpen(false)}
@@ -118,22 +139,69 @@ export default function SidebarMobile({
 
             {/* Tabs */}
             <nav className="flex-1 px-2 py-4 space-y-2 overflow-y-auto">
-              {allowedTabs.map(([name, { link, icon }]) => {
-                const isActive = router.pathname === link;
+              {allowedTabs.map(([name, data]) => {
+                const hasSubTabs = data.allowedSubTabs;
+                const isActive =
+                  router.pathname === data.link ||
+                  (hasSubTabs &&
+                    data.allowedSubTabs.some(
+                      ([, subData]) => subData.link === router.pathname
+                    ));
                 return (
-                  <Link
-                    key={name}
-                    href={link}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded ${
-                      isActive ? TABSTYLES.active : TABSTYLES.inactive
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-base">
-                      {icon}
-                    </span>
-                    <span className="text-sm font-medium">{name}</span>
-                  </Link>
+                  <div key={name} className="space-y-1">
+                    <button
+                      onClick={() =>
+                        handleTabClick(name, data.link, hasSubTabs)
+                      }
+                      className={`flex items-center gap-2 px-4 py-2 rounded w-full transition-all ${
+                        isActive ? TABSTYLES.active : TABSTYLES.inactive
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        {data.icon}
+                      </span>
+                      <span className="text-sm font-medium">{name}</span>
+                      {hasSubTabs && (
+                        <span className="ml-auto material-symbols-outlined">
+                          {openDropdown === name
+                            ? "expand_less"
+                            : "expand_more"}
+                        </span>
+                      )}
+                    </button>
+                    {hasSubTabs && openDropdown === name && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, y: -10 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="ml-4 mt-1 space-y-1 bg-white rounded-md"
+                      >
+                        {data.allowedSubTabs.map(([subName, subData]) => {
+                          const isSubActive = router.pathname === subData.link;
+                          return (
+                            <Link
+                              key={subName}
+                              href={subData.link}
+                              onClick={() => setSidebarOpen(false)}
+                              className={`flex items-center gap-2 px-4 py-2 transition-all rounded-md ${
+                                isSubActive
+                                  ? "bg-black text-white"
+                                  : "bg-white text-gray-700 hover:bg-gray-50"
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-sm">
+                                {subData.icon}
+                              </span>
+                              <span className="text-sm font-medium">
+                                {subName}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </div>
                 );
               })}
             </nav>
@@ -155,7 +223,7 @@ export default function SidebarMobile({
             </div>
           </motion.div>
 
-          {/* Spacer para scroll travado em fundo */}
+          {/* Spacer para evitar scroll no fundo */}
           <div className="flex-shrink-0 w-14" aria-hidden="true" />
         </div>
       )}

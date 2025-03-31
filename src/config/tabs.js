@@ -7,18 +7,28 @@ export const TABS = {
     link: "/users",
     icon: "group",
   },
-  // Pesquisas: {
-  //   link: "/researches",
-  //   icon: "science",
-  // },
-  // Configurações: {
-  //   link: "/settings",
-  //   icon: "settings",
-  // },
+  Pesquisas: {
+    icon: "app_registration",
+    // Link principal opcional – neste caso, usamos como container de dropdown
+    subTabs: {
+      "Gerenciar Pesquisas": {
+        link: "/researches/manage",
+        icon: "pending_actions",
+      },
+      "Criar pesquisa": {
+        link: "/researches/create",
+        icon: "add",
+      },
+    },
+  },
+  Relatórios: {
+    link: "/reports",
+    icon: "analytics",
+  },
 };
 
 export const PERMISSION_TABS = {
-  admin: ["Usuários"],
+  admin: ["Usuários", "Criar pesquisa"],
   research: [],
 };
 
