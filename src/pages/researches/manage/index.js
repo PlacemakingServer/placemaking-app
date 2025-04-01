@@ -8,16 +8,13 @@ import { getCachedData, syncLocalToServer, syncServerToCache } from "@/services/
 
 export default function Surveys() {
   const [surveys, setSurveys] = useState([]);
-  const [filteredSurveys, setFilteredSurveys] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const perPage = 10;
+  const [filters, setFilters] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [page, setPage] = useState({ completed: 1, ongoing: 1, future: 1 });
+  const perPage = 4; // Number of items per page
   const { isLoading, setIsLoading } = useLoading();
   const { showMessage } = useMessage();
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [order, setOrder] = useState("asc");
-  const [filterStatus, setFilterStatus] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
   const loadCachedSurveys = useCallback(async () => {
@@ -37,22 +34,38 @@ export default function Surveys() {
     loadCachedSurveys();
   }, [loadCachedSurveys]);
 
-  useEffect(() => {
-    let filtered = surveys.filter((survey) =>
-      survey.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      survey.location_title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    if (filterStatus) {
-      filtered = filtered.filter((survey) => survey.status === filterStatus);
-    }
-    if (order === "asc") {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
+  const currentDate = new Date();
+  const categorizedSurveys = {
+    completed: [],
+    ongoing: [],
+    future: []
+  };
+
+  surveys.forEach((survey) => {
+    const endDate = new Date(survey.end_date);
+    const startDate = new Date(survey.release_date);
+    if (endDate < currentDate) {
+      categorizedSurveys.completed.push(survey);
+    } else if (startDate > currentDate) {
+      categorizedSurveys.future.push(survey);
     } else {
-      filtered.sort((a, b) => b.title.localeCompare(a.title));
+      categorizedSurveys.ongoing.push(survey);
     }
-    setTotalPages(Math.ceil(filtered.length / perPage));
-    setFilteredSurveys(filtered.slice((page - 1) * perPage, page * perPage));
-  }, [surveys, searchTerm, order, filterStatus, page, perPage]);
+  });
+
+  const filterAndSortSurveys = (list) => {
+    return list
+      .filter((survey) =>
+        survey.title.toLowerCase().includes(filters.toLowerCase()) ||
+        survey.description.toLowerCase().includes(filters.toLowerCase()) ||
+        survey.location_title.toLowerCase().includes(filters.toLowerCase())
+      )
+      .sort((a, b) => {
+        return sortOrder === "asc"
+          ? a.created_at.localeCompare(b.created_at)
+          : b.created_at.localeCompare(a.created_at);
+      });
+  };
 
   const handleSync = async () => {
     setIsLoading(true);
@@ -69,105 +82,103 @@ export default function Surveys() {
     }
   };
 
-  const handlePrevious = () => {
-    if (page > 1) setPage((prev) => prev - 1);
-  };
-  const handleNext = () => {
-    if (page < totalPages) setPage((prev) => prev + 1);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="p-2 md:p-8 max-w-7xl mx-auto">
         <section className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Pesquisas Cadastradas</h2>
+            <h2 className="text-2xl font-bold">Pesquisas</h2>
             <Button onClick={handleSync} disabled={isLoading} variant="dark">
               Atualizar
             </Button>
           </div>
 
-          <div className="flex justify-end mb-2">
+          <div className="flex justify-end mb-2 gap-2">
             <Button variant="light" onClick={() => setShowFilters(!showFilters)}>
               {showFilters ? "Esconder filtros" : "Mostrar filtros"}
+            </Button>
+            <Button variant="light" onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}>
+              Ordenar: {sortOrder === "asc" ? "Mais Recentes" : "Mais Antigos"}
             </Button>
           </div>
 
           {showFilters && (
             <div className="mb-4 flex flex-wrap gap-4 items-center">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border p-2 rounded"
-                />
-              </div>
-
-              {/* Filtros com botões */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setOrder("asc")}
-                  className={clsx(
-                    "px-4 py-1 rounded-full text-sm border",
-                    order === "asc" ? "bg-blue-500 text-white" : "bg-white text-gray-700"
-                  )}
-                >
-                  Mais recentes
-                </button>
-                <button
-                  onClick={() => setOrder("desc")}
-                  className={clsx(
-                    "px-4 py-1 rounded-full text-sm border",
-                    order === "desc" ? "bg-blue-500 text-white" : "bg-white text-gray-700"
-                  )}
-                >
-                  Mais antigos
-                </button>
-              </div>
-
-              <Button
-                onClick={() => {
-                  setSearchTerm("");
-                  setFilterStatus("");
-                  setOrder("desc");
-                }}
-                variant="transparent_cinza"
-                className="text-sm"
-              >
-                Limpar Filtros
-              </Button>
+              <input
+                type="text"
+                placeholder="Buscar..."
+                value={filters}
+                onChange={(e) => setFilters(e.target.value)}
+                className="border p-2 rounded"
+              />
             </div>
           )}
 
-          {filteredSurveys.length === 0 ? (
-            <p className="text-gray-500">Nenhuma pesquisa encontrada.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredSurveys.map((survey) => (
-                <div key={survey.id} className="rounded-lg shadow p-4 flex flex-col">
-                  <h3 className="text-lg font-semibold truncate">{survey.title}</h3>
-                  <p className="text-gray-600 truncate">{survey.description}</p>
-                  <div className="flex justify-between mt-4">
-                    <Button variant="transparent_cinza" onClick={() => router.push(`/researches/manage/${survey.id}`)}>
-                      Visualizar
+        {Object.entries(categorizedSurveys).map(([key, list]) => {
+          const filteredAndSorted = filterAndSortSurveys(list);
+          const totalPages = Math.ceil(filteredAndSorted.length / perPage);
+
+          const handlePrevious = () => {
+            setPage(prev => ({ ...prev, [key]: Math.max(prev[key] - 1, 1  ) }));
+          };
+
+          const handleNext = () => {
+            setPage(prev => ({
+              ...prev,
+              [key]: Math.min(prev[key] + 1, totalPages),
+            }));
+          };
+
+          return (
+            <div key={key} className="mb-6">
+              <h3 className="text-xl font-semibold capitalize">
+                {key === "completed" ? "Pesquisas Já Realizadas" : key === "ongoing" ? "Pesquisas em Andamento" : "Pesquisas Futuras"}
+              </h3>
+              {filteredAndSorted.length === 0 ? (
+                <p className="text-gray-500">Nenhuma pesquisa encontrada.</p>
+              ) : (
+                <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {filteredAndSorted.slice((page[key] - 1) * perPage, page[key] * perPage).map((survey) => (
+                      <div key={survey.id} className="rounded-lg shadow p-4 flex flex-col bg-white border">
+                        <h3 className="text-lg font-semibold truncate">{survey.title}</h3>
+                        <p className="text-gray-600 truncate">{survey.description}</p>
+                        <div className="flex justify-between mt-4">
+                          <Button variant="transparent_cinza" onClick={() => router.push(`/researches/manage/${survey.id}`)}>
+                            Visualizar
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Paginação */}
+                  <div className="flex items-center justify-between mt-6">
+                    <Button
+                      onClick={handlePrevious}
+                      disabled={page[key] === 1}
+                      className="disabled:opacity-80"
+                      variant="dark"
+                    >
+                      Anterior
+                    </Button>
+                    <span className="text-sm text-gray-700">
+                      Página {page[key]} de {totalPages}
+                    </span>
+                    <Button
+                      onClick={handleNext}
+                      disabled={page[key] === totalPages}
+                      className="disabled:opacity-80"
+                      variant="dark"
+                    >
+                      Próxima
                     </Button>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
-          )}
-
-          <div className="flex items-center justify-between mt-6">
-            <Button onClick={handlePrevious} disabled={page === 1} variant="dark">
-              Anterior
-            </Button>
-            <span className="text-sm text-gray-700">Página {page} de {totalPages}</span>
-            <Button onClick={handleNext} disabled={page === totalPages} variant="dark">
-              Próxima
-            </Button>
-          </div>
+          );
+        })}
         </section>
       </main>
     </div>
