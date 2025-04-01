@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import clsx from "clsx";
 import { useRouter } from "next/router";
 import Button from "@/components/ui/Button";
 import { useLoading } from "@/context/LoadingContext";
@@ -7,35 +8,51 @@ import { getCachedData, syncLocalToServer, syncServerToCache } from "@/services/
 
 export default function Surveys() {
   const [surveys, setSurveys] = useState([]);
+  const [filteredSurveys, setFilteredSurveys] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const perPage = 10;
   const { isLoading, setIsLoading } = useLoading();
   const { showMessage } = useMessage();
   const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [order, setOrder] = useState("asc");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   const loadCachedSurveys = useCallback(async () => {
     setIsLoading(true);
     try {
       const result = await getCachedData("researches", { paginated: false });
-      const total = result.length;
-      const totalPagesCalc = Math.ceil(total / perPage);
-      const start = (page - 1) * perPage;
-      const paginatedSurveys = result.slice(start, start + perPage);
-
-      setSurveys(paginatedSurveys);
-      setTotalPages(totalPagesCalc);
+      setSurveys(result);
     } catch (err) {
       console.error("Erro ao carregar pesquisas do cache:", err);
       showMessage("Erro ao carregar pesquisas.", "vermelho_claro", 5000);
     } finally {
       setIsLoading(false);
     }
-  }, [page, perPage, setIsLoading, showMessage]);
+  }, [setIsLoading, showMessage]);
 
   useEffect(() => {
     loadCachedSurveys();
   }, [loadCachedSurveys]);
+
+  useEffect(() => {
+    let filtered = surveys.filter((survey) =>
+      survey.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      survey.location_title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    if (filterStatus) {
+      filtered = filtered.filter((survey) => survey.status === filterStatus);
+    }
+    if (order === "asc") {
+      filtered.sort((a, b) => a.title.localeCompare(b.title));
+    } else {
+      filtered.sort((a, b) => b.title.localeCompare(a.title));
+    }
+    setTotalPages(Math.ceil(filtered.length / perPage));
+    setFilteredSurveys(filtered.slice((page - 1) * perPage, page * perPage));
+  }, [surveys, searchTerm, order, filterStatus, page, perPage]);
 
   const handleSync = async () => {
     setIsLoading(true);
@@ -70,11 +87,65 @@ export default function Surveys() {
             </Button>
           </div>
 
-          {surveys.length === 0 ? (
+          <div className="flex justify-end mb-2">
+            <Button variant="light" onClick={() => setShowFilters(!showFilters)}>
+              {showFilters ? "Esconder filtros" : "Mostrar filtros"}
+            </Button>
+          </div>
+
+          {showFilters && (
+            <div className="mb-4 flex flex-wrap gap-4 items-center">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border p-2 rounded"
+                />
+              </div>
+
+              {/* Filtros com botões */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setOrder("asc")}
+                  className={clsx(
+                    "px-4 py-1 rounded-full text-sm border",
+                    order === "asc" ? "bg-blue-500 text-white" : "bg-white text-gray-700"
+                  )}
+                >
+                  Mais recentes
+                </button>
+                <button
+                  onClick={() => setOrder("desc")}
+                  className={clsx(
+                    "px-4 py-1 rounded-full text-sm border",
+                    order === "desc" ? "bg-blue-500 text-white" : "bg-white text-gray-700"
+                  )}
+                >
+                  Mais antigos
+                </button>
+              </div>
+
+              <Button
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilterStatus("");
+                  setOrder("desc");
+                }}
+                variant="transparent_cinza"
+                className="text-sm"
+              >
+                Limpar Filtros
+              </Button>
+            </div>
+          )}
+
+          {filteredSurveys.length === 0 ? (
             <p className="text-gray-500">Nenhuma pesquisa encontrada.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {surveys.map((survey) => (
+              {filteredSurveys.map((survey) => (
                 <div key={survey.id} className="rounded-lg shadow p-4 flex flex-col">
                   <h3 className="text-lg font-semibold truncate">{survey.title}</h3>
                   <p className="text-gray-600 truncate">{survey.description}</p>
