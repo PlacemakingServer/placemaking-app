@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import clsx from "clsx"; 
+import clsx from "clsx";
 import Button from "@/components/ui/Button";
 import ModalUser from "@/components/ui/ModalUser";
 import ModalRegisterUser from "@/components/ui/ModalRegisterUser";
 import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
+import UserCard from "@/components/ui/UserCard";
 import {
   getCachedData,
   syncLocalToServer,
@@ -13,7 +14,6 @@ import {
 import { VARIANTS } from "@/config/colors";
 import { USER_ROLES, USER_STATUS } from "@/config/data_types";
 import { useAuth } from "@/context/AuthContext";
-
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -41,14 +41,14 @@ export default function Users() {
         filterStatus,
         filterRole,
       });
-  
-      const filtered = result.filter(user => user.id !== userData?.id);
+
+      const filtered = result.filter((user) => user.id !== userData?.id);
 
       const total = filtered.length;
       const totalPagesCalc = Math.ceil(total / perPage);
       const start = (page - 1) * perPage;
       const paginatedUsers = filtered.slice(start, start + perPage);
-  
+
       setUsers(paginatedUsers);
       setTotalPages(totalPagesCalc);
     } catch (err) {
@@ -68,7 +68,6 @@ export default function Users() {
     showMessage,
     userData?.id,
   ]);
-  
 
   useEffect(() => {
     loadCachedUsers();
@@ -305,35 +304,11 @@ export default function Users() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {users.map((u) => (
-                <div
+                <UserCard
                   key={u.id}
-                  className="rounded-lg shadow p-4 flex flex-col justify-between transition transform hover:scale-105 hover:shadow-xl"
-                >
-                  <div className="space-y-2 text-sm">
-                    <h3 className="text-lg font-semibold truncate">{u.name}</h3>
-                    <p className="text-gray-600 truncate">Email: {u.email}</p>
-                    <p className="text-gray-600 truncate">Papel: {u.role}</p>
-                    <p className="text-gray-600 truncate">Status: {u.status}</p>
-                  </div>
-                  <div className="flex items-center gap-2 mt-4">
-                    {u._syncStatus && (
-                      <span
-                        className={`flex-shrink-0 truncate max-w-[100px] px-2 py-1 text-xs font-semibold rounded ${getBadgeVariant(
-                          u._syncStatus
-                        )}`}
-                      >
-                        {u._syncStatus}
-                      </span>
-                    )}
-                    <Button
-                      variant="transparent_cinza"
-                      className="p-1 flex-shrink-0"
-                      onClick={() => setSelectedUser(u)}
-                    >
-                      <span className="material-symbols-outlined">info</span>
-                    </Button>
-                  </div>
-                </div>
+                  user={u}
+                  onViewDetails={() => setSelectedUser(u)}
+                />
               ))}
             </div>
           )}

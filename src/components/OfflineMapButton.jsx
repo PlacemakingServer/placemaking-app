@@ -1,6 +1,8 @@
 // /components/OfflineMapButton.js
 import React, { useState } from "react";
 import MapLeafletNoSSR from "@/components/map/MapLeafletNoSSR";
+import Button from "@/components/ui/Button";
+
 
 export default function OfflineMapButton({ onLocationSelect }) {
   const [showMap, setShowMap] = useState(false);
@@ -53,12 +55,14 @@ export default function OfflineMapButton({ onLocationSelect }) {
   return (
     <div>
       {!showMap && (
-        <button
+        <Button
+          type="submit"
+          variant="dark"
+          className="w-md text-sm py-3 active:scale-95"
           onClick={openMap}
-          className="px-4 py-2 bg-blue-500 text-white rounded"
         >
           Abrir mapa
-        </button>
+        </Button>
       )}
 
       {showMap && (

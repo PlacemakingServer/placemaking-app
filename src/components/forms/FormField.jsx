@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import FormFieldDate from "./FormFieldDate";
-import FormFieldText from "./FormFieldText";
+import FormFieldDate from "@/components/forms/FormFieldDate";
+import FormFieldText from "@/components/forms/FormFieldText";
 
 export default function FormField({
   legend,

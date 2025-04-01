@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import { formatDateToDDMMYY } from "@/utils/formatDate";
 
 export default function FormFieldDate({
   legend,
@@ -21,7 +22,7 @@ export default function FormFieldDate({
     setFilled(!!value);
   }, [value]);
 
-  // fecha calendário ao clicar fora
+  // Fecha o calendário ao clicar fora do popover
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
@@ -31,6 +32,9 @@ export default function FormFieldDate({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Formata a data para exibir no botão
+  const displayValue = value ? formatDateToDDMMYY(value) : "__/__/__";
 
   return (
     <motion.div
@@ -50,7 +54,7 @@ export default function FormFieldDate({
           )}
         </div>
 
-        {/* Campo estilo botão */}
+        {/* Botão que abre o calendário */}
         <button
           type="button"
           onClick={() => setCalendarOpen((prev) => !prev)}
@@ -65,9 +69,7 @@ export default function FormFieldDate({
             disabled ? "cursor-not-allowed text-gray-400" : "hover:border-black"
           }`}
         >
-          <span className="text-left">
-            {value || "__/__/__"}
-          </span>
+          <span className="text-left">{displayValue}</span>
           <span className="material-symbols-outlined text-base text-gray-500 ml-2">
             calendar_month
           </span>
@@ -85,6 +87,7 @@ export default function FormFieldDate({
             >
               <Calendar
                 onChange={(date) => {
+                  // value armazenado continua em ISO (YYYY-MM-DD)
                   onChange({ target: { value: date.toISOString().split("T")[0] } });
                   setCalendarOpen(false);
                 }}
@@ -95,9 +98,13 @@ export default function FormFieldDate({
           )}
         </AnimatePresence>
 
-        {/* Mensagem de erro/helper */}
+        {/* Mensagem de erro ou texto auxiliar */}
         {(helperText || error) && (
-          <p className={`mt-1 text-xs ${error ? "text-red-500" : "text-gray-500"}`}>
+          <p
+            className={`mt-1 text-xs ${
+              error ? "text-red-500" : "text-gray-500"
+            }`}
+          >
             {error || helperText}
           </p>
         )}
