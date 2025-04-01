@@ -20,9 +20,12 @@ const configMap = {
     extract: (res) => res.users || [],
     single: (res) => res.user || null,
   },
-  researchs: {
-    endpoint: "/api/research",
-    extract: (res) => res.researchs || [],
+  researches: { 
+    endpoint: "/api/researches",
+    createEndpoint: "/api/researches/create",
+    updateEndpoint: "/api/researches/update",
+    deleteEndpoint: "/api/researches/delete",
+    extract: (res) => res.researches || [],
     single: (res) => res.research || null,
   },
 };
