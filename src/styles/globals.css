@@ -10,3 +10,13 @@ body {
 
 
 
+/* global.css */
+.react-calendar {
+  @apply rounded-lg p-3 bg-white text-sm;
+}
+.react-calendar__tile--active {
+  @apply bg-black text-white rounded-md;
+}
+.react-calendar__tile--now {
+  @apply bg-blue-100;
+}
