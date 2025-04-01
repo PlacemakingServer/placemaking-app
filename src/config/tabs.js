@@ -16,7 +16,7 @@ export const TABS = {
         icon: "pending_actions",
       },
       "Criar pesquisa": {
-        link: "/researches/create",
+        link: "/researches/create-research",
         icon: "add",
       },
     },
