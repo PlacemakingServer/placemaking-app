@@ -17,8 +17,8 @@ export async function initAuthDB() {
 export async function initResearchsDB() {
     return openDB("ResearchsDB", 1, {
       upgrade(db) {
-        if (!db.objectStoreNames.contains("researchs")) {
-          db.createObjectStore("researchs", { keyPath: "id" });
+        if (!db.objectStoreNames.contains("researches")) {
+          db.createObjectStore("researches", { keyPath: "id" });
         }
       },
     });
@@ -28,7 +28,7 @@ export async function initResearchsDB() {
 export async function initCachedDB() {
   return openDB("CachedDB", 1, {
     upgrade(db) {
-      const stores = ["users", "researchs", "itemTobeCreated"];
+      const stores = ["users", "researches", "itemTobeCreated"];
       for (const storeName of stores) {
         if (!db.objectStoreNames.contains(storeName)) {
           db.createObjectStore(storeName, { keyPath: "id" });

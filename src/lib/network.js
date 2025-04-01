@@ -1,24 +1,19 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 export function useNetworkStatus() {
-  const [isOnline, setIsOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
+  const [isOnline, setIsOnline] = useState(true); // Inicialmente assume online para evitar mismatch no SSR
 
   useEffect(() => {
-    function handleOnline() {
-      setIsOnline(true);
-    }
+    const updateStatus = () => setIsOnline(navigator.onLine);
 
-    function handleOffline() {
-      setIsOnline(false);
-    }
+    window.addEventListener("online", updateStatus);
+    window.addEventListener("offline", updateStatus);
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    updateStatus(); // Atualiza com o estado real do navegador
 
-    // Cleanup
     return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", updateStatus);
+      window.removeEventListener("offline", updateStatus);
     };
   }, []);
 
