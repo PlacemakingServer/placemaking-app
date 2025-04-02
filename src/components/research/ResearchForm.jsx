@@ -5,7 +5,7 @@ import FormField from "@/components/forms/FormField";
 import Button from "@/components/ui/Button";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
 import Switch from "@/components/ui/Switch";
-import MultiSelect from "@/components/ui/MultiSelect";
+import MultiSelect from "@/components/ui/Multiselect/Multiselect";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 
 const OfflineMapButton = dynamic(() => import("@/components/OfflineMapButton"), {
