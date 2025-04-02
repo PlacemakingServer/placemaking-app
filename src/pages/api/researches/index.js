@@ -1,12 +1,9 @@
-// pages/api/pesquisas/index.js
 import { parse } from "cookie";
 
 export default async function handler(req, res) {
   if (req.method !== "GET" && req.method !== "POST") {
     return res.status(405).json({ error: "Método não permitido" });
   }
-
-  // Verifica o token de autenticação no cookie
   const cookies = req.headers.cookie ? parse(req.headers.cookie) : {};
   const token = cookies.token;
 
@@ -14,7 +11,6 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Token não fornecido" });
   }
 
-  // Caso o método seja GET, recupera as pesquisas
   if (req.method === "GET") {
     try {
       const response = await fetch(`${process.env.SERVER_URL}/research/`, {

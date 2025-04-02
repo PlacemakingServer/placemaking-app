@@ -34,6 +34,8 @@ export default function CreateResearch() {
 
       const data = await res.json();
 
+      console.log("pequisa:", data);
+
       if (!res.ok) {
         const message = data?.error || "Erro ao criar a pesquisa.";
         showMessage(message, "vermelho", 5000);

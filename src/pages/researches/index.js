@@ -23,7 +23,7 @@ export default function Researches() {
     future: true,
   });
   const [page, setPage] = useState({ completed: 1, ongoing: 1, future: 1 });
-  const perPage = 4;
+  const perPage = 3;
   const { isLoading, setIsLoading } = useLoading();
   const { showMessage } = useMessage();
   const router = useRouter();
@@ -96,13 +96,13 @@ export default function Researches() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-transparent">
       <main className="p-4 md:p-8 max-w-8xl mx-auto">
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="bg-white rounded-2xl shadow-lg p-6 md:p-8"
+          className="bg-transparent rounded-2xl p-6 md:p-8"
         >
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
             <h2 className="text-3xl font-bold text-gray-800">
@@ -216,7 +216,7 @@ export default function Researches() {
                 ) : (
                   <motion.div
                     layout
-                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6"
+                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6"
                   >
                     {filteredAndSorted
                       .slice((page[key] - 1) * perPage, page[key] * perPage)
@@ -262,6 +262,8 @@ export default function Researches() {
                     </Button>
                   </div>
                 )}
+
+                <hr className="my-6 border-gray-200" />
               </div>
             );
           })}

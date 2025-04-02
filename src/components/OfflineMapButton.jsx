@@ -1,11 +1,11 @@
-// /components/OfflineMapButton.js
 import React, { useState } from "react";
 import MapLeafletNoSSR from "@/components/map/MapLeafletNoSSR";
 import Button from "@/components/ui/Button";
-
+import { useLoading } from "@/context/LoadingContext";
 
 export default function OfflineMapButton({ onLocationSelect }) {
   const [showMap, setShowMap] = useState(false);
+  const { setIsLoading } = useLoading();
 
   function openMap() {
     setShowMap(true);
@@ -19,19 +19,16 @@ export default function OfflineMapButton({ onLocationSelect }) {
     const { lat, lng } = coords;
 
     try {
+      setIsLoading("Coletando dados da localização...");
       const locationRes = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
       );
       const locationData = await locationRes.json();
-
+      setIsLoading("Obtendo dados do clima...");
       const weatherRes = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`
       );
       const weatherData = await weatherRes.json();
-
-      console.log("Dados da localização:", locationData);
-      console.log("Dados do clima:", weatherData);
-
       const result = {
         lat,
         lng,
@@ -47,9 +44,10 @@ export default function OfflineMapButton({ onLocationSelect }) {
     } catch (err) {
       console.error("Erro ao buscar dados:", err);
       alert("Erro ao buscar informações da localização.");
+    } finally {
+      setIsLoading(false);
+      setShowMap(false);
     }
-
-    setShowMap(false);
   }
 
   return (
