@@ -1,4 +1,3 @@
-// pages/researches/[id]/edit.jsx
 import { useState, useEffect } from "react";
 import ResearchForm from "@/components/research/ResearchForm";
 import { useRouter } from "next/router";
@@ -11,15 +10,31 @@ export default function EditResearch() {
 
   useEffect(() => {
     if (!id) return;
-    // Buscar os dados de pesquisa do backend
+
     (async () => {
       try {
-        const res = await fetch(`/api/researchs/${id}`);
+        const res = await fetch(`/api/researches/${id}`);
         const data = await res.json();
-        // Exemplo do shape do data: { title, description, lat, long, ...}
-        setInitialData(data);
+
+        if (!data.research) {
+          console.error("Pesquisa não encontrada");
+          return;
+        }
+
+        const formatted = {
+          ...data.research,
+          collaborators: (data.contributors || []).map((c) => ({
+            value: c.user_id,
+            label: c.users.name,
+            email: c.users.email,
+            role: c.users.role,
+            status: c.users.status,
+          })),
+        };
+
+        setInitialData(formatted);
       } catch (err) {
-        console.error(err);
+        console.error("Erro ao buscar dados da pesquisa:", err);
       }
     })();
   }, [id]);
@@ -29,7 +44,7 @@ export default function EditResearch() {
   };
 
   if (!initialData) {
-    return <div>Carregando...</div>;
+    return <div className="p-6 text-gray-700">Carregando pesquisa...</div>;
   }
 
   return (

@@ -14,6 +14,7 @@ import {
 import { VARIANTS } from "@/config/colors";
 import { USER_ROLES, USER_STATUS } from "@/config/data_types";
 import { useAuth } from "@/context/AuthContext";
+import FiltersComponent from "@/components/ui/FiltersComponent";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -151,150 +152,71 @@ export default function Users() {
               <span>Atualizar</span>
             </Button>
           </div>
-
-          {/* Botão para expandir filtros */}
-          <div className="flex justify-end mb-2">
-            <Button
-              variant="light"
-              onClick={() => setShowFilters((prev) => !prev)}
-              className="text-sm flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-base">
-                {showFilters ? "expand_less" : "tune"}
-              </span>
-              {showFilters ? "Esconder filtros" : "Mostrar filtros"}
-            </Button>
-          </div>
-
+          
           {/* Filtros expandíveis com animação leve */}
-          <div
-            className={clsx(
-              "transition-all overflow-hidden",
-              showFilters ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
-            )}
-          >
-            <section className="mb-6 border border-gray-200 rounded-xl shadow-sm p-4 bg-white space-y-5">
-              {/* Campo de busca */}
-              <div>
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1">
-                  <span className="material-symbols-outlined text-base">
-                    search
-                  </span>
-                  Buscar por nome ou e-mail
-                </label>
-                <input
-                  type="text"
-                  placeholder="Digite aqui..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                />
-              </div>
-
-              {/* Ordenação */}
-              <div>
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1">
-                  <span className="material-symbols-outlined text-base">
-                    sort
-                  </span>
-                  Ordem de cadastro
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setOrder("desc")}
-                    className={clsx(
-                      "px-4 py-1 rounded-full text-sm border",
-                      order === "desc" ? VARIANTS.secondary : VARIANTS.light
-                    )}
-                  >
-                    Mais novo
-                  </button>
-                  <button
-                    onClick={() => setOrder("asc")}
-                    className={clsx(
-                      "px-4 py-1 rounded-full text-sm border",
-                      order === "asc" ? VARIANTS.secondary : VARIANTS.light
-                    )}
-                  >
-                    Mais velho
-                  </button>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div>
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1">
-                  <span className="material-symbols-outlined text-base">
-                    flag
-                  </span>
-                  Filtrar por status
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {["", ...USER_STATUS].map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => setFilterStatus(status)}
-                      className={clsx(
-                        "px-4 py-1 rounded-full text-sm border",
-                        filterStatus === status
-                          ? VARIANTS.secondary
-                          : VARIANTS.light
-                      )}
-                    >
-                      {status || "Todos"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Papel */}
-              <div>
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1">
-                  <span className="material-symbols-outlined text-base">
-                    groups
-                  </span>
-                  Filtrar por papel
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {["", ...USER_ROLES].map((role) => (
-                    <button
-                      key={role}
-                      onClick={() => setFilterRole(role)}
-                      className={clsx(
-                        "px-4 py-1 rounded-full text-sm border",
-                        filterRole === role
-                          ? VARIANTS.secondary
-                          : VARIANTS.light
-                      )}
-                    >
-                      {role || "Todos"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Limpar filtros */}
-              {(searchTerm ||
-                order !== "desc" ||
-                filterStatus ||
-                filterRole) && (
-                <div className="pt-1">
-                  <Button
-                    onClick={() => {
-                      setSearchTerm("");
-                      setOrder("desc");
-                      setFilterStatus("");
-                      setFilterRole("");
-                    }}
-                    variant="transparent_cinza"
-                    className="text-sm"
-                  >
-                    Limpar Filtros
-                  </Button>
-                </div>
-              )}
-            </section>
-          </div>
+          <FiltersComponent
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            variants={VARIANTS}
+            filters={[
+              {
+                key: "searchTerm",
+                label: "Buscar por nome ou e-mail",
+                icon: "search",
+                type: "text",
+                value: searchTerm,
+                defaultValue: "",
+              },
+              {
+                key: "order",
+                label: "Ordem de cadastro",
+                icon: "sort",
+                type: "button-group",
+                value: order,
+                defaultValue: "desc",
+                options: [
+                  { label: "Mais novo", value: "desc" },
+                  { label: "Mais velho", value: "asc" },
+                ],
+              },
+              {
+                key: "filterStatus",
+                label: "Filtrar por status",
+                icon: "flag",
+                type: "button-group",
+                value: filterStatus,
+                defaultValue: "",
+                options: [
+                  { label: "Todos", value: "" },
+                  ...USER_STATUS.map((s) => ({ label: s, value: s })),
+                ],
+              },
+              {
+                key: "filterRole",
+                label: "Filtrar por papel",
+                icon: "groups",
+                type: "button-group",
+                value: filterRole,
+                defaultValue: "",
+                options: [
+                  { label: "Todos", value: "" },
+                  ...USER_ROLES.map((r) => ({ label: r, value: r })),
+                ],
+              },
+            ]}
+            onChange={(key, value) => {
+              if (key === "searchTerm") setSearchTerm(value);
+              if (key === "order") setOrder(value);
+              if (key === "filterStatus") setFilterStatus(value);
+              if (key === "filterRole") setFilterRole(value);
+            }}
+            onClear={() => {
+              setSearchTerm("");
+              setOrder("desc");
+              setFilterStatus("");
+              setFilterRole("");
+            }}
+          />
 
           {users.length === 0 ? (
             <p className="text-gray-500">

@@ -9,10 +9,9 @@ export const TABS = {
   },
   Pesquisas: {
     icon: "app_registration",
-    // Link principal opcional – neste caso, usamos como container de dropdown
     subTabs: {
-      "Gerenciar Pesquisas": {
-        link: "/researches/manage",
+      "Pesquisas": {
+        link: "/researches",
         icon: "pending_actions",
       },
       "Criar pesquisa": {
