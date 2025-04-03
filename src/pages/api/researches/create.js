@@ -108,7 +108,7 @@ export default async function handler(req, res) {
       lat,
       long,
       location_title,
-      collaborators,
+      selectedCollaborators,
     } = req.body;
 
     const researchPayload = {
@@ -123,9 +123,10 @@ export default async function handler(req, res) {
     };
 
     var research = await createResearch(researchPayload, token);
-    var contributors = await addCollaborators(research.id, collaborators, token);
+    var contributors = await addCollaborators(research.id, selectedCollaborators, token);
 
-    research.contributors = contributors;
+    research.selectedCollaborators = contributors;
+    research.activities = [];
 
     return res.status(201).json({
       message: "Pesquisa criada e colaboradores adicionados com sucesso!",

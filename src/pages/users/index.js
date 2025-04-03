@@ -122,13 +122,17 @@ export default function Users() {
     <div className="min-h-screen bg-gray-50">
       <main className="p-2 md:p-8 max-w-7xl mx-auto">
         {/* Botão de cadastro */}
-        <Button
-          onClick={() => setIsRegisterOpen(true)}
-          variant="dark"
-          className="fixed bottom-4 right-4 w-12 h-12 rounded-full shadow-lg flex justify-center items-center transition lg-hidden"
-        >
-          <span className="material-symbols-outlined text-xl">person_add</span>
-        </Button>
+        <div className="flex justify-end mb-4">
+          {/* Botão completo para desktop */}
+          <Button
+            onClick={() => setIsRegisterOpen(true)}
+            variant="dark"
+            className="flex px-4 py-2 gap-2 items-center"
+          >
+            <span className="material-symbols-outlined">person_add</span>
+            Cadastrar usuário
+          </Button>
+        </div>
 
         {/* Seção de Gerenciamento */}
         <section className="bg-white rounded-lg shadow p-6">
@@ -152,12 +156,13 @@ export default function Users() {
               <span>Atualizar</span>
             </Button>
           </div>
-          
+
           {/* Filtros expandíveis com animação leve */}
           <FiltersComponent
             showFilters={showFilters}
             setShowFilters={setShowFilters}
             variants={VARIANTS}
+            mobilePosition="right"
             filters={[
               {
                 key: "searchTerm",

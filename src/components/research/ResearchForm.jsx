@@ -8,11 +8,13 @@ import Switch from "@/components/ui/Switch";
 import MultiSelect from "@/components/ui/Multiselect/Multiselect";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 
-
 // Botão de mapa offline carregado de forma dinâmica
-const OfflineMapButton = dynamic(() => import("@/components/OfflineMapButton"), {
-  ssr: false,
-});
+const OfflineMapButton = dynamic(
+  () => import("@/components/OfflineMapButton"),
+  {
+    ssr: false,
+  }
+);
 
 /**
  * ResearchForm
@@ -49,7 +51,7 @@ export default function ResearchForm({
   });
 
   // Para mostrar/ocultar cada seção
-  const [showBasicInfo, setShowBasicInfo] = useState(true);
+  const [showBasicInfo, setShowBasicInfo] = useState(false);
   const [showDates, setShowDates] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
   const [showLocationInfo, setShowLocationInfo] = useState(true);
@@ -193,6 +195,7 @@ export default function ResearchForm({
       collaboratorsToRemove: toRemove,
     };
 
+    // console.log("Payload enviado:", payload);
     onSubmit?.(payload);
   };
 
@@ -270,7 +273,7 @@ export default function ResearchForm({
             />
             <FormField
               legend="Descrição"
-              type="text"
+              type="textarea"
               value={form.description}
               onChange={handleChange("description")}
             />
@@ -495,7 +498,7 @@ export default function ResearchForm({
         <div className="flex justify-center pt-4 gap-6">
           {isEdit && (
             <Button
-              variant="transparent_vermelho"
+              variant="warning"
               onClick={handleDiscard}
               className="active:scale-95"
             >
@@ -504,7 +507,7 @@ export default function ResearchForm({
           )}
           <Button
             type="submit"
-            variant="secondary"
+            variant="verde"
             className="text-lg py-3 active:scale-95"
             onClick={handleSubmit}
           >

@@ -1,3 +1,4 @@
+
 import { parse } from "cookie";
 
 export default async function handler(req, res) {
@@ -6,22 +7,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Obtém o token do cookie
     const cookies = parse(req.headers.cookie || "");
     const token = cookies.token;
-
     if (!token) {
       return res.status(401).json({ error: "Token não fornecido" });
     }
 
-    // Envia a requisição para o backend para pegar os tipos de pesquisa
-    const response = await fetch(`${process.env.SERVER_URL}/research_types`, {
+    const response = await fetch(`${process.env.SERVER_URL}/input_types`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`, // Inclui o token no cabeçalho
+        "Authorization": `Bearer ${token}`,
       },
     });
+
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -29,11 +28,10 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-
     return res.status(200).json(data);
 
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao buscar input_types:", err);
     return res.status(500).json({ error: "Erro ao conectar com o servidor" });
   }
 }

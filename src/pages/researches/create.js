@@ -34,8 +34,6 @@ export default function CreateResearch() {
 
       const data = await res.json();
 
-      console.log("pequisa:", data);
-
       if (!res.ok) {
         const message = data?.error || "Erro ao criar a pesquisa.";
         showMessage(message, "vermelho", 5000);
@@ -53,10 +51,12 @@ export default function CreateResearch() {
   };
 
   return (
+    <div className="pb-20">
     <ResearchForm
       isEdit={false}
       onSubmit={handleCreate}
     />
+    </div>
   );
 }
 

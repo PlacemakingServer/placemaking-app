@@ -6,3 +6,10 @@ export function formatDateToDDMMYY(dateString) {
   const year = String(date.getFullYear());
   return `${day}/${month}/${year}`;
 }
+
+export function formatDateToLocalYYYYMMDD(date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}

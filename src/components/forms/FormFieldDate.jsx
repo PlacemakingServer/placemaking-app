@@ -2,7 +2,28 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { formatDateToDDMMYY } from "@/utils/formatDate";
+
+// Converte um objeto Date para uma string no formato YYYY-MM-DD (usando valores locais)
+function formatDateToLocalYYYYMMDD(date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// Formata uma string no formato YYYY-MM-DD para DD/MM/YYYY, sem criar novo objeto Date
+function formatDateToDDMMYY(dateString) {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+// Converte a string "YYYY-MM-DD" em um objeto Date usando os componentes locais
+function parseDateString(dateString) {
+  if (!dateString) return new Date();
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
 
 export default function FormFieldDate({
   legend,
@@ -15,14 +36,9 @@ export default function FormFieldDate({
   tooltip = "",
 }) {
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [filled, setFilled] = useState(false);
   const ref = useRef(null);
 
-  useEffect(() => {
-    setFilled(!!value);
-  }, [value]);
-
-  // Fecha o calendário ao clicar fora do popover
+  // Fecha o calendário ao clicar fora do componente
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
@@ -33,7 +49,7 @@ export default function FormFieldDate({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Formata a data para exibir no botão
+  // Exibe a data no formato DD/MM/YYYY
   const displayValue = value ? formatDateToDDMMYY(value) : "__/__/__";
 
   return (
@@ -44,7 +60,7 @@ export default function FormFieldDate({
       transition={{ duration: 0.3, ease: "easeInOut" }}
     >
       <div className="relative" ref={ref}>
-        {/* Label + Tooltip */}
+        {/* Label */}
         <div className="flex items-center gap-1 mb-1">
           <label className="text-sm font-medium text-gray-700">{legend}</label>
           {tooltip && (
@@ -54,7 +70,7 @@ export default function FormFieldDate({
           )}
         </div>
 
-        {/* Botão que abre o calendário */}
+        {/* Botão que exibe a data e abre o calendário */}
         <button
           type="button"
           onClick={() => setCalendarOpen((prev) => !prev)}
@@ -75,7 +91,7 @@ export default function FormFieldDate({
           </span>
         </button>
 
-        {/* Calendário popover */}
+        {/* Popover do calendário */}
         <AnimatePresence>
           {calendarOpen && !disabled && (
             <motion.div
@@ -87,18 +103,25 @@ export default function FormFieldDate({
             >
               <Calendar
                 onChange={(date) => {
-                  // value armazenado continua em ISO (YYYY-MM-DD)
-                  onChange({ target: { value: date.toISOString().split("T")[0] } });
+                  // Cria um objeto Date a partir dos valores locais (ano, mês e dia)
+                  const localDate = new Date(
+                    date.getFullYear(),
+                    date.getMonth(),
+                    date.getDate()
+                  );
+                  const formatted = formatDateToLocalYYYYMMDD(localDate);
+                  onChange({ target: { value: formatted } });
                   setCalendarOpen(false);
                 }}
-                value={value ? new Date(value) : new Date()}
+                // Converte a string de valor para um objeto Date com a função parseDateString
+                value={value ? parseDateString(value) : new Date()}
                 className="rounded-lg p-2 [&_.react-calendar__tile--active]:!bg-black [&_.react-calendar__tile--active]:text-white"
               />
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Mensagem de erro ou texto auxiliar */}
+        {/* Exibe mensagem de erro ou helper */}
         {(helperText || error) && (
           <p
             className={`mt-1 text-xs ${

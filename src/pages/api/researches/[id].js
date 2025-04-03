@@ -1,6 +1,40 @@
-// pages/api/researchs/[id].js
-
 import { parse } from "cookie";
+
+
+const BASE_URL = process.env.SERVER_URL || "http://localhost:8000";
+
+async function fetchWithAuth(url, token) {
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await res.json();
+  return { ok: res.ok, status: res.status, data };
+}
+
+async function getResearchDetails(id, token) {
+  const { ok, status, data } = await fetchWithAuth(`${BASE_URL}/research/${id}`, token);
+  if (!ok) {
+    throw { status, message: "Erro ao buscar dados da pesquisa", details: data };
+  }
+  return data.research;
+}
+
+async function getResearchContributors(id, token) {
+  const { ok, status, data } = await fetchWithAuth(`${BASE_URL}/research/${id}/contributors`, token);
+  
+  return data?.contributors || [];
+}
+
+
+async function getResearchActivities(id, token) {
+  const { ok, status, data } = await fetchWithAuth(`${BASE_URL}/research/${id}/activities`, token);
+
+  return data?.activities || [];
+}
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -18,48 +52,21 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Token não fornecido" });
   }
 
-  const BASE_URL = process.env.SERVER_URL || "http://localhost:8000";
-
   try {
-    // Fetch da pesquisa
-    const researchRes = await fetch(`${BASE_URL}/research/${id}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const [research, contributors, activities] = await Promise.all([
+      getResearchDetails(id, token),
+      getResearchContributors(id, token),
+      getResearchActivities(id, token),
+    ]);
 
-    const researchData = await researchRes.json();
+    research.selectedCollaborators = contributors
+    research.activities = activities
 
-    if (!researchRes.ok) {
-      return res.status(researchRes.status).json({
-        error: "Erro ao buscar dados da pesquisa",
-        details: researchData,
-      });
-    }
-
-    const contributorsRes = await fetch(`${BASE_URL}/research/${id}/contributors`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const contributorsData = await contributorsRes.json();
-
-    if (!contributorsRes.ok) {
-      return res.status(contributorsRes.status).json({
-        error: "Erro ao buscar colaboradores",
-        details: contributorsData,
-      });
-    }
-
-    return res.status(200).json({
-      research: researchData.research,
-      contributors: contributorsData.contributors,
-    });
+    return res.status(200).json({ research });
   } catch (error) {
-    console.error("Erro interno:", error);
-    return res.status(500).json({ error: "Erro interno no servidor" });
+    console.error("Erro ao buscar dados da pesquisa:", error);
+    return res
+      .status(error.status || 500)
+      .json({ error: error.message || "Erro interno", details: error.details });
   }
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import Select from "react-select";
 
-export default function MultiSelect({ options = [], value = [], onChange, placeholder = "Selecione...", isDisabled = false }) {
+export default function MultiSelect({ options = [], value = [], onChange, placeholder = "Selecione...", isDisabled = false, isMulti = true,  closeMenuOnSelect = false }) {
   const customStyles = {
     control: (base, state) => ({
       ...base,
@@ -49,7 +49,7 @@ export default function MultiSelect({ options = [], value = [], onChange, placeh
 
   return (
     <Select
-      isMulti
+      isMulti={isMulti}
       isDisabled={isDisabled}
       options={options}
       value={value}
@@ -57,7 +57,7 @@ export default function MultiSelect({ options = [], value = [], onChange, placeh
       styles={customStyles}
       placeholder={placeholder}
       className="text-sm"
-      closeMenuOnSelect={false}
+      closeMenuOnSelect={closeMenuOnSelect}
     />
   );
 }
