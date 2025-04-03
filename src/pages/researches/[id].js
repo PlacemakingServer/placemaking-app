@@ -16,6 +16,7 @@ export default function EditResearch() {
   const [loading, setLoading] = useState(true);
   const [activityTypes, setActivityTypes] = useState([]);
 
+  // Busca activity_types (opcional, depende do seu fluxo)
   useEffect(() => {
     (async () => {
       try {
@@ -28,10 +29,12 @@ export default function EditResearch() {
     })();
   }, []);
 
+  // Busca os dados da pesquisa para edição
   useEffect(() => {
     if (!id) return;
 
     (async () => {
+      setLoading(true);
       try {
         const res = await fetch(`/api/researches/${id}`);
         const data = await res.json();
@@ -41,17 +44,20 @@ export default function EditResearch() {
           setLoading(false);
           return;
         }
-        const formatted = {
+
+        // Mapeando colaboradores para o formato { value, label, ... }
+        const mapped = {
           ...data.research,
-            selectedCollaborators: (data.research.selectedCollaborators || []).map((c) => ({
-            value: c.user_id,
-            label: c.users.name,
-            email: c.users.email,
-            role: c.users.role,
-            status: c.users.status,
+          selectedCollaborators: (data.research.selectedCollaborators || []).map((c) => ({
+            value: c.user_id || c.id, // Depende de como o backend retorna
+            label: c.users?.name || c.name,
+            email: c.users?.email || c.email,
+            role: c.users?.role || c.role,
+            status: c.users?.status || c.status,
           })),
         };
-        setInitialData(formatted);
+
+        setInitialData(mapped);
       } catch (err) {
         console.error("Erro ao buscar dados da pesquisa:", err);
       } finally {
@@ -60,23 +66,54 @@ export default function EditResearch() {
     })();
   }, [id]);
 
+  // Chama PUT /api/researches/update
   const handleUpdate = async (payload) => {
-
-    console.log("payload", payload);
-    return
     try {
+      // Exemplo de padronização de datas no front antes de enviar
+      const release_date = payload.release_date
+        ? `${payload.release_date}T00:00:00`
+        : null;
+      const end_date = payload.end_date
+        ? `${payload.end_date}T00:00:00`
+        : null;
+
+      const finalPayload = {
+        ...payload,
+        id,
+        release_date,
+        end_date,
+      };
+
       const res = await fetch("/api/researches/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, id }),
+        body: JSON.stringify(finalPayload),
       });
 
       if (!res.ok) {
         throw new Error(`Falha ao atualizar pesquisa. Status: ${res.status}`);
       }
 
+      // Resposta do backend
       const updatedData = await res.json();
       console.log("Pesquisa atualizada com sucesso:", updatedData);
+
+      // Mapeia novamente os colaboradores, pois o backend pode retornar 
+      // { id, name } e você precisa { value, label } para o form
+      const mappedData = {
+        ...updatedData,
+        selectedCollaborators: (updatedData.selectedCollaborators || []).map((c) => ({
+          value: c.id,
+          label: c.name,
+          email: c.email,
+          role: c.role,
+          status: c.status,
+        }))
+      };
+
+      setInitialData(mappedData);
+      showMessage("Pesquisa atualizada com sucesso", "verde", 5000);
+      router.reload();
     } catch (err) {
       console.error("Erro ao atualizar a pesquisa:", err);
       showMessage("Erro ao atualizar a pesquisa", "vermelho_claro", 5000);
@@ -95,12 +132,18 @@ export default function EditResearch() {
     { id: "dinamica", label: "Dinâmica", icon: "sync_alt" },
   ];
 
+  // Exemplo de como renderizar seções (depende do seu fluxo)
   const renderActivityType = (activity) => {
     switch (activity.type) {
       case "Formulário":
         return (
           <section id="formulario" key="formulario">
-            <CollectionFormSection activity_type_id={activity.id} research_id={id} isEdit={true} onSubmit={() => {}} />
+            <CollectionFormSection
+              activity_type_id={activity.id}
+              research_id={id}
+              isEdit={true}
+              onSubmit={() => {}}
+            />
           </section>
         );
       case "Estática":
@@ -125,6 +168,8 @@ export default function EditResearch() {
       <main className="p-4 sm:p-6 space-y-20 mb-20">
         <section id="pesquisa">
           <h2 className="text-2xl font-bold mb-4">Pesquisa</h2>
+
+          {/* Passa a pesquisa como initialData + handleUpdate */}
           <ResearchForm
             isEdit
             initialData={initialData}

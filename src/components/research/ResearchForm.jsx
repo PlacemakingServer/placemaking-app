@@ -8,32 +8,26 @@ import Switch from "@/components/ui/Switch";
 import MultiSelect from "@/components/ui/Multiselect/Multiselect";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 
-// Botão de mapa offline carregado de forma dinâmica
-const OfflineMapButton = dynamic(
-  () => import("@/components/OfflineMapButton"),
-  {
-    ssr: false,
-  }
-);
+const OfflineMapButton = dynamic(() => import("@/components/OfflineMapButton"), {
+  ssr: false,
+});
 
 /**
  * ResearchForm
- * Componente genérico para criar ou editar Pesquisas.
- *
- * Props:
- *  - initialData (opcional): Valores iniciais da pesquisa (ex.: título, lat, etc.).
- *  - onSubmit (função): Chamado ao enviar o formulário.
- *  - isEdit (boolean): Se está em modo de edição ou criação.
+ * - isEdit (boolean): true -> edição, false -> criação
+ * - initialData (obj): valores iniciais da pesquisa
+ * - onSubmit (função): callback para enviar payload final
  */
 export default function ResearchForm({
   initialData = {},
   onSubmit,
   isEdit = false,
 }) {
-  // Selecionamos colaboradores originais (apenas se houver no initialData)
+  // Em modo edição, guardamos a lista original de colaboradores
+  // para poder calcular adições e remoções.
   const originalCollaborators = initialData.selectedCollaborators || [];
 
-  // Estado principal do formulário, mesclando com initialData
+  // Estado principal do formulário
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -50,29 +44,22 @@ export default function ResearchForm({
     ...initialData,
   });
 
-  // Para mostrar/ocultar cada seção
   const [showBasicInfo, setShowBasicInfo] = useState(false);
   const [showDates, setShowDates] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
   const [showLocationInfo, setShowLocationInfo] = useState(true);
   const [showCollaborators, setShowCollaborators] = useState(false);
 
-  // Todos os colaboradores do sistema
+  // Lista global de usuários (para MultiSelect)
   const [allCollaborators, setAllCollaborators] = useState([]);
-
-  // Imagem de fundo
   const [imageUrl, setImageUrl] = useState("");
 
-  /**
-   * Atualiza campo de texto no form.
-   */
+  // 1. Mapeia input
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  /**
-   * Atualiza localização ao selecionar no mapa.
-   */
+  // 2. Ao selecionar ponto no mapa
   const handleLocationSelect = (data) => {
     setForm((prev) => ({
       ...prev,
@@ -84,10 +71,7 @@ export default function ResearchForm({
     }));
   };
 
-  /**
-   * Descartar alterações (apenas quando isEdit = true).
-   * Restaura o form ao estado inicial do props.
-   */
+  // 3. Descartar alterações (somente se isEdit)
   const handleDiscard = () => {
     setForm({
       ...initialData,
@@ -97,17 +81,12 @@ export default function ResearchForm({
     });
   };
 
-  /**
-   * Identifica quem é adicionado ou removido comparando a seleção atual
-   * com a lista original de colaboradores.
-   */
+  // 4. Quando selecionamos colaboradores
   function refreshCollaboratorsDiff(newSelected) {
     const originalIds = new Set(originalCollaborators.map((c) => c.value));
     const newIds = new Set(newSelected.map((c) => c.value));
 
-    // Adicionados => presentes em newSelected, mas não no original
     const toAdd = newSelected.filter((c) => !originalIds.has(c.value));
-    // Removidos => presentes no original, mas não em newSelected
     const toRemove = originalCollaborators.filter((c) => !newIds.has(c.value));
 
     setForm((prev) => ({
@@ -118,22 +97,16 @@ export default function ResearchForm({
     }));
   }
 
-  /**
-   * Ao mudar a seleção do MultiSelect:
-   *  - Se não estiver em edição, apenas atualiza selectedCollaborators.
-   *  - Se estiver em edição, atualiza também collaboratorsToAdd/remov.
-   */
   const handleSelectChange = (newValue) => {
     if (!isEdit) {
+      // Em modo criação, não faz distinção de add/remove
       setForm((prev) => ({ ...prev, selectedCollaborators: newValue }));
-      return;
+    } else {
+      refreshCollaboratorsDiff(newValue);
     }
-    refreshCollaboratorsDiff(newValue);
   };
 
-  /**
-   * Remove um colaborador da lista de "adicionados" (desfaz a adição).
-   */
+  // Desfaz a adição (remove do array de add)
   const handleRemoveAdd = (user) => {
     const newSelected = form.selectedCollaborators.filter(
       (u) => u.value !== user.value
@@ -141,20 +114,15 @@ export default function ResearchForm({
     refreshCollaboratorsDiff(newSelected);
   };
 
-  /**
-   * Desfaz a remoção de um colaborador (recoloca na lista final).
-   */
+  // Desfaz a remoção
   const handleUndoRemove = (user) => {
     const newSelected = [...form.selectedCollaborators, user];
     refreshCollaboratorsDiff(newSelected);
   };
 
-  /**
-   * handleSubmit
-   * Cria payload e chama onSubmit, enviando só os dados essenciais do form.
-   */
+  // 5. Ao enviar o form, construímos o payload
   const handleSubmit = () => {
-    // Formata os colaboradores finais
+    // Mapeia novamente os colaboradores no estilo final
     const selected = form.selectedCollaborators.map((c) => ({
       id: c.value,
       name: c.label,
@@ -162,7 +130,6 @@ export default function ResearchForm({
       status: c.status,
       email: c.email,
     }));
-    // idem para toAdd / toRemove, se precisar no payload
     const toAdd = form.collaboratorsToAdd.map((c) => ({
       id: c.value,
       name: c.label,
@@ -178,13 +145,15 @@ export default function ResearchForm({
       email: c.email,
     }));
 
-    // Montamos apenas as props necessárias
+    // Monta o objeto final. Se form.id existir, ele entra no payload
     const payload = {
-      id: form.id, // se houver
+      ...(form.id && { id: form.id }),
       title: form.title,
       description: form.description,
-      release_date: form.release_date,
-      end_date: form.end_date,
+      // Vamos enviar datas sem formatação extra aqui;
+      // ou poderia já anexar T00:00:00 se desejado
+      release_date: form.release_date || null,
+      end_date: form.end_date || null,
       lat: form.lat,
       long: form.long,
       location_title: form.location_title,
@@ -195,21 +164,17 @@ export default function ResearchForm({
       collaboratorsToRemove: toRemove,
     };
 
-    // console.log("Payload enviado:", payload);
+    // Chama a callback do pai
     onSubmit?.(payload);
   };
 
-  /**
-   * Sorteia uma imagem de fundo ao montar.
-   */
+  // 6. Sorteia imagem de fundo
   useEffect(() => {
     const idx = Math.floor(Math.random() * 5);
     setImageUrl(`/img/cards/img-${idx}.jpg`);
   }, []);
 
-  /**
-   * Busca lista global de colaboradores (API).
-   */
+  // 7. Busca lista global de colaboradores
   useEffect(() => {
     async function fetchAll() {
       try {
@@ -232,7 +197,7 @@ export default function ResearchForm({
 
   return (
     <div className="max-w-4xl mx-auto mt-6 bg-white rounded-lg shadow-md overflow-hidden">
-      {/* Cabeçalho com imagem de fundo */}
+      {/* Cabeçalho */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -293,13 +258,13 @@ export default function ResearchForm({
             <FormField
               legend="Data de Início"
               type="date"
-              value={form.release_date}
+              value={form.release_date || ""}
               onChange={handleChange("release_date")}
             />
             <FormField
               legend="Data de Fim"
               type="date"
-              value={form.end_date}
+              value={form.end_date || ""}
               onChange={handleChange("end_date")}
             />
           </div>
@@ -412,10 +377,9 @@ export default function ResearchForm({
               Você pode escolher múltiplos colaboradores para participar.
             </p>
 
-            {/* Em modo de edição, exibimos as seções de "adicionados" e "removidos" */}
+            {/* Em modo edição, exibimos "adicionados" e "removidos" */}
             {isEdit && (
               <div className="mt-6 space-y-6">
-                {/* Adicionados */}
                 {form.collaboratorsToAdd?.length > 0 && (
                   <div>
                     <h3 className="text-sm font-semibold text-gray-700 mb-2">
@@ -441,7 +405,6 @@ export default function ResearchForm({
                   </div>
                 )}
 
-                {/* Removidos */}
                 {form.collaboratorsToRemove?.length > 0 && (
                   <div>
                     <h3 className="text-sm font-semibold text-gray-700 mb-2">
@@ -469,7 +432,6 @@ export default function ResearchForm({
               </div>
             )}
 
-            {/* Lista final de selecionados */}
             {form.selectedCollaborators?.length > 0 && (
               <div className="mt-6 border-t pt-4 space-y-2">
                 <h3 className="text-sm font-semibold text-gray-700 mb-2">
@@ -494,8 +456,17 @@ export default function ResearchForm({
           </>
         )}
 
-        {/* Botões finais (descartar + salvar/criar) */}
+        {/* Botões finais */}
         <div className="flex justify-center pt-4 gap-6">
+          <Button
+            type="submit"
+            variant="dark"
+            className="text-lg py-3 active:scale-95"
+            onClick={handleSubmit}
+          >
+            {isEdit ? "Salvar Alterações" : "Criar Pesquisa"}
+          </Button>
+
           {isEdit && (
             <Button
               variant="warning"
@@ -505,24 +476,13 @@ export default function ResearchForm({
               Descartar Alterações
             </Button>
           )}
-          <Button
-            type="submit"
-            variant="verde"
-            className="text-lg py-3 active:scale-95"
-            onClick={handleSubmit}
-          >
-            {isEdit ? "Salvar Alterações" : "Criar Pesquisa"}
-          </Button>
         </div>
       </div>
     </div>
   );
 }
 
-/**
- * SectionToggle
- * Pequeno subcomponente para mostrar um título e um switch.
- */
+// Subcomponente para mostrar título + switch
 function SectionToggle({ title, isChecked, onChange }) {
   return (
     <div className="flex justify-between items-center">

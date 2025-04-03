@@ -10,6 +10,7 @@ export default function CreateResearch() {
   const { setIsLoading } = useLoading();
   const router = useRouter();
 
+  
   const handleCreate = async (payload) => {
     setIsLoading(true);
 
@@ -23,13 +24,27 @@ export default function CreateResearch() {
         return;
       }
 
+      const release_date = payload.release_date
+        ? `${payload.release_date}T00:00:00`
+        : null;
+      const end_date = payload.end_date
+        ? `${payload.end_date}T00:00:00`
+        : null;
+
+      const finalPayload = {
+        ...payload,
+        release_date,
+        end_date,
+        created_by: userId,
+      };
+
       const res = await fetch("/api/researches/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-user-id": userId,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(finalPayload),
       });
 
       const data = await res.json();
@@ -41,6 +56,7 @@ export default function CreateResearch() {
       }
 
       showMessage("Pesquisa criada com sucesso!", "verde", 4000);
+
       router.push(`/researches/${data.research.id}`);
     } catch (error) {
       console.error("Erro ao criar pesquisa:", error);
@@ -52,10 +68,10 @@ export default function CreateResearch() {
 
   return (
     <div className="pb-20">
-    <ResearchForm
-      isEdit={false}
-      onSubmit={handleCreate}
-    />
+      <ResearchForm
+        isEdit={false} 
+        onSubmit={handleCreate}
+      />
     </div>
   );
 }

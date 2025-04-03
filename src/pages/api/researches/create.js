@@ -114,8 +114,8 @@ export default async function handler(req, res) {
     const researchPayload = {
       title,
       description,
-      release_date: `${release_date}T12:00:00`,
-      end_date: `${end_date}T12:00:00`,
+      release_date: release_date,
+      end_date: end_date,
       lat,
       long,
       location_title,
