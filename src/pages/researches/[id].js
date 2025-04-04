@@ -4,9 +4,9 @@ import ResearchForm from "@/components/research/ResearchForm";
 import { useMessage } from "@/context/MessageContext";
 import ResearchLoadingSkeleton from "@/components/research/ResearchLoadingSkeleton";
 import SideBarSectionsFilter from "@/components/ui/SideBarSectionsFilter";
-import CollectionFormSection from "@/components/collection/CollectionFormSection";
-import StaticCollectionSection from "@/components/collection/StaticCollectionSection";
-import DynamicCollectionSection from "@/components/collection/DynamicCollectionSection";
+// import CollectionFormSection from "@/components/surveys/CollectionFormSection";
+// import StaticCollectionSection from "@/components/surveys/StaticCollectionSection";
+// import DynamicCollectionSection from "@/components/surveys/DynamicCollectionSection";
 
 export default function EditResearch() {
   const router = useRouter();
@@ -136,48 +136,48 @@ export default function EditResearch() {
   ];
 
   // Exemplo de como renderizar seções (depende do seu fluxo)
-  const renderActivityType = (activity) => {
-    switch (activity.type) {
-      case "Formulário":
-        return (
-          <section id="formulario" key="formulario">
-            <CollectionFormSection
-              activity_type_id={activity.id}
-              research_id={id}
-              initialData={initialData.activities.find(
-                (a) => a.id === activity.id
-              )}
-            />
-          </section>
-        );
-      case "Estática":
-        return (
-          <section id="estatica" key="estatica">
-            <StaticCollectionSection
-              activity_type_id={activity.id}
-              research_id={id}
-              initialData={initialData.activities.find(
-                (a) => a.id === activity.id
-              )}
-            />
-          </section>
-        );
-      case "Dinâmica":
-        return (
-          <section id="dinamica" key="dinamica">
-            <DynamicCollectionSection
-              activity_type_id={activity.id}
-              research_id={id}
-              initialData={initialData.activities.find(
-                (a) => a.id === activity.id
-              )}
-            />
-          </section>
-        );
-      default:
-        return null;
-    }
-  };
+  // const renderActivityType = (activity) => {
+  //   switch (activity.type) {
+  //     case "Formulário":
+  //       return (
+  //         <section id="formulario" key="formulario">
+  //           <CollectionFormSection
+  //             activity_type_id={activity.id}
+  //             research_id={id}
+  //             initialData={initialData.activities.find(
+  //               (a) => a.id === activity.id
+  //             )}
+  //           />
+  //         </section>
+  //       );
+  //     case "Estática":
+  //       return (
+  //         <section id="estatica" key="estatica">
+  //           <StaticCollectionSection
+  //             activity_type_id={activity.id}
+  //             research_id={id}
+  //             initialData={initialData.activities.find(
+  //               (a) => a.id === activity.id
+  //             )}
+  //           />
+  //         </section>
+  //       );
+  //     case "Dinâmica":
+  //       return (
+  //         <section id="dinamica" key="dinamica">
+  //           <DynamicCollectionSection
+  //             activity_type_id={activity.id}
+  //             research_id={id}
+  //             initialData={initialData.activities.find(
+  //               (a) => a.id === activity.id
+  //             )}
+  //           />
+  //         </section>
+  //       );
+  //     default:
+  //       return null;
+  //   }
+  // };
 
   return (
     <div className="relative">
@@ -193,7 +193,7 @@ export default function EditResearch() {
           />
         </section>
 
-        {activityTypes.map((activity) => renderActivityType(activity))}
+        {/* {activityTypes.map((activity) => renderActivityType(activity))} */}
       </main>
 
       <SideBarSectionsFilter sections={sections} position="right" />
