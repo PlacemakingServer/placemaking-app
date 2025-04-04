@@ -3,12 +3,12 @@
   "short_name": "Placemaking",
   "icons": [
     {
-      "src": "/img/192-azul.png",
+      "src": "/img/192-branco.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/img/512-azul.png",
+      "src": "/img/512-branco.png",
       "sizes": "512x512",
       "type": "image/png"
     }
