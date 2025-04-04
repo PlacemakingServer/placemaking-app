@@ -22,13 +22,21 @@ function AppContent({ Component, pageProps }) {
     <>
       <Head>
         <title>{`${pageName} | Minha Aplicação`}</title>
-        <link rel="icon" type="image/png" sizes="512x512" href="/img/icon-512x512.png" />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="512x512"
+          href="/img/icon-512x512.png"
+        />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
       </Head>
 
       <Layout pageName={pageName}>
         <PageComponent {...pageProps} />
       </Layout>
-
       <AnimatePresence>{isLoading && <Loading />}</AnimatePresence>
     </>
   );

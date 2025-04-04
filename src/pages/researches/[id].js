@@ -16,20 +16,19 @@ export default function EditResearch() {
   const [loading, setLoading] = useState(true);
   const [activityTypes, setActivityTypes] = useState([]);
 
-  // Busca activity_types (opcional, depende do seu fluxo)
+  
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/activity_types");
+        const res = await fetch("/api/survey_types");
         const data = await res.json();
         setActivityTypes(data.activity_types || []);
       } catch (error) {
-        console.error("Erro ao buscar activity types:", error);
+        console.error("Erro ao buscar uma survey:", error);
       }
     })();
   }, []);
 
-  // Busca os dados da pesquisa para edição
   useEffect(() => {
     if (!id) return;
 
@@ -44,14 +43,12 @@ export default function EditResearch() {
           setLoading(false);
           return;
         }
-
-        // Mapeando colaboradores para o formato { value, label, ... }
         const mapped = {
           ...data.research,
           selectedCollaborators: (
             data.research.selectedCollaborators || []
           ).map((c) => ({
-            value: c.user_id || c.id, // Depende de como o backend retorna
+            value: c.user_id || c.id, 
             label: c.users?.name || c.name,
             email: c.users?.email || c.email,
             role: c.users?.role || c.role,

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
 import { initAuthDB } from "@/lib/db";
+import FullscreenButton from "@/components/ui/FullscreenButton";
 
 function getAllowedTabs(userRole) {
   const isAllowed = (name) => {
@@ -196,29 +197,52 @@ export default function SidebarDesktop({ userRole }) {
         </nav>
 
         {/* Footer (Logout) */}
-        <div
-          className="relative"
-          onMouseEnter={() => {
-            if (!expanded) setHoveredTab("Logout");
-          }}
-          onMouseLeave={() => {
-            if (!expanded) setHoveredTab(null);
-          }}
-        >
-          <Button
-            onClick={handleLogout}
-            variant="transparent_vermelho"
-            className={`w-full flex items-center gap-2 px-4 py-2 rounded transition ${
-              !expanded ? "justify-center" : ""
-            }`}
+        {/* Footer (Fullscreen + Logout) */}
+        <div className="space-y-1">
+          <FullscreenButton
+            expanded={expanded}
+            hovered={hoveredTab}
+            setHovered={setHoveredTab}
+          />
+
+          <div
+            className="relative"
+            onMouseEnter={() => {
+              if (!expanded) setHoveredTab("Logout");
+            }}
+            onMouseLeave={() => {
+              if (!expanded) setHoveredTab(null);
+            }}
           >
-            <span className="material-symbols-outlined text-xl">logout</span>
-            {expanded && (
-              <span className="text-sm font-medium whitespace-nowrap">
-                Logout
-              </span>
+            <Button
+              onClick={handleLogout}
+              variant="transparent_vermelho"
+              className={`w-full flex items-center gap-2 px-4 py-2 rounded transition ${
+                !expanded ? "justify-center" : ""
+              }`}
+            >
+              <span className="material-symbols-outlined text-xl">logout</span>
+              {expanded && (
+                <span className="text-sm font-medium whitespace-nowrap">
+                  Logout
+                </span>
+              )}
+            </Button>
+
+            {!expanded && hoveredTab === "Logout" && (
+              <AnimatePresence>
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded shadow-lg whitespace-nowrap z-10"
+                >
+                  Logout
+                </motion.div>
+              </AnimatePresence>
             )}
-          </Button>
+          </div>
         </div>
       </div>
     </motion.div>
