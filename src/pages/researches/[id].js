@@ -48,7 +48,9 @@ export default function EditResearch() {
         // Mapeando colaboradores para o formato { value, label, ... }
         const mapped = {
           ...data.research,
-          selectedCollaborators: (data.research.selectedCollaborators || []).map((c) => ({
+          selectedCollaborators: (
+            data.research.selectedCollaborators || []
+          ).map((c) => ({
             value: c.user_id || c.id, // Depende de como o backend retorna
             label: c.users?.name || c.name,
             email: c.users?.email || c.email,
@@ -73,9 +75,7 @@ export default function EditResearch() {
       const release_date = payload.release_date
         ? `${payload.release_date}T00:00:00`
         : null;
-      const end_date = payload.end_date
-        ? `${payload.end_date}T00:00:00`
-        : null;
+      const end_date = payload.end_date ? `${payload.end_date}T00:00:00` : null;
 
       const finalPayload = {
         ...payload,
@@ -98,17 +98,19 @@ export default function EditResearch() {
       const updatedData = await res.json();
       console.log("Pesquisa atualizada com sucesso:", updatedData);
 
-      // Mapeia novamente os colaboradores, pois o backend pode retornar 
+      // Mapeia novamente os colaboradores, pois o backend pode retornar
       // { id, name } e você precisa { value, label } para o form
       const mappedData = {
         ...updatedData,
-        selectedCollaborators: (updatedData.selectedCollaborators || []).map((c) => ({
-          value: c.id,
-          label: c.name,
-          email: c.email,
-          role: c.role,
-          status: c.status,
-        }))
+        selectedCollaborators: (updatedData.selectedCollaborators || []).map(
+          (c) => ({
+            value: c.id,
+            label: c.name,
+            email: c.email,
+            role: c.role,
+            status: c.status,
+          })
+        ),
       };
 
       setInitialData(mappedData);
@@ -122,7 +124,11 @@ export default function EditResearch() {
 
   if (loading) return <ResearchLoadingSkeleton />;
   if (!initialData) {
-    return <div className="p-6 text-red-500">Não foi possível carregar a pesquisa.</div>;
+    return (
+      <div className="p-6 text-red-500">
+        Não foi possível carregar a pesquisa.
+      </div>
+    );
   }
 
   const sections = [
@@ -141,21 +147,34 @@ export default function EditResearch() {
             <CollectionFormSection
               activity_type_id={activity.id}
               research_id={id}
-              isEdit={true}
-              onSubmit={() => {}}
+              initialData={initialData.activities.find(
+                (a) => a.id === activity.id
+              )}
             />
           </section>
         );
       case "Estática":
         return (
           <section id="estatica" key="estatica">
-            <StaticCollectionSection isEdit={true} onSubmit={() => {}} />
+            <StaticCollectionSection
+              activity_type_id={activity.id}
+              research_id={id}
+              initialData={initialData.activities.find(
+                (a) => a.id === activity.id
+              )}
+            />
           </section>
         );
       case "Dinâmica":
         return (
           <section id="dinamica" key="dinamica">
-            <DynamicCollectionSection isEdit={true} onSubmit={() => {}} />
+            <DynamicCollectionSection
+              activity_type_id={activity.id}
+              research_id={id}
+              initialData={initialData.activities.find(
+                (a) => a.id === activity.id
+              )}
+            />
           </section>
         );
       default:

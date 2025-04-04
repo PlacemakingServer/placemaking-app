@@ -9,15 +9,11 @@ import FormBuilder from "@/components/forms/FormBuilder";
  * Seção de coleta via formulário, usada para criar ou editar.
  * Props:
  * - initialData: dados iniciais da coleta (opcional)
- * - onSubmit: função chamada ao salvar
- * - isEdit: booleano que define se está em modo de edição
  * - activity_type_id: id do tipo de atividade (exibido)
  * - research_id: id da pesquisa (exibido)
  */
 export default function CollectionFormSection({
   initialData = {},
-  onSubmit,
-  isEdit = false,
   activity_type_id,
   research_id,
 }) {
@@ -25,12 +21,13 @@ export default function CollectionFormSection({
   const [form, setForm] = useState({
     title: "",
     description: "",
-    activity_time: "",
-    link: "",
+    activity_time: 0,
+    activity_type_id: activity_type_id,
+    research_id: research_id,
     ...initialData,
   });
   const [formStructure, setFormStructure] = useState([]);
-
+  const [isEdit, setIsEdit] = useState(false);
   const initialDataRef = useRef(JSON.stringify(initialData));
 
   useEffect(() => {
@@ -51,10 +48,31 @@ export default function CollectionFormSection({
       ...form,
       activity_type_id,
       research_id,
-      type: "form",
-      structure: formStructure, // estrutura criada no FormBuilder
     };
-    onSubmit?.(payload);
+    console.log("formmm", form);
+    create(payload);
+  };
+
+  const create = async (payload) => {
+    try {
+      const res = await fetch("/api/activities/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Falha ao criar uma coleta. Status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      console.log("Coleta criada com sucesso:", data);
+
+      setIsEdit(true);
+      setForm(...data);
+    } catch (err) {
+      console.error("Erro ao criar uma coleta:", err);
+    }
   };
 
   return (
