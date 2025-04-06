@@ -12,58 +12,57 @@ export default function EditResearch() {
   const router = useRouter();
   const { id } = router.query;
   const { showMessage } = useMessage();
-  const [initialData, setInitialData] = useState(null);
+  const [researchData, setResearchData] = useState(null);
+  const [contributorsData, setContributorsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activityTypes, setActivityTypes] = useState([]);
 
-  
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/survey_types");
-        const data = await res.json();
-        setActivityTypes(data.activity_types || []);
-      } catch (error) {
-        console.error("Erro ao buscar uma survey:", error);
-      }
-    })();
-  }, []);
 
   useEffect(() => {
     if (!id) return;
+    fetchResearchData(id);
+    fecthReseachContributorsData(id);
+  }, [id]);
 
-    (async () => {
-      setLoading(true);
+  const fetchResearchData = async (id) => {
+    setLoading(true);
       try {
         const res = await fetch(`/api/researches/${id}`);
         const data = await res.json();
-
         if (!data.research) {
           showMessage("Pesquisa não encontrada", "vermelho_claro", 5000);
           setLoading(false);
           return;
         }
-        const mapped = {
-          ...data.research,
-          selectedCollaborators: (
-            data.research.selectedCollaborators || []
-          ).map((c) => ({
-            value: c.user_id || c.id, 
-            label: c.users?.name || c.name,
-            email: c.users?.email || c.email,
-            role: c.users?.role || c.role,
-            status: c.users?.status || c.status,
-          })),
-        };
-
-        setInitialData(mapped);
+        setResearchData(data.research);
       } catch (err) {
         console.error("Erro ao buscar dados da pesquisa:", err);
       } finally {
         setLoading(false);
       }
-    })();
-  }, [id]);
+  }
+
+  const fecthReseachContributorsData = async (id) => {
+    try {
+      const res = await fetch(`/api/contributors?research_id=${id}`);
+      const data = await res.json();
+      if (!data.contributors) {
+        showMessage("Colaboradores não encontrados", "vermelho_claro", 5000);
+        return;
+      }
+      const mappedData = data.contributors.map((c) => ({
+        value: c.id,
+        label: c.name,
+        email: c.email,
+        role: c.role,
+        status: c.status,
+      }));
+      setContributorsData(mappedData);
+      setActivityTypes(data.contributors);
+    } catch (err) {
+      console.error("Erro ao buscar colaboradores da pesquisa:", err);
+    }
+  }
 
   // Chama PUT /api/researches/update
   const handleUpdate = async (payload) => {
@@ -95,8 +94,6 @@ export default function EditResearch() {
       const updatedData = await res.json();
       console.log("Pesquisa atualizada com sucesso:", updatedData);
 
-      // Mapeia novamente os colaboradores, pois o backend pode retornar
-      // { id, name } e você precisa { value, label } para o form
       const mappedData = {
         ...updatedData,
         selectedCollaborators: (updatedData.selectedCollaborators || []).map(
@@ -120,7 +117,7 @@ export default function EditResearch() {
   };
 
   if (loading) return <ResearchLoadingSkeleton />;
-  if (!initialData) {
+  if (!researchData) {
     return (
       <div className="p-6 text-red-500">
         Não foi possível carregar a pesquisa.
@@ -128,12 +125,12 @@ export default function EditResearch() {
     );
   }
 
-  const sections = [
-    { id: "pesquisa", label: "Pesquisa", icon: "search" },
-    { id: "formulario", label: "Formulário", icon: "description" },
-    { id: "estatica", label: "Estática", icon: "insights" },
-    { id: "dinamica", label: "Dinâmica", icon: "sync_alt" },
-  ];
+  // const sections = [
+  //   { id: "pesquisa", label: "Pesquisa", icon: "search" },
+  //   { id: "formulario", label: "Formulário", icon: "description" },
+  //   { id: "estatica", label: "Estática", icon: "insights" },
+  //   { id: "dinamica", label: "Dinâmica", icon: "sync_alt" },
+  // ];
 
   // Exemplo de como renderizar seções (depende do seu fluxo)
   // const renderActivityType = (activity) => {
@@ -188,7 +185,8 @@ export default function EditResearch() {
           {/* Passa a pesquisa como initialData + handleUpdate */}
           <ResearchForm
             isEdit
-            initialData={initialData}
+            initialData={researchData}
+            contributorsData={contributorsData}
             onSubmit={handleUpdate}
           />
         </section>
@@ -196,7 +194,7 @@ export default function EditResearch() {
         {/* {activityTypes.map((activity) => renderActivityType(activity))} */}
       </main>
 
-      <SideBarSectionsFilter sections={sections} position="right" />
+      {/* <SideBarSectionsFilter sections={sections} position="right" /> */}
     </div>
   );
 }

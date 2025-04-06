@@ -23,19 +23,6 @@ async function getResearchDetails(id, token) {
   return data.research;
 }
 
-async function getResearchContributors(id, token) {
-  const { ok, status, data } = await fetchWithAuth(`${BASE_URL}/research/${id}/contributors`, token);
-  
-  return data?.contributors || [];
-}
-
-
-async function getResearchActivities(id, token) {
-  const { ok, status, data } = await fetchWithAuth(`${BASE_URL}/research/${id}/activities`, token);
-
-  return data?.activities || [];
-}
-
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Método não permitido" });
@@ -53,16 +40,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const [research, contributors, activities] = await Promise.all([
-      getResearchDetails(id, token),
-      getResearchContributors(id, token),
-      getResearchActivities(id, token),
+    const [research] = await Promise.all([
+      getResearchDetails(id, token)
     ]);
 
-    research.selectedCollaborators = contributors
-    research.activities = activities
-
-    return res.status(200).json({ research });
+    return res.status(200).json({research});
   } catch (error) {
     console.error("Erro ao buscar dados da pesquisa:", error);
     return res

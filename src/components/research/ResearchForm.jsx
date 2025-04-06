@@ -8,9 +8,12 @@ import Switch from "@/components/ui/Switch";
 import MultiSelect from "@/components/ui/Multiselect/Multiselect";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 
-const OfflineMapButton = dynamic(() => import("@/components/OfflineMapButton"), {
-  ssr: false,
-});
+const OfflineMapButton = dynamic(
+  () => import("@/components/OfflineMapButton"),
+  {
+    ssr: false,
+  }
+);
 
 /**
  * ResearchForm
@@ -20,6 +23,7 @@ const OfflineMapButton = dynamic(() => import("@/components/OfflineMapButton"), 
  */
 export default function ResearchForm({
   initialData = {},
+  contributorsData = [],
   onSubmit,
   isEdit = false,
 }) {
