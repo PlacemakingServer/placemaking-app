@@ -48,7 +48,7 @@ export async function handler(req, res) {
 
     const url = `${
       process.env.SERVER_URL
-    }/survey/fields${survey_id}?survey_type=${encodeURIComponent(survey_type)}`;
+    }/survey/${survey_id}/fields?survey_type=${encodeURIComponent(survey_type)}`;
 
     const response = await fetch(url, {
       method: "POST",
