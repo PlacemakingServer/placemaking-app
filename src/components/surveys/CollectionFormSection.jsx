@@ -9,12 +9,12 @@ import FormBuilder from "@/components/forms/FormBuilder";
  * Seção de coleta via formulário, usada para criar ou editar.
  * Props:
  * - initialData: dados iniciais da coleta (opcional)
- * - activity_type_id: id do tipo de atividade (exibido)
+ * - activity_type: id do tipo de atividade (exibido)
  * - research_id: id da pesquisa (exibido)
  */
 export default function CollectionFormSection({
   initialData = {},
-  activity_type_id,
+  activity_type,
   research_id,
 }) {
   const [enabled, setEnabled] = useState(false);
@@ -22,7 +22,7 @@ export default function CollectionFormSection({
     title: "",
     description: "",
     activity_time: 0,
-    activity_type_id: activity_type_id,
+    activity_type: activity_type,
     research_id: research_id,
     ...initialData,
   });
@@ -46,10 +46,9 @@ export default function CollectionFormSection({
   const handleSave = () => {
     const payload = {
       ...form,
-      activity_type_id,
+      activity_type,
       research_id,
     };
-    console.log("formmm", form);
     create(payload);
   };
 
@@ -94,7 +93,7 @@ export default function CollectionFormSection({
           <strong>ID da Pesquisa:</strong> {research_id || "—"}
         </p>
         <p>
-          <strong>ID do Tipo de Coleta:</strong> {activity_type_id || "—"}
+          <strong>ID do Tipo de Coleta:</strong> {activity_type || "—"}
         </p>
       </div>
 

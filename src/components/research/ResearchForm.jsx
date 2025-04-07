@@ -26,10 +26,11 @@ export default function ResearchForm({
   contributorsData = [],
   onSubmit,
   isEdit = false,
+  users = [],
 }) {
   // Em modo edição, guardamos a lista original de colaboradores
   // para poder calcular adições e remoções.
-  const originalCollaborators = initialData.selectedCollaborators || [];
+  const originalCollaborators = contributorsData || [];
 
   // Estado principal do formulário
   const [form, setForm] = useState({
@@ -149,13 +150,10 @@ export default function ResearchForm({
       email: c.email,
     }));
 
-    // Monta o objeto final. Se form.id existir, ele entra no payload
     const payload = {
       ...(form.id && { id: form.id }),
       title: form.title,
       description: form.description,
-      // Vamos enviar datas sem formatação extra aqui;
-      // ou poderia já anexar T00:00:00 se desejado
       release_date: form.release_date || null,
       end_date: form.end_date || null,
       lat: form.lat,
@@ -168,36 +166,14 @@ export default function ResearchForm({
       collaboratorsToRemove: toRemove,
     };
 
-    // Chama a callback do pai
     onSubmit?.(payload);
   };
-
-  // 6. Sorteia imagem de fundo
   useEffect(() => {
     const idx = Math.floor(Math.random() * 5);
     setImageUrl(`/img/cards/img-${idx}.jpg`);
+    setAllCollaborators(users)
   }, []);
 
-  // 7. Busca lista global de colaboradores
-  useEffect(() => {
-    async function fetchAll() {
-      try {
-        const res = await fetch("/api/users");
-        const data = await res.json();
-        const formatted = data.users?.map((c) => ({
-          value: c.id,
-          label: c.name,
-          role: c.role,
-          status: c.status,
-          email: c.email,
-        }));
-        setAllCollaborators(formatted || []);
-      } catch (error) {
-        console.error("Erro ao buscar colaboradores:", error);
-      }
-    }
-    fetchAll();
-  }, []);
 
   return (
     <div className="max-w-4xl mx-auto mt-6 bg-white rounded-lg shadow-md overflow-hidden">

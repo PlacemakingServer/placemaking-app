@@ -12,7 +12,7 @@ const handler = async (req, res) => {
     if (!token) {
       return res.status(401).json({ error: "Token não fornecido" });
     }
-
+    
     const { research_id, survey_type } = req.query;
 
     const missingFields = checkMissingFields({ research_id, survey_type });
