@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import FormField from "@/components/forms/FormField";
@@ -171,7 +171,11 @@ export default function ResearchForm({
   useEffect(() => {
     const idx = Math.floor(Math.random() * 5);
     setImageUrl(`/img/cards/img-${idx}.jpg`);
+
+    if(users.length > 0) {
     setAllCollaborators(users)
+  }
+    
   }, []);
 
 

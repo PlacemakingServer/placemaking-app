@@ -1,15 +1,38 @@
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ResearchForm from "@/components/research/ResearchForm";
 import { initAuthDB } from "@/lib/db";
 import { useMessage } from "@/context/MessageContext";
 import { useLoading } from "@/context/LoadingContext";
+import { set } from "zod";
 
 export default function CreateResearch() {
   const { showMessage } = useMessage();
   const { setIsLoading } = useLoading();
   const router = useRouter();
+  const [users, setUsers] = useState([]);
 
+  useEffect(() => { 
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("/api/users");
+      const data = await res.json();
+      const formatted = data.users?.map((c) => ({
+        value: c.id,
+        label: c.name,
+        role: c.role,
+        status: c.status,
+        email: c.email,
+      }));
+      setUsers(formatted || []);
+    } catch (error) {
+      console.error("Erro ao buscar colaboradores:", error);
+    }
+  };
+      
   
   const handleCreate = async (payload) => {
     setIsLoading(true);
@@ -71,6 +94,7 @@ export default function CreateResearch() {
       <ResearchForm
         isEdit={false} 
         onSubmit={handleCreate}
+        users={users}
       />
     </div>
   );

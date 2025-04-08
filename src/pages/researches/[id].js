@@ -98,8 +98,7 @@ export default function EditResearch() {
         showMessage("Colaboradores não encontrados", "vermelho_claro", 5000);
         return;
       }
-
-      console.log("Colaboradores:", data);
+      
       const mappedData = data.contributors.map((c) => ({
         value: c.id,
         label: c.name,
