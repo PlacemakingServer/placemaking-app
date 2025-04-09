@@ -15,7 +15,7 @@ export default function EditResearch() {
   const { showMessage } = useMessage();
   const [researchData, setResearchData] = useState(null);
   const [contributorsData, setContributorsData] = useState(null);
-  const [users, setUsers] = useState(null);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [surveys, setSurveys] = useState([]);
   const [activityTypes, setActivityTypes] = useState([

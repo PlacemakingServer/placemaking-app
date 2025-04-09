@@ -162,7 +162,7 @@ export default async function handler(req, res) {
           successfulAdd.push(collaboratorsToAdd[i]);
         } else {
           failedAdd.push(collaboratorsToAdd[i]);
-          const errData = await addResponses[i].json();
+          const errData =await addResponses[i].json();
           console.error("Erro ao adicionar colaborador:", errData);
         }
       }

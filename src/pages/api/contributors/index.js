@@ -2,7 +2,7 @@
 import { parse } from "cookie";
 
 const checkMissingFields = (dataObj) => {
-  const requiredFields = ["reseach_id"];
+  const requiredFields = ["research_id"];
   return requiredFields.filter((field) => !dataObj[field]);
 }
 
