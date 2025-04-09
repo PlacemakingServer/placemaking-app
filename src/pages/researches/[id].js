@@ -54,7 +54,10 @@ export default function EditResearch() {
       const activity = activityTypes[i];
       fetchSurveys(id, activity.type);
     }
-  }, [id, activityTypes]);
+
+
+    console.log(researchData)
+  }, [id, activityTypes, researchData]);
   const fetchUsers = async () => {
     try {
       const res = await fetch("/api/users");
@@ -92,22 +95,16 @@ export default function EditResearch() {
 
   const fecthReseachContributorsData = async (id) => {
     try {
+      
       const res = await fetch(`/api/contributors?research_id=${id}`);
       const data = await res.json();
-      if (!data.contributors) {
+      
+      if (!data) {
         showMessage("Colaboradores não encontrados", "vermelho_claro", 5000);
         return;
       }
-      
-      const mappedData = data.contributors.map((c) => ({
-        value: c.id,
-        label: c.name,
-        email: c.email,
-        role: c.role,
-        status: c.status,
-      }));
 
-      setContributorsData(mappedData);
+      setContributorsData(data);
     } catch (err) {
       console.error("Erro ao buscar colaboradores da pesquisa:", err);
     }
@@ -120,7 +117,7 @@ export default function EditResearch() {
       const data = await res.json();
 
       if (!data.surveys) {
-        showMessage("Pesquisas não encontradas", "vermelho_claro", 5000);
+        showMessage(`Essa pesquisa ainda não possui uma coleta ${survey_type} `, "azul_escuro", 2000);
         return;
       }
 

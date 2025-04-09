@@ -172,9 +172,9 @@ export default function ResearchForm({
     const idx = Math.floor(Math.random() * 5);
     setImageUrl(`/img/cards/img-${idx}.jpg`);
 
-    if(users.length > 0) {
-    setAllCollaborators(users)
-  }
+    if(users?.length > 0) {
+      setAllCollaborators(users)
+    }
     
   }, []);
 

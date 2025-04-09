@@ -19,7 +19,7 @@ async function updateResearch(token, researchId, researchData) {
 // Função para adicionar um colaborador
 async function addCollaborator(token, researchId, userId) {
   const response = await fetch(
-    `${process.env.SERVER_URL}/research/${researchId}/contributors/${userId}`,
+    `${process.env.SERVER_URL}/research/${researchId}/contributors`,
     {
       method: "POST",
       headers: {
@@ -28,9 +28,11 @@ async function addCollaborator(token, researchId, userId) {
       },
       body: JSON.stringify({
         instruction: "Pesquisador",
+        user_id: userId,
       }),
     }
   );
+
   return response;
 }
 
