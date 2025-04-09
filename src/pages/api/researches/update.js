@@ -19,7 +19,7 @@ async function updateResearch(token, researchId, researchData) {
 // Função para adicionar um colaborador
 async function addCollaborator(token, researchId, userId) {
   const response = await fetch(
-    `${process.env.SERVER_URL}/research/${researchId}/contributors`,
+    `${process.env.SERVER_URL}/research/${researchId}/contributors/${userId}`,
     {
       method: "POST",
       headers: {
@@ -27,8 +27,7 @@ async function addCollaborator(token, researchId, userId) {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        instruction: "Pesquisador",
-        user_id: userId,
+        instruction: "Pesquisador"
       }),
     }
   );
@@ -164,7 +163,7 @@ export default async function handler(req, res) {
           successfulAdd.push(collaboratorsToAdd[i]);
         } else {
           failedAdd.push(collaboratorsToAdd[i]);
-          const errData = await addResponses[i].json();
+          const errData =await addResponses[i].json();
           console.error("Erro ao adicionar colaborador:", errData);
         }
       }

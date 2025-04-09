@@ -22,14 +22,14 @@ const handler = async (req, res) => {
       });
     }
 
-    const url = `${process.env.SERVER_URL}/research/${research_id}/surveys?survey_type=${encodeURIComponent(survey_type)}`;
+    const url = `${process.env.SERVER_URL}/research/${research_id}/survey?survey_type=${encodeURIComponent(survey_type)}`;
 
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-      },
+      }
     });
 
     if (!response.ok) {

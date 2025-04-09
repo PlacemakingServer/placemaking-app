@@ -173,8 +173,8 @@ export default function ResearchForm({
     setImageUrl(`/img/cards/img-${idx}.jpg`);
 
     if(users?.length > 0) {
-      setAllCollaborators(users)
-    }
+    setAllCollaborators(users)
+  }
     
   }, []);
 
