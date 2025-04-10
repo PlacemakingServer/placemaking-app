@@ -51,12 +51,15 @@ export default async function handler(req, res) {
     console.log("Data from API:", data);
 
     const formattedData = data.contributors.map((c) => ({
+      value: c.user?.id,
       id: c.user?.id,
       name: c.user?.name,
+      label: c.user?.name,
       email: c.user?.email,
       role: c.user?.role,
       status: c.user?.status,
     }));
+
 
     return res.status(200).json(formattedData);
 

@@ -54,9 +54,6 @@ export default function EditResearch() {
       const activity = activityTypes[i];
       fetchSurveys(id, activity.type);
     }
-
-
-    console.log(researchData)
   }, [id, activityTypes, researchData]);
   const fetchUsers = async () => {
     try {
@@ -103,7 +100,6 @@ export default function EditResearch() {
         showMessage("Colaboradores não encontrados", "vermelho_claro", 5000);
         return;
       }
-
       setContributorsData(data);
     } catch (err) {
       console.error("Erro ao buscar colaboradores da pesquisa:", err);

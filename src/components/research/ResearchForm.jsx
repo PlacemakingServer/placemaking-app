@@ -29,8 +29,7 @@ export default function ResearchForm({
   users = [],
 }) {
   // Em modo edição, guardamos a lista original de colaboradores
-  // para poder calcular adições e remoções.
-  const originalCollaborators = contributorsData || [];
+  // para poder calcular adições e remoções
 
   // Estado principal do formulário
   const [form, setForm] = useState({
@@ -43,7 +42,7 @@ export default function ResearchForm({
     location_title: "",
     weather_celsius: null,
     weather_fahrenheit: null,
-    selectedCollaborators: [],
+    selectedCollaborators: contributorsData || [],
     collaboratorsToAdd: [],
     collaboratorsToRemove: [],
     ...initialData,
@@ -54,6 +53,7 @@ export default function ResearchForm({
   const [showLocation, setShowLocation] = useState(false);
   const [showLocationInfo, setShowLocationInfo] = useState(true);
   const [showCollaborators, setShowCollaborators] = useState(false);
+  const [originalCollaborators, setOriginalCollaborators] = useState([]);
 
   // Lista global de usuários (para MultiSelect)
   const [allCollaborators, setAllCollaborators] = useState([]);
@@ -88,12 +88,16 @@ export default function ResearchForm({
 
   // 4. Quando selecionamos colaboradores
   function refreshCollaboratorsDiff(newSelected) {
-    const originalIds = new Set(originalCollaborators.map((c) => c.value));
+    const originalArray = Array.isArray(originalCollaborators)
+      ? originalCollaborators
+      : [];
+  
+    const originalIds = new Set(originalArray.map((c) => c.value));
     const newIds = new Set(newSelected.map((c) => c.value));
-
+  
     const toAdd = newSelected.filter((c) => !originalIds.has(c.value));
-    const toRemove = originalCollaborators.filter((c) => !newIds.has(c.value));
-
+    const toRemove = originalArray.filter((c) => !newIds.has(c.value));
+  
     setForm((prev) => ({
       ...prev,
       selectedCollaborators: newSelected,
@@ -101,6 +105,7 @@ export default function ResearchForm({
       collaboratorsToRemove: toRemove,
     }));
   }
+  
 
   const handleSelectChange = (newValue) => {
     if (!isEdit) {
@@ -169,15 +174,24 @@ export default function ResearchForm({
     onSubmit?.(payload);
   };
   useEffect(() => {
+    if (users) {
+      setAllCollaborators(users);
+    }
+  
+    if (contributorsData && isEdit) {
+      setOriginalCollaborators(contributorsData || []);
+      setForm((prev) => ({
+        ...prev,
+        selectedCollaborators: contributorsData,
+      }));
+    }
+  }, [users, contributorsData, isEdit]);
+
+  useEffect(() => {
     const idx = Math.floor(Math.random() * 5);
     setImageUrl(`/img/cards/img-${idx}.jpg`);
-
-    if(users?.length > 0) {
-    setAllCollaborators(users)
-  }
-    
   }, []);
-
+  
 
   return (
     <div className="max-w-4xl mx-auto mt-6 bg-white rounded-lg shadow-md overflow-hidden">
@@ -426,7 +440,7 @@ export default function ResearchForm({
                     <UserCardCompact
                       key={user.value}
                       user={{
-                        id: user.value,
+                        id: user.id,
                         name: user.label,
                         role: user.role,
                         status: user.status,

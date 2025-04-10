@@ -20,8 +20,10 @@ export default function CreateResearch() {
     try {
       const res = await fetch("/api/users");
       const data = await res.json();
+
       const formatted = data.users?.map((c) => ({
         value: c.id,
+        id: c.id,
         label: c.name,
         role: c.role,
         status: c.status,
