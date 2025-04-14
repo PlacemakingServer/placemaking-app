@@ -29,6 +29,28 @@ export default function Researches() {
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
 
+  const loadResearches = async () =>{
+
+    fetch("/api/researches")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+
+        console.log("Pesquisas carregadas:", data);
+        setResearches(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching researches:", error);
+        showMessage("Erro ao carregar pesquisas.", "vermelho_claro", 5000);
+      });
+    
+
+  }
+
   const loadCachedResearches = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -43,8 +65,8 @@ export default function Researches() {
   }, [setIsLoading, showMessage]);
 
   useEffect(() => {
-    loadCachedResearches();
-  }, [loadCachedResearches]);
+    loadResearches();
+  }, []);
 
   const currentDate = new Date();
   const categorizedResearches = {
