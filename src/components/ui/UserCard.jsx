@@ -1,14 +1,18 @@
 // components/ui/UserCard.jsx
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 import { VARIANTS } from "@/config/colors";
 
 export default function UserCard({ user, onViewDetails }) {
   const getBadgeVariant = (status) => {
     switch (status) {
-      case "pendingCreate": return VARIANTS.azul_escuro;
-      case "pendingUpdate": return VARIANTS.warning;
-      case "pendingDelete": return VARIANTS.vermelho;
-      default: return VARIANTS.verde;
+      case "pendingCreate":
+        return VARIANTS.azul_escuro;
+      case "pendingUpdate":
+        return VARIANTS.warning;
+      case "pendingDelete":
+        return VARIANTS.vermelho;
+      default:
+        return VARIANTS.verde;
     }
   };
 
@@ -23,7 +27,9 @@ export default function UserCard({ user, onViewDetails }) {
       <div className="flex items-center gap-2 mt-4">
         {user._syncStatus && (
           <span
-            className={`flex-shrink-0 truncate max-w-[100px] px-2 py-1 text-xs font-semibold rounded ${getBadgeVariant(user._syncStatus)}`}
+            className={`flex-shrink-0 truncate max-w-[100px] px-2 py-1 text-xs font-semibold rounded ${getBadgeVariant(
+              user._syncStatus
+            )}`}
           >
             {user._syncStatus}
           </span>

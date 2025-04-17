@@ -5,7 +5,7 @@ import { TABS, PERMISSION_TABS, TABSTYLES } from "@/config/tabs";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { initAuthDB } from "@/lib/db";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 
 function getAllowedTabs(userRole) {
   const isAllowed = (name) => {

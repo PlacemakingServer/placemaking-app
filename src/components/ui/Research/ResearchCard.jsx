@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 import { VARIANTS } from "@/config/colors";
 import { motion } from "framer-motion";
 
@@ -15,7 +15,10 @@ export default function ResearchCard({ research }) {
       className="rounded-2xl shadow-md bg-white overflow-hidden flex flex-col justify-between border hover:shadow-xl"
     >
       {/* Header com imagem de fundo */}
-      <div className="relative h-14 bg-cover bg-center" style={{ backgroundImage: `url('${imageUrl}')` }}>
+      <div
+        className="relative h-14 bg-cover bg-center"
+        style={{ backgroundImage: `url('${imageUrl}')` }}
+      >
         <div className="absolute inset-0 bg-black/30 rounded-t-2xl" />
         <div className="absolute inset-0 flex items-center px-4">
           <h3 className="text-white text-md font-semibold truncate drop-shadow-md z-10">

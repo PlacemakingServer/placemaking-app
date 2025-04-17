@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 import FormField from "@/components/forms/FormField";
 import { motion, AnimatePresence } from "framer-motion";
 import MultiSelect from "@/components/ui/Multiselect/Multiselect";
@@ -40,7 +40,7 @@ export default function FormBuilder({ onSubmit, activity_id }) {
   // Quando clica em “Salvar” ou “Adicionar Pergunta”
   const handleSaveQuestion = () => {
     if (!newQuestion.title || !newQuestion.inputType) return;
-    
+
     // Cria objeto do field
     const newField = {
       id: crypto.randomUUID(),
@@ -101,12 +101,11 @@ export default function FormBuilder({ onSubmit, activity_id }) {
       activity_id: activity_id,
       fields: formFields, // todas as perguntas adicionadas
     };
-  
+
     console.log("📦 Estrutura final do formulário:", payload);
-    
+
     // onSubmit?.(formFields);
   };
-  
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto mt-10 p-6 rounded-xl">

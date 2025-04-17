@@ -7,7 +7,7 @@ import {
   markItemForUpdate,
   markItemForDelete,
 } from "@/services/cache";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 import { USER_ROLES, USER_STATUS } from "@/config/data_types";
 import Link from "next/link";
 
@@ -92,7 +92,6 @@ export default function ModalUser({
       setIsProcessing(false);
     }
   };
-  
 
   const handleDelete = async () => {
     setIsProcessing(true);
@@ -160,9 +159,7 @@ export default function ModalUser({
                 className="absolute top-3 right-3 text-white hover:text-gray-200"
                 onClick={onClose}
               >
-                <span className="material-symbols-outlined text-xl">
-                  close
-                </span>
+                <span className="material-symbols-outlined text-xl">close</span>
               </button>
             </div>
             <div className="p-6 space-y-4">
@@ -275,7 +272,3 @@ export default function ModalUser({
     </AnimatePresence>
   );
 }
-
-
-
-

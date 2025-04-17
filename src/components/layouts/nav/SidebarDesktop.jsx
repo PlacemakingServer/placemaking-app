@@ -4,7 +4,7 @@ import { TABS, PERMISSION_TABS, TABSTYLES } from "@/config/tabs";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 import { initAuthDB } from "@/lib/db";
 import FullscreenButton from "@/components/ui/FullscreenButton";
 

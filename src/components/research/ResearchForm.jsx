@@ -2,7 +2,7 @@ import { useState, useEffect, use } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import FormField from "@/components/forms/FormField";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
 import Switch from "@/components/ui/Switch";
 import MultiSelect from "@/components/ui/Multiselect/Multiselect";
@@ -91,13 +91,13 @@ export default function ResearchForm({
     const originalArray = Array.isArray(originalCollaborators)
       ? originalCollaborators
       : [];
-  
+
     const originalIds = new Set(originalArray.map((c) => c.value));
     const newIds = new Set(newSelected.map((c) => c.value));
-  
+
     const toAdd = newSelected.filter((c) => !originalIds.has(c.value));
     const toRemove = originalArray.filter((c) => !newIds.has(c.value));
-  
+
     setForm((prev) => ({
       ...prev,
       selectedCollaborators: newSelected,
@@ -105,7 +105,6 @@ export default function ResearchForm({
       collaboratorsToRemove: toRemove,
     }));
   }
-  
 
   const handleSelectChange = (newValue) => {
     if (!isEdit) {
@@ -177,7 +176,7 @@ export default function ResearchForm({
     if (users) {
       setAllCollaborators(users);
     }
-  
+
     if (contributorsData && isEdit) {
       setOriginalCollaborators(contributorsData || []);
       setForm((prev) => ({
@@ -191,7 +190,6 @@ export default function ResearchForm({
     const idx = Math.floor(Math.random() * 5);
     setImageUrl(`/img/cards/img-${idx}.jpg`);
   }, []);
-  
 
   return (
     <div className="max-w-4xl mx-auto mt-6 bg-white rounded-lg shadow-md overflow-hidden">
