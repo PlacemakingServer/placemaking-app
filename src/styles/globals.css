@@ -48,3 +48,18 @@ body {
 .animate-slide-in-left {
   animation: slideInLeft 0.3s ease-out;
 }
+
+
+.react-select__control {
+  @apply border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm rounded-lg shadow-sm;
+}
+.react-select__menu {
+  @apply bg-white dark:bg-zinc-800 text-sm shadow-lg rounded-md;
+}
+.react-select__option--is-focused {
+  @apply bg-zinc-100 dark:bg-zinc-700;
+}
+.react-select__multi-value {
+  @apply bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 px-1 rounded;
+}
+

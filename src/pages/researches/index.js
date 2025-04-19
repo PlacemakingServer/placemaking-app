@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 import Button from "@/components/ui/Button";
@@ -22,34 +22,30 @@ export default function Researches() {
     ongoing: true,
     future: true,
   });
-  const [page, setPage] = useState({ completed: 1, ongoing: 1, future: 1 });
+  const [page, setPage] = useState({
+    completed: 1,
+    ongoing: 1,
+    future: 1,
+  });
   const perPage = 3;
   const { isLoading, setIsLoading } = useLoading();
   const { showMessage } = useMessage();
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
 
-  const loadResearches = async () =>{
-
-    fetch("/api/researches")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
-      })
-      .then((data) => {
-
-        console.log("Pesquisas carregadas:", data);
-        setResearches(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching researches:", error);
-        showMessage("Erro ao carregar pesquisas.", "vermelho_claro", 5000);
-      });
-    
-
+const loadResearches = async () => {
+  try {
+    const res = await fetch("/api/researches");
+    if (!res.ok) throw new Error("Network response was not ok");
+    const json = await res.json();
+    const list = Array.isArray(json) ? json : json.researches || [];
+    setResearches(list);
+  } catch (e) {
+    console.error("Erro ao carregar pesquisas:", e);
+    showMessage("Erro ao carregar pesquisas.", "vermelho_claro", 5000);
   }
+};
+
 
   const loadCachedResearches = useCallback(async () => {
     setIsLoading(true);
@@ -64,28 +60,27 @@ export default function Researches() {
     }
   }, [setIsLoading, showMessage]);
 
+  
   useEffect(() => {
     loadResearches();
   }, []);
 
-  const currentDate = new Date();
-  const categorizedResearches = {
-    completed: [],
-    ongoing: [],
-    future: [],
-  };
-
-  researches.forEach((research) => {
-    const endDate = new Date(research.end_date);
-    const startDate = new Date(research.release_date);
-    if (endDate < currentDate) {
-      categorizedResearches.completed.push(research);
-    } else if (startDate > currentDate) {
-      categorizedResearches.future.push(research);
-    } else {
-      categorizedResearches.ongoing.push(research);
-    }
-  });
+  
+  const categorizedResearches = useMemo(() => {
+    const currentDate = new Date();
+    const list = Array.isArray(researches) ? researches : [];
+    const cat = { completed: [], ongoing: [], future: [] };
+    list.forEach((research) => {
+      const endDate = new Date(research.end_date);
+      const startDate = new Date(research.release_date);
+  
+      if (endDate < currentDate)      cat.completed.push(research);
+      else if (startDate > currentDate) cat.future.push(research);
+      else                              cat.ongoing.push(research);
+    });
+  
+    return cat;
+  }, [researches]);
 
   const filterAndSortResearches = (list) => {
     return list
@@ -96,10 +91,13 @@ export default function Researches() {
           research.location_title.toLowerCase().includes(filters.toLowerCase())
       )
       .sort((a, b) => {
+        const aDate = a?.created_at ?? "";
+        const bDate = b?.created_at ?? "";
         return sortOrder === "asc"
-          ? a.created_at.localeCompare(b.created_at)
-          : b.created_at.localeCompare(a.created_at);
+          ? aDate.localeCompare(bDate)
+          : bDate.localeCompare(aDate);
       });
+      
   };
 
   const handleSync = async () => {
@@ -108,6 +106,7 @@ export default function Researches() {
       await syncLocalToServer("researches");
       await syncServerToCache("researches");
       showMessage("Pesquisas sincronizadas com sucesso!", "azul_claro");
+      // Atualiza a listagem no estado local
       loadCachedResearches();
     } catch (err) {
       console.error("Erro ao sincronizar pesquisas:", err);
@@ -205,6 +204,7 @@ export default function Researches() {
 
           {Object.entries(categorizedResearches).map(([key, list]) => {
             if (!showCategory[key]) return null;
+
             const filteredAndSorted = filterAndSortResearches(list);
             const totalPages = Math.ceil(filteredAndSorted.length / perPage);
 
@@ -284,7 +284,6 @@ export default function Researches() {
                     </Button>
                   </div>
                 )}
-
                 <hr className="my-6 border-gray-200" />
               </div>
             );

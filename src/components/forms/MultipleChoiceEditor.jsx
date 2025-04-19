@@ -6,12 +6,12 @@ import FormField from "@/components/forms/FormField";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function MultipleChoiceEditor({ options = [], setOptions }) {
-  const [draft, setDraft] = useState({ option_text: "", option_df_value: "" });
+  const [draft, setDraft] = useState({ option_text: "-", option_df_value: "" });
 
   const handleAdd = () => {
     if (!draft.option_text.trim() || !draft.option_df_value.trim()) return;
     setOptions((prev) => [...prev, draft]);
-    setDraft({ option_text: "", option_df_value: "" });
+    setDraft({ option_text: "-", option_df_value: "" });
   };
 
   const handleRemove = (index) => {
@@ -29,7 +29,7 @@ export default function MultipleChoiceEditor({ options = [], setOptions }) {
 
       {/* Campos de entrada */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="w-full sm:w-1/5">
+        {/* <div className="w-full sm:w-1/5">
           <FormField
             legend="Letra da opção"
             type="text"
@@ -39,8 +39,7 @@ export default function MultipleChoiceEditor({ options = [], setOptions }) {
             }
             placeholder="a."
           />
-        </div>
-
+        </div> */}
         <div className="flex-1">
           <FormField
             legend="Valor da opção"

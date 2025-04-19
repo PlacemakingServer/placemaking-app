@@ -28,10 +28,6 @@ export default function ResearchForm({
   isEdit = false,
   users = [],
 }) {
-  // Em modo edição, guardamos a lista original de colaboradores
-  // para poder calcular adições e remoções
-
-  // Estado principal do formulário
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -55,16 +51,15 @@ export default function ResearchForm({
   const [showCollaborators, setShowCollaborators] = useState(false);
   const [originalCollaborators, setOriginalCollaborators] = useState([]);
 
-  // Lista global de usuários (para MultiSelect)
+  
   const [allCollaborators, setAllCollaborators] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
-
-  // 1. Mapeia input
+  
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  // 2. Ao selecionar ponto no mapa
+  
   const handleLocationSelect = (data) => {
     setForm((prev) => ({
       ...prev,
@@ -76,7 +71,7 @@ export default function ResearchForm({
     }));
   };
 
-  // 3. Descartar alterações (somente se isEdit)
+  
   const handleDiscard = () => {
     setForm({
       ...initialData,
@@ -86,7 +81,6 @@ export default function ResearchForm({
     });
   };
 
-  // 4. Quando selecionamos colaboradores
   function refreshCollaboratorsDiff(newSelected) {
     const originalArray = Array.isArray(originalCollaborators)
       ? originalCollaborators
@@ -109,14 +103,13 @@ export default function ResearchForm({
 
   const handleSelectChange = (newValue) => {
     if (!isEdit) {
-      // Em modo criação, não faz distinção de add/remove
       setForm((prev) => ({ ...prev, selectedCollaborators: newValue }));
     } else {
       refreshCollaboratorsDiff(newValue);
     }
   };
 
-  // Desfaz a adição (remove do array de add)
+
   const handleRemoveAdd = (user) => {
     const newSelected = form.selectedCollaborators.filter(
       (u) => u.value !== user.value
@@ -124,15 +117,14 @@ export default function ResearchForm({
     refreshCollaboratorsDiff(newSelected);
   };
 
-  // Desfaz a remoção
+
   const handleUndoRemove = (user) => {
     const newSelected = [...form.selectedCollaborators, user];
     refreshCollaboratorsDiff(newSelected);
   };
 
-  // 5. Ao enviar o form, construímos o payload
+
   const handleSubmit = () => {
-    // Mapeia novamente os colaboradores no estilo final
     const selected = form.selectedCollaborators.map((c) => ({
       id: c.value,
       name: c.label,
@@ -194,8 +186,7 @@ export default function ResearchForm({
   
 
   return (
-    <div className="max-w-4xl mx-auto mt-6 bg-white rounded-lg shadow-md overflow-hidden">
-      {/* Cabeçalho */}
+    <div className="max-w-4xl mx-auto mt-6 bg-white rounded-2xl shadow-md overflow-hidden">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -220,7 +211,6 @@ export default function ResearchForm({
       </motion.div>
 
       <div className="p-6 space-y-6">
-        {/* Seção: Informações Básicas */}
         <SectionToggle
           title="Informações Básicas"
           isChecked={showBasicInfo}
@@ -245,7 +235,6 @@ export default function ResearchForm({
 
         <hr className="my-6 border-gray-200" />
 
-        {/* Seção: Datas */}
         <SectionToggle
           title="Período da Pesquisa"
           isChecked={showDates}
@@ -270,7 +259,6 @@ export default function ResearchForm({
 
         <hr className="my-6 border-gray-200" />
 
-        {/* Seção: Localização */}
         <SectionToggle
           title="Localização"
           isChecked={showLocation}
@@ -357,7 +345,6 @@ export default function ResearchForm({
 
         <hr className="my-6 border-gray-200" />
 
-        {/* Seção: Colaboradores */}
         <SectionToggle
           title="Colaboradores"
           isChecked={showCollaborators}

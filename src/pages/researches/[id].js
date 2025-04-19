@@ -5,81 +5,60 @@ import { useMessage } from "@/context/MessageContext";
 import ResearchLoadingSkeleton from "@/components/research/ResearchLoadingSkeleton";
 import SideBarSectionsFilter from "@/components/ui/SideBarSectionsFilter";
 import CollectionFormSection from "@/components/surveys/CollectionFormSection";
-import { set } from "zod";
-// import StaticCollectionSection from "@/components/surveys/StaticCollectionSection";
-// import DynamicCollectionSection from "@/components/surveys/DynamicCollectionSection";
+import AddSurveyPrompt from "@/components/surveys/AddSurveyPrompt";
 
 export default function EditResearch() {
   const router = useRouter();
   const { id } = router.query;
   const { showMessage } = useMessage();
   const [researchData, setResearchData] = useState(null);
-  const [contributorsData, setContributorsData] = useState(null);
+  const [contributors, setContributors] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [surveys, setSurveys] = useState([]);
-  const [activityTypes, setActivityTypes] = useState([
-    {
-      id: "formulario",
-      label: "Formulário",
-      icon: "description",
-      type: "Formulário",
-    },
-    {
-      id: "estatica",
-      label: "Estática",
-      icon: "insights",
-      type: "Estática",
-    },
-    {
-      id: "dinamica",
-      label: "Dinâmica",
-      icon: "sync_alt",
-      type: "Dinâmica",
-    },
-  ]);
+  const [renderedSurveys, setRenderedSurveys] = useState([]);
+  const [isCreatingSurvey, setIsCreatingSurvey] = useState(false);
+
+  const SURVEY_TYPES = [
+    { id: "formulario", label: "Formulário", icon: "description" },
+    { id: "estatica", label: "Estática", icon: "insights" },
+    { id: "dinamica", label: "Dinâmica", icon: "sync_alt" },
+  ];
 
   useEffect(() => {
     if (!id) return;
-    fetchResearchData(id);
-    fecthReseachContributorsData(id);
+    loadResearchData();
+    loadContributors();
+    loadAllSurveyTypes();
   }, [id]);
 
   useEffect(() => {
-    fetchUsers();
+    loadUsers();
   }, []);
-  useEffect(() => {
-    if (!id || activityTypes.length <= 0) return;
-    for (let i = 0; i < activityTypes.length; i++) {
-      const activity = activityTypes[i];
-      fetchSurveys(id, activity.type);
-    }
-  }, [id, activityTypes, researchData]);
-  const fetchUsers = async () => {
+
+  const loadUsers = async () => {
     try {
       const res = await fetch("/api/users");
       const data = await res.json();
-      const formatted = data.users?.map((c) => ({
-        value: c.id,
-        label: c.name,
-        role: c.role,
-        status: c.status,
-        email: c.email,
+      const formatted = data.users?.map((u) => ({
+        value: u.id,
+        label: u.name,
+        role: u.role,
+        status: u.status,
+        email: u.email,
       }));
       setUsers(formatted || []);
-    } catch (error) {
-      console.error("Erro ao buscar colaboradores:", error);
+    } catch (err) {
+      console.error("Erro ao buscar usuários:", err);
     }
   };
 
-  const fetchResearchData = async (id) => {
+  const loadResearchData = async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/researches/${id}`);
       const data = await res.json();
       if (!data.research) {
         showMessage("Pesquisa não encontrada", "vermelho_claro", 5000);
-        setLoading(false);
         return;
       }
       setResearchData(data.research);
@@ -90,49 +69,95 @@ export default function EditResearch() {
     }
   };
 
-  const fecthReseachContributorsData = async (id) => {
+  const loadContributors = async () => {
     try {
-      
       const res = await fetch(`/api/contributors?research_id=${id}`);
       const data = await res.json();
-      
       if (!data) {
         showMessage("Colaboradores não encontrados", "vermelho_claro", 5000);
         return;
       }
-      setContributorsData(data);
+      setContributors(data);
     } catch (err) {
-      console.error("Erro ao buscar colaboradores da pesquisa:", err);
+      console.error("Erro ao buscar colaboradores:", err);
     }
   };
 
-  const fetchSurveys = async (id, survey_type) => {
+  const loadAllSurveyTypes = () => {
+    SURVEY_TYPES.forEach(({ label }) => loadSurveyByType(label));
+  };
+
+  const loadSurveyByType = async (surveyType) => {
     try {
-      const params = new URLSearchParams({ research_id: id, survey_type: survey_type });
+      const params = new URLSearchParams({
+        research_id: id,
+        survey_type: surveyType,
+      });
       const res = await fetch(`/api/surveys?${params.toString()}`);
       const data = await res.json();
 
-      if (!data.surveys) {
-        showMessage(`Essa pesquisa ainda não possui uma coleta ${survey_type} `, "azul_escuro", 2000);
-        return;
-      }
+      if (!data.surveys || data.surveys.length === 0) return;
 
-      setSurveys((prev) => [...prev, ...data.surveys]);
-    } catch (error) {
-      console.error("Erro ao buscar pesquisas:", error);
+      renderSurveyComponent(surveyType, data);
+    } catch (err) {
+      console.error("Erro ao buscar survey do tipo", surveyType, err);
     }
   };
 
-  const handleUpdate = async (payload) => {
+  const renderSurveyComponent = (surveyLabel, data) => {
+
+    const surveyType = SURVEY_TYPES.find((t) => t.label === surveyLabel);
+    const surveyData = data?.surveys[0] || null;
+    if (!surveyType || renderedSurveys.find((s) => s.id === surveyType.id)) return;
+    setRenderedSurveys((prev) => {
+      return [
+        ...prev,
+        {
+          ...surveyType,
+          component: (
+            <CollectionFormSection
+              key={`survey-${surveyType.id}`}
+              survey_type={surveyType.label}
+              research_id={id}
+              initialData={surveyData}
+              handleCancelCreateSurvey={handleCancelCreateSurvey}
+              handleCreateSurvey={handleCreateSurvey}
+            />
+          ),
+        },
+      ]
+    });
+  };
+
+  const handleStartCreateSurvey = (selectedTypeId) => {
+    const typeObj = SURVEY_TYPES.find((t) => t.id === selectedTypeId);
+    if (!typeObj) return;
+
+    renderSurveyComponent(typeObj.label, null);
+
+    setTimeout(() => {
+      const element = document.getElementById(`survey-${selectedTypeId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 300);
+
+    setIsCreatingSurvey(true);
+  };
+
+  const handleCancelCreateSurvey = () => {
+    setRenderedSurveys((prev) => prev.filter((s) => s.id !== "formulario"));
+    setIsCreatingSurvey(false);
+  };
+
+  const handleResearchUpdate = async (payload) => {
     try {
-      const release_date = payload.release_date ? `${payload.release_date}T00:00:00` : null;
+      const release_date = payload.release_date
+        ? `${payload.release_date}T00:00:00`
+        : null;
       const end_date = payload.end_date ? `${payload.end_date}T00:00:00` : null;
-      const finalPayload = {
-        ...payload,
-        id,
-        release_date,
-        end_date,
-      };
+
+      const finalPayload = { ...payload, id, release_date, end_date };
 
       const res = await fetch("/api/researches/update", {
         method: "PUT",
@@ -144,26 +169,73 @@ export default function EditResearch() {
         throw new Error(`Falha ao atualizar pesquisa. Status: ${res.status}`);
       }
 
-      const updatedData = await res.json();
-
-      const mappedData = {
-        ...updatedData,
-        selectedCollaborators: (updatedData.selectedCollaborators || []).map(
-          (c) => ({
-            value: c.id,
-            label: c.name,
-            email: c.email,
-            role: c.role,
-            status: c.status,
-          })
-        ),
-      };
-
+      const updated = await res.json();
       showMessage("Pesquisa atualizada com sucesso", "verde", 5000);
       router.reload();
     } catch (err) {
       console.error("Erro ao atualizar a pesquisa:", err);
       showMessage("Erro ao atualizar a pesquisa", "vermelho_claro", 5000);
+    }
+  };
+
+  const handleCreateSurvey = async (payload) => {
+    try {
+      const res = await fetch("/api/surveys/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(`Falha ao criar uma coleta. Status: ${res.status}`);
+      }
+      if (!data) {
+        showMessage("Erro ao criar uma coleta", "vermelho_claro", 5000);
+        return null;
+      }
+      showMessage("Coleta criada com sucesso", "verde", 5000);
+      setIsCreatingSurvey(true);
+      return data?.survey;
+    } catch (err) {
+      showMessage("Erro ao criar uma coleta", "vermelho_claro", 5000);
+      return null;
+    }
+  };
+
+  const handleSurveyUpdate = async (payload) => {
+    try {
+      const res = await fetch("/api/surveys/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        throw new Error(`Falha ao atualizar a coleta. Status: ${res.status}`);
+      }
+      const data = await res.json();
+      showMessage("Coleta atualizada com sucesso", "verde", 5000);
+      router.reload();
+    } catch (err) {
+      console.error("Erro ao atualizar a coleta:", err);
+      showMessage("Erro ao atualizar a coleta", "vermelho_claro", 5000);
+    }
+  };
+
+  const handleSurveyDelete = async (surveyId) => {
+    try {
+      const res = await fetch(`/api/surveys/delete?survey_id=${surveyId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        throw new Error(`Falha ao deletar a coleta. Status: ${res.status}`);
+      }
+      const data = await res.json();
+      showMessage("Coleta deletada com sucesso", "verde", 5000);
+      router.reload();
+    } catch (err) {
+      console.error("Erro ao deletar a coleta:", err);
+      showMessage("Erro ao deletar a coleta", "vermelho_claro", 5000);
     }
   };
 
@@ -176,75 +248,41 @@ export default function EditResearch() {
     );
   }
 
-  const sections = [
+  const sidebarSections = [
     { id: "pesquisa", label: "Pesquisa", icon: "search" },
-    { id: "formulario", label: "Formulário", icon: "description" },
-    { id: "estatica", label: "Estática", icon: "insights" },
-    { id: "dinamica", label: "Dinâmica", icon: "sync_alt" },
+    ...SURVEY_TYPES,
   ];
-
-  const renderActivityType = (activity) => {
-    switch (activity.type) {
-      case "Formulário":
-        return (
-          <section id="formulario" key="formulario">
-            {/* <CollectionFormSection
-              activity_type={activity.id}
-              research_id={id}
-              initialData={initialData.activities.find(
-                (a) => a.id === activity.id
-              )}
-            /> */}
-          </section>
-        );
-      // case "Estática":
-      //   return (
-      //     <section id="estatica" key="estatica">
-      //       <StaticCollectionSection
-      //         activity_type_id={activity.id}
-      //         research_id={id}
-      //         initialData={initialData.activities.find(
-      //           (a) => a.id === activity.id
-      //         )}
-      //       />
-      //     </section>
-      //   );
-      // case "Dinâmica":
-      // return (
-      //   <section id="dinamica" key="dinamica">
-      //     <DynamicCollectionSection
-      //       activity_type_id={activity.id}
-      //       research_id={id}
-      //       initialData={initialData.activities.find(
-      //         (a) => a.id === activity.id
-      //       )}
-      //     />
-      //   </section>
-      // );
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="relative">
       <main className="p-4 sm:p-6 space-y-20 mb-20">
         <section id="pesquisa">
-          <h2 className="text-2xl font-bold mb-4">Pesquisa</h2>
-
+          <h2 className="text-xl font-bold mb-4">Pesquisa</h2>
           <ResearchForm
             isEdit
             initialData={researchData}
-            contributorsData={contributorsData}
+            contributorsData={contributors}
             users={users}
-            onSubmit={handleUpdate}
+            onSubmit={handleResearchUpdate}
           />
         </section>
 
-        {activityTypes.map((activity) => renderActivityType(activity))}
+        {!isCreatingSurvey && (
+          <section id="create-survey">
+            <h2 className="text-xl font-bold mb-4">Criar coleta</h2>
+            <AddSurveyPrompt onContinue={handleStartCreateSurvey} />
+          </section>
+        )}
+
+        {renderedSurveys.map((survey) => (
+          <section id={`survey-${survey.id}`} key={`survey-${survey.id}`}>
+            <h2 className="text-xl font-bold mb-4">{survey.label}</h2>
+            {survey.component}
+          </section>
+        ))}
       </main>
 
-      <SideBarSectionsFilter sections={sections} position="right" />
+      <SideBarSectionsFilter sections={sidebarSections} position="right" />
     </div>
   );
 }

@@ -11,7 +11,7 @@ const checkMissingFields = (dataObj) => {
   return requiredFields.filter((field) => !dataObj[field]);
 };
 
-export async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -30,7 +30,7 @@ export async function handler(req, res) {
       title,
       description,
       input_type_id
-    } = req.query;
+    } = req.body;
 
     const missingFields = checkMissingFields({
       survey_id,

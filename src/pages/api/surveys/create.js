@@ -2,6 +2,7 @@ import { parse } from "cookie";
 
 const handler = async (req, res) => {
   try {
+
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
     }
@@ -11,8 +12,21 @@ const handler = async (req, res) => {
       return res.status(401).json({ error: "Token não fornecido" });
     }
 
+    
     const {survey_type, title, description, lat, long, location_title, research_id} = req.body;
-    let missingFields = checkMissingFields([survey_type, title, description, lat, long, location_title, research_id]);
+    let missingFields = checkMissingFields({
+      survey_type,
+      title,
+      description,
+      lat,
+      long,
+      location_title,
+      research_id,
+    });
+
+
+
+
     if (missingFields.length > 0) {
       return res
         .status(400)
@@ -45,7 +59,6 @@ const handler = async (req, res) => {
     if (!data) {
       return res.status(404).json({ error: "Erro ao adicionar um contribuidor à coleta." });
     }
-
     return res.status(200).json(data);
   } catch (err) {
     return res.status(500).json({ error: "Erro ao conectar com o servidor" });
