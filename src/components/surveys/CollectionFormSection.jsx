@@ -1,17 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import FormField from "@/components/forms/FormField";
+import { motion, AnimatePresence } from "framer-motion";
+import { ClipboardList } from "lucide-react";
+
 import Switch from "@/components/ui/Switch";
 import Button from "@/components/ui/Button";
 import FormBuilder from "@/components/forms/FormBuilder";
-import dynamic from "next/dynamic";
-import MapPreview from "@/components/map/MapPreviewNoSSR";
-
-const OfflineMapButton = dynamic(
-  () => import("@/components/OfflineMapButton"),
-  {
-    ssr: false,
-  }
-);
+import MicroRegionEditor from "@/components/surveys/MicroRegionEditor";
+import LocationForm from "@/components/surveys/LocationForm";
+import BasicInformation from "@/components/surveys/BasicInformation";
+import CollaboratorSelector from "@/components/surveys/CollaboratorSelector";
+import TimeRanges from "@/components/surveys/TimeRanges";
 
 export default function CollectionFormSection({
   initialData = {},
@@ -31,20 +29,13 @@ export default function CollectionFormSection({
   });
   const [isEdit, setIsEdit] = useState(false);
   const initialDataRef = useRef(JSON.stringify(initialData));
-  const [showLocationInfo, setShowLocationInfo] = useState(true);
-  const [enableFormBulder, setEnableFormBuilder] = useState(false);
-  const [showSurveyInformation, setShowSurveyInformation] = useState(true);
-
-  const handleLocationSelect = (data) => {
-    setForm((prev) => ({
-      ...prev,
-      lat: data.lat,
-      long: data.lng,
-      location_title: data.location || "",
-      weather_celsius: data.weather_celsius ?? null,
-      weather_fahrenheit: data.weather_fahrenheit ?? null,
-    }));
-  };
+  const [showLocationForm, setShowLocationForm] = useState(false);
+  const [showSurveyInformation, setShowSurveyInformation] = useState(false);
+  const [microRegions, setMicroRegions] = useState([]);
+  const [timeRanges, setTimeRanges] = useState([]);
+  const [formStructure, setFormStructure] = useState(
+    initialData?.structure || {}
+  );
 
   useEffect(() => {
     const hasInitialData = initialData && initialData.id;
@@ -61,20 +52,18 @@ export default function CollectionFormSection({
     setEnableFormBuilder(hasInitialData);
   }, [initialData]);
 
+  const [enableFormBuilder, setEnableFormBuilder] = useState(isEdit);
+
   useEffect(() => {
-    if (!enabled) {
-      setEnableFormBuilder(false);
-    } else {
-      setEnableFormBuilder(true);
-    }
+    setEnableFormBuilder(enabled);
   }, [enabled]);
 
-  const handleChange = (field) => (e) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-  };
-
   const handleSave = async () => {
-    const data = await handleCreateSurvey(form);
+    const data = await handleCreateSurvey({
+      ...form,
+      micro_regions: microRegions,
+      time_ranges: timeRanges,
+    });
     if (data && data.id) {
       setIsEdit(true);
       setEnabled(true);
@@ -82,23 +71,29 @@ export default function CollectionFormSection({
         ...prev,
         ...data,
       }));
-
       if (data.structure) {
         setFormStructure(data.structure);
       }
-
       setEnableFormBuilder(true);
     }
   };
 
   return (
-    <div className="border rounded-xl p-6 bg-white shadow max-w-4xl mx-auto w-full space-y-6">
-      <div className="w-full flex flex-row items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
-        <h2 className="text-xl font-bold text-gray-800">
-          {isEdit ? `Entrevista: ${form.title}` : "Nova - Entrevista"}
-        </h2>
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="bg-gray-50 border border-gray-200 rounded-2xl shadow-md p-6 sm:p-8 max-w-4xl mx-auto w-full space-y-6 transition-all"
+    >
+      <div className="w-full flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-2 text-gray-800">
+          <ClipboardList size={20} className="text-green-500" />
+          <h2 className="text-xl font-bold">
+            {isEdit ? `Entrevista: ${form.title}` : "Nova - Entrevista"}
+          </h2>
+        </div>
         <div className="flex items-center gap-2 ml-auto">
-          <Switch checked={enabled} onChange={setEnabled} />
+          <Switch type="arrow" checked={enabled} onChange={setEnabled} />
         </div>
       </div>
 
@@ -111,141 +106,81 @@ export default function CollectionFormSection({
         </p>
       </div>
 
-      {enabled && (
-        <div className="space-y-4 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">
-                Informações da Coleta
-              </h2>
-              <p className="text-sm text-gray-600">
-                Insira as informações da coleta, como título, descrição e
-                localização.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={showSurveyInformation}
-                onChange={setShowSurveyInformation}
-              />
-            </div>
-          </div>
+      <AnimatePresence>
+        {enabled && (
+          <motion.div
+            key="form-content"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-6"
+          >
+            <BasicInformation
+              form={form}
+              setForm={setForm}
+              showSurveyInformation={showSurveyInformation}
+              setShowSurveyInformation={setShowSurveyInformation}
+            />
 
-          {showSurveyInformation && (
-            <div className="space-y-4">
-              <FormField
-                legend="Título do Formulário"
-                type="text"
-                value={form.title}
-                onChange={handleChange("title")}
-              />
+            <div className="h-px bg-gray-200 my-4" />
 
-              <FormField
-                legend="Descrição"
-                type="textarea"
-                value={form.description}
-                onChange={handleChange("description")}
-              />
+            <LocationForm
+              form={form}
+              setForm={setForm}
+              showLocationForm={showLocationForm}
+              setShowLocationForm={setShowLocationForm}
+            />
 
-              <div className="p-4 rounded-lg space-y-4 bg-gray-50 border">
-                <p className="text-sm text-gray-600">
-                  Defina uma localização para essa coleta pelo mapa interativo.
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    legend="Latitude"
-                    type="text"
-                    value={form.lat}
-                    onChange={handleChange("lat")}
-                    disabled
-                  />
-                  <FormField
-                    legend="Longitude"
-                    type="text"
-                    value={form.long}
-                    onChange={handleChange("long")}
-                    disabled
-                  />
-                </div>
+            <div className="h-px bg-gray-200 my-4" />
 
-                <FormField
-                  legend="Localização (Título)"
-                  type="text"
-                  value={form.location_title}
-                  onChange={handleChange("location_title")}
-                />
+            <MicroRegionEditor
+              regions={microRegions}
+              setRegions={setMicroRegions}
+              form={form}
+              setForm={setForm}
+            />
+            <div className="h-px bg-gray-200 my-4" />
 
-                <div className="flex flex-col items-center border-t pt-4 gap-2">
-                  <OfflineMapButton onLocationSelect={handleLocationSelect} />
-                  <p className="text-xs text-gray-500 text-center">
-                    Para obter a localização automaticamente, clique em{" "}
-                    <strong>“Abrir mapa”</strong>.
-                  </p>
-                </div>
+            <TimeRanges timeRanges={timeRanges} setTimeRanges={setTimeRanges} />
 
-                {!!form.lat && !!form.long && (
-                  <>
-                    <div className="flex items-center justify-between border-b pb-2 mt-4">
-                      <p className="text-sm text-gray-700 font-medium">
-                        Exibir Informações da localização
-                      </p>
-                      <Switch
-                        checked={showLocationInfo}
-                        onChange={setShowLocationInfo}
-                      />
-                    </div>
-                    {showLocationInfo && (
-                      <div className="mt-4 text-sm text-gray-700 border rounded-md p-4 bg-gray-50 space-y-4">
-                        <div>
-                          <strong className="block mb-1">
-                            Resumo da Localização:
-                          </strong>
-                          <p>{form.location_title}</p>
-                          <p>Lat: {Number(form.lat).toFixed(6)}</p>
-                          <p>Long: {Number(form.long).toFixed(6)}</p>
-                          {form.weather_celsius && form.weather_fahrenheit && (
-                            <p>
-                              Clima: {form.weather_celsius}°C /{" "}
-                              {Number(form.weather_fahrenheit).toFixed(1)}°F
-                            </p>
-                          )}
-                        </div>
-                        <MapPreview
-                          lat={Number(form.lat)}
-                          lng={Number(form.long)}
-                          height="200px"
-                          width="100%"
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+            <div className="h-px bg-gray-200 my-4" />
 
-              {enabled && (
-                <div className="pt-4 flex justify-center">
-                  <Button variant="verde" onClick={handleSave}>
-                    {isEdit ? "Salvar Alterações" : "Criar Coleta"}
+            <CollaboratorSelector
+              form={form}
+              setForm={setForm}
+              isEdit={isEdit}
+              availableCollaborators={initialData?.available_collaborators || []}
+            />
+
+            <div className="h-px bg-gray-200 my-4" />
+
+            <div className="pt-6 flex justify-center gap-4">
+              <motion.div whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }}>
+                <Button variant="verde" onClick={handleSave} className="transition-all">
+                  {isEdit ? "Salvar Alterações" : "Criar Coleta"}
+                </Button>
+              </motion.div>
+
+              {!isEdit && (
+                <motion.div whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }}>
+                  <Button
+                    variant="vermelho"
+                    className="transition-all"
+                    onClick={handleCancelCreateSurvey}
+                  >
+                    Cancelar
                   </Button>
-                  {!isEdit && (
-                    <Button
-                      variant="vermelho"
-                      className="ml-4"
-                      onClick={() => handleCancelCreateSurvey()}
-                    >
-                      Cancelar
-                    </Button>
-                  )}
-                </div>
+                </motion.div>
               )}
             </div>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <hr className="border-gray-200 pl-6 pr-6" />
-      {enableFormBulder && (
+      {enableFormBuilder && (
         <div>
+          <div className="h-px bg-gray-200 my-4" />
           <FormBuilder
             survey_id={form.id}
             survey_type={form.survey_type}
@@ -253,6 +188,6 @@ export default function CollectionFormSection({
           />
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

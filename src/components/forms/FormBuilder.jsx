@@ -169,7 +169,7 @@ export default function FormBuilder({ onSubmit, survey_id, survey_type }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Switch checked={showFormBuilder} onChange={setShowFormBuilder} />
+          <Switch checked={showFormBuilder} onChange={setShowFormBuilder} type="arrow"/>
         </div>
       </div>
 
