@@ -43,7 +43,7 @@ export default function ResearchAnswers() {
     // Se não temos os parâmetros necessários, redirecionamos para a página de seleção
     if (!surveyId || !surveyType || !contributor_id) {
       showMessage('Parâmetros de pesquisa incompletos. Redirecionando...', 'warning');
-      router.push('/api/fields');
+      router.push(`/api/fields?>survey_id=${surveyId}&survey_type=${surveyType}`);
       return;
     }
     

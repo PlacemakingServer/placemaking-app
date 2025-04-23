@@ -56,20 +56,10 @@ export default function ResearchCard({ research }) {
             variant="transparent_cinza"
             className="p-2"
             title="Ver Detalhes"
-            onClick={() => router.push(`/researches/${research.id}`)}
+            onClick={() => router.push(`/researches/${research.id}/view`)}
           >
             <span className="material-symbols-outlined text-base">
               visibility
-            </span>
-          </Button>
-          <Button
-            variant="transparent_cinza"
-            className="p-2"
-            title="Ver Respostas"
-            onClick={() => router.push(`/researches/${research.id}/answers`)}
-          >
-            <span className="material-symbols-outlined text-base">
-              question_answer
             </span>
           </Button>
         </div>
