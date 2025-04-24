@@ -96,7 +96,7 @@ export default function ResearchView() {
       await syncLocalToServer("surveys");
       await syncServerToCache("surveys", {
         research_id: selectedResearch?.id,
-        survey_type: "Formulário",
+        survey_type: "all",
       });
       showMessage("Coletas sincronizadas com sucesso!", "azul_claro");
       loadCachedSurveys();
@@ -140,21 +140,35 @@ export default function ResearchView() {
       className="max-w-screen-lg mx-auto p-6 md:p-8 box-border"
     >
       {/* Cabeçalho e Detalhes da Pesquisa */}
+
+      <div className="flex flex-row gap-2 justify-between items-start">
+        <div className="flex flex-col flex-start">
+          <h1 className="text-2xl font-bold p-4">Sincronizar Coletas: </h1>
+          <motion.p className="text-sm text-gray-500 p-4">
+            Clique no botão "Atualizar" para sincronizar as coletas com o
+            servidor.
+            <br />
+            <strong>Observação:</strong> As coletas podem demorar alguns
+            segundos.
+          </motion.p>
+        </div>
+        <Button
+          onClick={handleSync}
+          disabled={isLoading}
+          className="w-full sm:w-fit self-start sm:self-auto px-4 py-2 transition flex items-center justify-center gap-2 text-sm h-fit m-4"
+          variant="secondary"
+        >
+          <span className="material-symbols-outlined text-base">sync</span>
+          <span>Atualizar</span>
+        </Button>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className="flex flex-col gap-4 bg-white rounded-lg shadow-md box-border border-2"
       >
-        <Button
-          onClick={handleSync}
-          disabled={isLoading}
-          className="w-full sm:w-fit self-start sm:self-auto px-4 py-2 transition flex items-center justify-center gap-2 text-sm"
-          variant="secondary"
-        >
-          <span className="material-symbols-outlined text-base">sync</span>
-          <span>Atualizar</span>
-        </Button>
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -287,12 +301,12 @@ export default function ResearchView() {
               transition={{ duration: 0.3 }}
               className="mt-4 text-sm text-gray-700 border rounded-md p-4 bg-gray-50 space-y-4 "
             >
-              <MapPreview
-                lat={selectedResearch.lat}
-                lng={selectedResearch.long}
-                height="200px"
-                width="100"
-              />
+                <MapPreview
+                  lat={selectedResearch.lat}
+                  lng={selectedResearch.long}
+                  height="200px"
+                  width="100"
+                />
               <div className="flex flex-row justify-between items-center gap-4">
                 <motion.p>
                   <strong>Localização:</strong>{" "}
@@ -355,45 +369,57 @@ export default function ResearchView() {
             transition={{ duration: 0.3 }}
             className="mt-4 text-sm text-gray-700 border rounded-md p-4 bg-gray-50 space-y-4"
           >
-            {Object.entries(
-              surveys
-                .filter((s) => s.research_id === selectedResearch.id)
-                .reduce((acc, survey) => {
-                  const type = survey.survey_type || "outros";
-                  acc[type] = acc[type] || [];
-                  acc[type].push(survey);
-                  return acc;
-                }, {})
-            ).map(([type, group]) => (
-              <div key={type}>
-                <h3 className="text-sm font-semibold text-gray-800 capitalize mb-2">
-                  {type}
-                </h3>
-                <ul className="list-disc list-inside space-y-1">
-                  {group.map((survey) => (
-                    <li key={survey.id}>
-                      {survey.title || `Survey ${survey.id}`}
-                      <span className="text-gray-500 text-xs ml-2">
-                        {survey.description}
-                      </span>
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/researches/${selectedResearch.id}/surveys/${survey.id}`
-                          )
-                        }
-                        className="text-blue-600 hover:text-blue-800 transition ml-2"
-                      >
-                        Ver detalhes
-                      </button>
-                      <span className="text-gray-500 text-xs ml-2">
-                        {survey._syncStatus}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {(() => {
+              const filteredSurveys = surveys.filter(
+                (s) => s.research_id === selectedResearch.id
+              );
+
+              if (filteredSurveys.length === 0) {
+                return (
+                  <div className="text-gray-500 italic">
+                    Nenhuma survey vinculada a esta pesquisa.
+                  </div>
+                );
+              }
+
+              const grouped = filteredSurveys.reduce((acc, survey) => {
+                const type = survey.survey_type || "outros";
+                acc[type] = acc[type] || [];
+                acc[type].push(survey);
+                return acc;
+              }, {});
+
+              return Object.entries(grouped).map(([type, group]) => (
+                <div key={type}>
+                  <h3 className="text-sm font-semibold text-gray-800 capitalize mb-2">
+                    {type}
+                  </h3>
+                  <ul className="list-disc list-inside space-y-1">
+                    {group.map((survey) => (
+                      <li key={survey.id}>
+                        {survey.title || `Survey ${survey.id}`}
+                        <span className="text-gray-500 text-xs ml-2">
+                          {survey.description}
+                        </span>
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/researches/${selectedResearch.id}/surveys/${survey.id}`
+                            )
+                          }
+                          className="text-blue-600 hover:text-blue-800 transition ml-2"
+                        >
+                          Ver detalhes
+                        </button>
+                        <span className="text-gray-500 text-xs ml-2">
+                          {survey._syncStatus}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ));
+            })()}
           </motion.div>
         )}
       </motion.div>

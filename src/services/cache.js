@@ -319,7 +319,6 @@ export async function syncServerToCache(store, queryParams = {}) {
   if (!config) throw new Error(`Sem config para ${store}`);
 
   try {
-    // 🔧 Constrói a URL com os parâmetros, se houver
     const url = new URL(config.endpoint, window.location.origin);
     Object.entries(queryParams).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -328,6 +327,11 @@ export async function syncServerToCache(store, queryParams = {}) {
     });
 
     const res = await fetch(url.toString());
+    
+    if (res.status === 404  ) {
+      return { success: false, message: "Nenhum dado encontrado" };
+    }
+
     if (!res.ok) throw new Error(`Erro ao sync servidor->cache de ${store}`);
 
     const serverItems = config.extract(await res.json());
