@@ -1,4 +1,5 @@
-import { use, useState } from "react";
+// src/pages/login.jsx
+import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -6,15 +7,16 @@ import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthentication } from "@/hooks";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
   const { isLoading, setIsLoading } = useLoading(false);
   const { showMessage } = useMessage();
-  const { saveCredentials, saveUserInfo } = useAuth();
+  const { login } = useAuthentication();
   const router = useRouter();
 
   const handleLogin = async (e) => {
@@ -22,36 +24,11 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Erro ao fazer login");
-      }
-
-      const data = await res.json();
-      
-
-      const { token, token_type, expires_at } = data.access_token;
-
-      await saveCredentials({
-        access_token: token,
-        token_type,
-        expires_at,
-      });
-
-      await saveUserInfo(data.user);
-
-      showMessage(data.message, "verde");
+      await login(email, password);
+      showMessage("Login efetuado com sucesso!", "verde");
       router.push("/");
     } catch (err) {
-      showMessage(err.message, "vermelho_claro");
+      showMessage(err.message || "Erro ao fazer login", "vermelho_claro");
     } finally {
       setIsLoading(false);
     }
@@ -60,9 +37,9 @@ export default function Login() {
   return (
     <div
       className="
-      h-screen flex items-center justify-center p-8
-      bg-no-repeat bg-cover bg-center bg-black bg-opacity-60 bg-blend-darken
-    "
+        h-screen flex items-center justify-center p-8
+        bg-no-repeat bg-cover bg-center bg-black bg-opacity-60 bg-blend-darken
+      "
       style={{ backgroundImage: "url('/img/bg-login.jpg')" }}
     >
       <motion.div
@@ -123,7 +100,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute top-1/2 right-4 transform -translate-y-1/2 text-sm  hover:underline"
+                className="absolute top-1/2 right-4 transform -translate-y-1/2 text-sm hover:underline"
               >
                 {showPassword ? "Ocultar" : "Mostrar"}
               </button>

@@ -5,7 +5,8 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(pwd)"
+# ROOT_DIR="$(pwd)"
+ROOT_DIR="./src/pages/api"
 TIMESTAMP="$(date +'%Y-%m-%d_%H-%M-%S')"
 OUTPUT_FILE="${ROOT_DIR}/nextjs_structure_dump_${TIMESTAMP}.txt"
 

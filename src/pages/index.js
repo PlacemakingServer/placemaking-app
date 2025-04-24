@@ -1,4 +1,10 @@
+import { checkAndSyncIfEmpty } from '@/utils/checkAndSyncIfEmpty';
+import { useEffect } from 'react';
 export default function Home() {
+  useEffect(() => {
+    checkAndSyncIfEmpty();
+  }, []);
+
 
   return (
     <div>

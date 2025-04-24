@@ -1,4 +1,3 @@
-// pages/_app.js
 import "@/styles/globals.css";
 import { useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
@@ -6,10 +5,11 @@ import { LoadingContextProvider, useLoading } from "@/context/LoadingContext";
 import { MessageProvider } from "@/context/MessageContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Loading from "@/components/ui/Loading";
-import { registerServiceWorker } from "@/services/registerServiceWorker";
+import { initBackgroundSync } from "@/utils/periodicSync";
 import PublicLayout from "@/components/layouts/PublicLayout";
 import PrivateLayout from "@/components/layouts/PrivateLayout";
 import Head from "next/head";
+
 
 function AppContent({ Component, pageProps }) {
   const { isLoading } = useLoading();
@@ -44,8 +44,23 @@ function AppContent({ Component, pageProps }) {
 
 function MyApp({ Component, pageProps }) {
   useEffect(() => {
-    registerServiceWorker();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then(() => {
+          console.log('SW registrado com sucesso!');
+          if (!navigator.serviceWorker.controller) {
+            sessionStorage.setItem('sw-activated', '1');
+            window.location.reload();
+          } else {
+            initBackgroundSync();
+          }
+        })
+        .catch(console.error);
+    }
   }, []);
+
+  
 
   return (
     <AuthProvider>

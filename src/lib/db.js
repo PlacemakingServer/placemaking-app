@@ -1,42 +1,52 @@
-import { openDB } from "idb";
+// lib/db.js
+import { openDB } from 'idb';
 
-export async function initAuthDB() {
-    return openDB("UserCredentialsDB", 1, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains("user-data")) {
-          db.createObjectStore("user-data", { keyPath: "id" });
-        }
-        if (!db.objectStoreNames.contains("user-creds")) {
-          db.createObjectStore("user-creds", { keyPath: "id" });
-        }
-      },
-    });
-  }
-  
+export const DB_NAME = 'placemaking-db';
+export const DB_VERSION = 1;
 
-export async function initResearchsDB() {
-    return openDB("ResearchsDB", 1, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains("researches")) {
-          db.createObjectStore("researches", { keyPath: "id" });
-        }
-      },
-    });
-}
+const storeSchema = [
+  'auth',
+  'users',
+  'activity_answers',
+  'fields',
+  'researches',
+  'survey_time_ranges',
+  'survey_regions',
+  'survey_group',
+  'survey_contributors',
+  'survey_answers',
+  'static_surveys',
+  'form_surveys',
+  'dynamic_surveys',
+  'research_contributors',
+  'input_types',
+  'field_options'
+];
 
-
-export async function initCachedDB() {
-  return openDB("CachedDB", 1, {
+export async function initPlacemakingDB() {
+  return openDB(DB_NAME, DB_VERSION, {
     upgrade(db) {
-      const stores = ["users", "researches", "itemTobeCreated"];
-      for (const storeName of stores) {
+      for (const storeName of storeSchema) {
         if (!db.objectStoreNames.contains(storeName)) {
-          db.createObjectStore(storeName, { keyPath: "id" });
+          db.createObjectStore(storeName, { keyPath: 'id' });
         }
       }
     },
   });
 }
 
+// AUTH MANAGEMENT
+export async function saveAuth(auth) {
+  const db = await initPlacemakingDB();
+  await db.put('auth', { ...auth, id: 'current' });
+}
 
-  
+export async function getAuth() {
+  const db = await initPlacemakingDB();
+  return db.get('auth', 'current');
+}
+
+export async function deleteAuth() {
+  const db = await initPlacemakingDB();
+  return db.delete('auth', 'current');
+}

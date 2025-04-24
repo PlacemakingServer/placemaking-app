@@ -59,6 +59,10 @@ export default function ResearchForm({
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
+  // useEffect(() => {
+  //   console.log("Form data:", form);
+  // }, []);
+
   
   const handleLocationSelect = (data) => {
     setForm((prev) => ({
@@ -186,7 +190,7 @@ export default function ResearchForm({
   
 
   return (
-    <div className="max-w-4xl mx-auto mt-6 bg-white rounded-2xl shadow-md overflow-hidden">
+    <div className="max-w-4xl mx-auto mt-6 bg-white rounded-2xl shadow-md">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -472,7 +476,7 @@ function SectionToggle({ title, isChecked, onChange }) {
   return (
     <div className="flex justify-between items-center">
       <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
-      <Switch checked={isChecked} onChange={onChange} />
+      <Switch type="arrow" checked={isChecked} onChange={onChange} />
     </div>
   );
 }

@@ -108,12 +108,12 @@ export default function CollaboratorSelector({
           </p>
         </div>
         <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-700 whitespace-nowrap">Todos da Pesquisa</span>
           <Switch
             checked={useAllFromResearch}
             onChange={handleToggleAll}
             type="checkbox"
           />
-          <span className="text-sm text-gray-700 whitespace-nowrap">Todos da Pesquisa</span>
         </div>
       </div>
 

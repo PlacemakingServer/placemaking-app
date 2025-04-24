@@ -1,73 +1,58 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { initAuthDB } from "@/lib/db";
+// src/context/AuthContext.jsx
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { getAuth, saveAuth, deleteAuth } from '@/lib/db';
 
-const AuthContext = createContext();
+// Contexto de autenticação usando IndexedDB (store "auth")
+export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [authToken, setAuthToken] = useState(null);
+export function AuthProvider({ children }) {
   const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const fetchFromIndexedDB = async (storeName, key) => {
-    const db = await initAuthDB();
-    return await db.get(storeName, key);
-  };
-
-  const saveToIndexedDB = async (storeName, key, data) => {
-    const db = await initAuthDB();
-    await db.put(storeName, { id: key, ...data });
-  };
-
-  const loadAuthState = async () => {
-    const creds = await fetchFromIndexedDB("user-creds", "user-creds");
-    const user = await fetchFromIndexedDB("user-data", "user-data");
-    if (creds) setAuthToken(creds);
-    if (user) setUserData(user.user);
-  };
-
-  const saveCredentials = async ({ access_token, token_type, expires_at }) => {
-    const data = { access_token, token_type, expires_at };
-    await saveToIndexedDB("user-creds", "user-creds", data);
-    setAuthToken(data);
-  };
-  
-  const saveUserInfo = async (user) => {
-    await saveToIndexedDB("user-data", "user-data", { user });
-    setUserData(user);
-  };
-  
-  const syncUserDataFromAPI = async () => {
-    try {
-      if (!userData?.id) return;
-
-      const res = await fetch(`/api/users/${userData.id}`);
-      if (!res.ok) throw new Error("Erro ao buscar dados do usuário");
-
-      const data = await res.json();
-      if (data.user) {
-        await saveUserInfo(data.user);
+  useEffect(() => {
+    (async () => {
+      try {
+        const stored = await getAuth();
+        if (stored?.user) {
+          setUserData(stored.user);
+        }
+      } catch (err) {
+        console.error('Erro ao ler auth do IndexedDB:', err);
+      } finally {
+        setLoading(false);
       }
+    })();
+  }, []);
+
+  const persistAuth = async ({ user, token }) => {
+    try {
+      await saveAuth({ id: 'current', user, token });
+      setUserData(user);
     } catch (err) {
-      console.error("[syncUserDataFromAPI]", err);
+      console.error('Erro ao salvar auth:', err);
+    }
+  };
+  
+  const clearAuth = async () => {
+    try {
+      await deleteAuth();
+      setUserData(null);
+    } catch (err) {
+      console.error('Erro ao deletar auth:', err);
     }
   };
 
-  useEffect(() => {
-    loadAuthState();
-  }, []);
-
   return (
     <AuthContext.Provider
-      value={{
-        userCreds: authToken,
-        userData,
-        saveCredentials,
-        saveUserInfo,
-        syncUserData: syncUserDataFromAPI,
-      }}
+      value={{ userData, setUserData, loading, persistAuth, clearAuth }}
     >
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}

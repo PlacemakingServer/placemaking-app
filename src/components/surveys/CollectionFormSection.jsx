@@ -38,6 +38,11 @@ export default function CollectionFormSection({
   );
 
   useEffect(() => {
+    console.log("Survey:", initialData);
+  }, []);
+
+
+  useEffect(() => {
     const hasInitialData = initialData && initialData.id;
     const serializedInitial = JSON.stringify(initialData);
 

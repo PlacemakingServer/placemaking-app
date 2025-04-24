@@ -10,10 +10,11 @@ const baseConfig = {
 };
 
 const nextConfig = withPWA({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
+  dest: 'public',
+  disable: true,               
+  register: false,  
+  buildExcludes: [/\/sw\.js$/],       
+  skipWaiting: true
 })(baseConfig);
 
 export default nextConfig;

@@ -1,1 +1,146 @@
-if(!self.define){let e,s={};const a=(a,i)=>(a=new URL(a+".js",i).href,s[a]||new Promise((s=>{if("document"in self){const e=document.createElement("script");e.src=a,e.onload=s,document.head.appendChild(e)}else e=a,importScripts(a),s()})).then((()=>{let e=s[a];if(!e)throw new Error(`Module ${a} didn’t register its module`);return e})));self.define=(i,n)=>{const c=e||("document"in self?document.currentScript.src:"")||location.href;if(s[c])return;let t={};const r=e=>a(e,c),d={module:{uri:c},exports:t,require:r};s[c]=Promise.all(i.map((e=>d[e]||r(e)))).then((e=>(n(...e),t)))}}define(["./workbox-4754cb34"],(function(e){"use strict";importScripts(),self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"/_next/dynamic-css-manifest.json",revision:"fe98ca6effd7235d56f644a56c027db5"},{url:"/_next/static/0omtKdsWmcyikKxoqMwlK/_buildManifest.js",revision:"7d0c364189f82611d59e62bf02e65b04"},{url:"/_next/static/0omtKdsWmcyikKxoqMwlK/_ssgManifest.js",revision:"b6652df95db52feb4daf4eca35380933"},{url:"/_next/static/chunks/131-d3f351951728dc83.js",revision:"d3f351951728dc83"},{url:"/_next/static/chunks/166-00d1d4b30d72ae5f.js",revision:"00d1d4b30d72ae5f"},{url:"/_next/static/chunks/246.5a5b8cd09d50f419.js",revision:"5a5b8cd09d50f419"},{url:"/_next/static/chunks/25f4ac2a.8601ed679bedfefa.js",revision:"8601ed679bedfefa"},{url:"/_next/static/chunks/362-544b7ffb04891863.js",revision:"544b7ffb04891863"},{url:"/_next/static/chunks/469.dcfe01ec1eeb4fb0.js",revision:"dcfe01ec1eeb4fb0"},{url:"/_next/static/chunks/637-cb7b15b771eea3d6.js",revision:"cb7b15b771eea3d6"},{url:"/_next/static/chunks/681.19401f7396061f45.js",revision:"19401f7396061f45"},{url:"/_next/static/chunks/framework-b8ed9b642a1d405a.js",revision:"b8ed9b642a1d405a"},{url:"/_next/static/chunks/main-c93a439998821712.js",revision:"c93a439998821712"},{url:"/_next/static/chunks/pages/_app-c76159481e69240c.js",revision:"c76159481e69240c"},{url:"/_next/static/chunks/pages/_error-41608b100cc61246.js",revision:"41608b100cc61246"},{url:"/_next/static/chunks/pages/forgot-password-7e955a85805f2cdd.js",revision:"7e955a85805f2cdd"},{url:"/_next/static/chunks/pages/index-00a5c9fdc41ace82.js",revision:"00a5c9fdc41ace82"},{url:"/_next/static/chunks/pages/login-13fed7c4b02b2602.js",revision:"13fed7c4b02b2602"},{url:"/_next/static/chunks/pages/offline-9554457fe89d7b44.js",revision:"9554457fe89d7b44"},{url:"/_next/static/chunks/pages/reports-e152b7c7eebd96d3.js",revision:"e152b7c7eebd96d3"},{url:"/_next/static/chunks/pages/researches-bdb916a109ac3181.js",revision:"bdb916a109ac3181"},{url:"/_next/static/chunks/pages/researches/%5Bid%5D-032f074e4738b3f9.js",revision:"032f074e4738b3f9"},{url:"/_next/static/chunks/pages/researches/create-598d7943b78ee316.js",revision:"598d7943b78ee316"},{url:"/_next/static/chunks/pages/users-fa284d1aace4dcfa.js",revision:"fa284d1aace4dcfa"},{url:"/_next/static/chunks/pages/users/%5Bid%5D-7c4c15430146f41d.js",revision:"7c4c15430146f41d"},{url:"/_next/static/chunks/pages/validate-code-a554e61e4036af1f.js",revision:"a554e61e4036af1f"},{url:"/_next/static/chunks/polyfills-42372ed130431b0a.js",revision:"846118c33b2c0e922d7b3a7676f81f6f"},{url:"/_next/static/chunks/webpack-7a8f7a6a7d834dbd.js",revision:"7a8f7a6a7d834dbd"},{url:"/_next/static/css/1de76be520b4de19.css",revision:"1de76be520b4de19"},{url:"/_next/static/css/72313199b7132b63.css",revision:"72313199b7132b63"},{url:"/_next/static/css/cfeeee289a41e7d4.css",revision:"cfeeee289a41e7d4"},{url:"/_next/static/media/layers-2x.9859cd12.png",revision:"9859cd12"},{url:"/_next/static/media/layers.ef6db872.png",revision:"ef6db872"},{url:"/_next/static/media/marker-icon.d577052a.png",revision:"d577052a"},{url:"/file.svg",revision:"d09f95206c3fa0bb9bd9fefabfd0ea71"},{url:"/globe.svg",revision:"2aaafa6a49b6563925fe440891e32717"},{url:"/img/192-azul.png",revision:"4871d525549a5a8e55a207c1eeedb10e"},{url:"/img/192-branco.png",revision:"606da435e4f9f03b15e76d702844125e"},{url:"/img/512-azul.png",revision:"1b96aa3174e97b5d928af677c8bd9420"},{url:"/img/512-branco.png",revision:"c49ef261c682c54c00aecb3a07b73116"},{url:"/img/bg-login.jpg",revision:"ef1222083e8ef0517f024e8db218f859"},{url:"/img/cards/img-0.jpg",revision:"82d87030679f5a99a079657013f2ca40"},{url:"/img/cards/img-1.jpg",revision:"a07feaffa9ea2e6abad1394fd3c150f6"},{url:"/img/cards/img-2.jpg",revision:"d665de20beaef631f6de9862a6ce132e"},{url:"/img/cards/img-3.jpg",revision:"19408aacd13a2f3d76240c61c0537096"},{url:"/img/cards/img-4.jpg",revision:"eda6a79920b5ce063c2df6490f8260b1"},{url:"/img/email-template-background.jpg",revision:"ce0ea6042b6ae330c06d21f0d4a42b66"},{url:"/img/icon-192x192.png",revision:"fe2a6848074217afa9340a1c5f896569"},{url:"/img/icon-512x512.png",revision:"fb04a35aed1e6f44f37b91c5932e6264"},{url:"/img/logo-no-bg-azul.png",revision:"3fff52d68482f63918118f9f5dcdf32f"},{url:"/img/logo-no-bg-preto.png",revision:"05f5add462c7c4c5eceb2e402ae7de65"},{url:"/img/placemaking.png",revision:"677f84a2653fffde073b79c0a41eb05f"},{url:"/manifest.json",revision:"94a966d89951dd666b0cb2873175b2d9"},{url:"/maps/layers-2x.png",revision:"4f0283c6ce28e888000e978e537a6a56"},{url:"/maps/marker-icon.png",revision:"2273e3d8ad9264b7daa5bdbf8e6b47f8"},{url:"/maps/marker-shadow.png",revision:"44a526eed258222515aa21eaffd14a96"},{url:"/next.svg",revision:"8e061864f388b47f33a1c3780831193e"},{url:"/vercel.svg",revision:"c0af2f507b369b085b35ef4bbe3bcf1e"},{url:"/window.svg",revision:"a2760511c65806022ad20adf74370ff3"},{url:"/workers/sw.js",revision:"85c2389710e99285425dd656249fe82c"}],{ignoreURLParametersMatching:[]}),e.cleanupOutdatedCaches(),e.registerRoute("/",new e.NetworkFirst({cacheName:"start-url",plugins:[{cacheWillUpdate:async({request:e,response:s,event:a,state:i})=>s&&"opaqueredirect"===s.type?new Response(s.body,{status:200,statusText:"OK",headers:s.headers}):s}]}),"GET"),e.registerRoute(/^https:\/\/fonts\.(?:gstatic)\.com\/.*/i,new e.CacheFirst({cacheName:"google-fonts-webfonts",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:31536e3})]}),"GET"),e.registerRoute(/^https:\/\/fonts\.(?:googleapis)\.com\/.*/i,new e.StaleWhileRevalidate({cacheName:"google-fonts-stylesheets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,new e.StaleWhileRevalidate({cacheName:"static-font-assets",plugins:[new e.ExpirationPlugin({maxEntries:4,maxAgeSeconds:604800})]}),"GET"),e.registerRoute(/\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,new e.StaleWhileRevalidate({cacheName:"static-image-assets",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\/_next\/image\?url=.+$/i,new e.StaleWhileRevalidate({cacheName:"next-image",plugins:[new e.ExpirationPlugin({maxEntries:64,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp3|wav|ogg)$/i,new e.CacheFirst({cacheName:"static-audio-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:mp4)$/i,new e.CacheFirst({cacheName:"static-video-assets",plugins:[new e.RangeRequestsPlugin,new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:js)$/i,new e.StaleWhileRevalidate({cacheName:"static-js-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:css|less)$/i,new e.StaleWhileRevalidate({cacheName:"static-style-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\/_next\/data\/.+\/.+\.json$/i,new e.StaleWhileRevalidate({cacheName:"next-data",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute(/\.(?:json|xml|csv)$/i,new e.NetworkFirst({cacheName:"static-data-assets",plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute((({url:e})=>{if(!(self.origin===e.origin))return!1;const s=e.pathname;return!s.startsWith("/api/auth/")&&!!s.startsWith("/api/")}),new e.NetworkFirst({cacheName:"apis",networkTimeoutSeconds:10,plugins:[new e.ExpirationPlugin({maxEntries:16,maxAgeSeconds:86400})]}),"GET"),e.registerRoute((({url:e})=>{if(!(self.origin===e.origin))return!1;return!e.pathname.startsWith("/api/")}),new e.NetworkFirst({cacheName:"others",networkTimeoutSeconds:10,plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:86400})]}),"GET"),e.registerRoute((({url:e})=>!(self.origin===e.origin)),new e.NetworkFirst({cacheName:"cross-origin",networkTimeoutSeconds:10,plugins:[new e.ExpirationPlugin({maxEntries:32,maxAgeSeconds:3600})]}),"GET")}));
+importScripts("./idb.js");
+const BATCH_SIZE = 50;
+const CACHE = "pwa-v1";
+const STATIC = ["/", "/login"];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((cache) =>
+        Promise.all(
+          STATIC.map((path) =>
+            cache
+              .add(new Request(path, { mode: "no-cors" }))
+              .catch((err) => console.warn("[SW] Falha ao cachear:", path, err))
+          )
+        )
+      )
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.mode === "navigate") {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((cache) => cache.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then((res) => res || caches.match("/")))
+    );
+    return;
+  }
+
+  event.respondWith(caches.match(req).then((res) => res || fetch(req)));
+});
+
+const ENTITIES = [
+  "users",
+  "researches",
+  "research_contributors",
+  "fields",
+  "input_types",
+  "field_options",
+  "survey_answers",
+  "static_surveys",
+  "form_surveys",
+  "dynamic_surveys",
+  "survey_time_ranges",
+  "survey_regions",
+  "survey_group",
+  "survey_contributors",
+];
+
+async function pushPending() {
+  for (const store of ENTITIES) {
+    try {
+      console.log(`[SW] Enviando pendências para ${store}`);
+      const all = await getAllItems(store);
+      const pendings = all.filter(
+        (i) => i._syncStatus === "pending" || i._syncStatus === "error"
+      );
+
+      for (let i = 0; i < pendings.length; i += BATCH_SIZE) {
+        const batch = pendings.slice(i, i + BATCH_SIZE);
+        try {
+          const res = await fetch(`/api/sync?entity=${store}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(batch),
+          });
+          if (!res.ok) throw new Error(`Erro ao sincronizar ${store}: ${res.status}`);
+          const synced = await res.json();
+          for (const item of batch) {
+            await updateItem(store, item.id, { _syncStatus: "synced" });
+          }
+        } catch (err) {
+          console.error(`[SW] Erro no pushPending (${store})`, err);
+          for (const item of batch) {
+            await updateItem(store, item.id, { _syncStatus: "error" });
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`[SW] Erro geral no pushPending para ${store}`, err);
+    }
+  }
+}
+
+async function pullUpdates() {
+  for (const store of ENTITIES) {
+    try {
+      const res = await fetch(`/api/sync?entity=${store}`);
+      if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+      const data = await res.json();
+      const items = data[store];
+      if (!items || items.length === 0) return;
+      for (const item of items) {
+        await updateItem(store, item.id, {
+          ...item,
+          _syncStatus: "synced"
+        }, true);
+      }
+    } catch (err) {
+      console.error(`[SW] pullUpdates falhou em ${store}`, err);
+    }
+  }
+}
+
+
+
+self.addEventListener("periodicsync", (event) => {
+  console.info("[SW] periodicSync", event.tag);
+  if (event.tag === "pull-updates") {
+    event.waitUntil(pullUpdates());
+  } else if (event.tag === "push-pending") {
+    event.waitUntil(pushPending());
+  } else {
+    console.warn("[SW] Tag de periodicSync não reconhecida:", event.tag);
+  }
+});
+
+
+self.addEventListener("sync", (event) => {
+  console.info("[SW] sync", event.tag);
+  if (event.tag === "push-pending") {
+    event.waitUntil(pushPending());
+  }
+});
+
+
+self.addEventListener("message", (event) => {
+  if (event.data === "TRIGGER_PULL") {
+    pullUpdates();
+  }
+  if (event.data === "TRIGGER_PUSH") {
+    pushPending();
+  }
+});

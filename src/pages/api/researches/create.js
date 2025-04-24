@@ -25,49 +25,6 @@ async function createResearch(researchData, token) {
   return data.research;
 }
 
-async function addCollaborator(researchId, collaboratorId, token) {
-  const contributorRes = await fetch(
-    `${BASE_URL}/research/${researchId}/contributors/${collaboratorId}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ instruction: "Pesquisador" }),
-    }
-  );
-
-  const data = await contributorRes.json();
-
-  if (!contributorRes.ok) {
-    throw {
-      status: contributorRes.status,
-      message: `Erro ao adicionar colaborador`,
-      details: data,
-    };
-  }
-
-  return data.user;
-}
-
-async function addCollaborators(researchId, collaborators, token) {
-  const contributors = [];
-  
-  for (const collaborator of collaborators) {
-    try {
-      const contributor = await addCollaborator(researchId, collaborator.id, token);
-      contributors.push(contributor);
-    } catch (error) {
-      throw {
-        ...error,
-        message: `Erro ao adicionar colaborador ${collaborator.label}`,
-      };
-    }
-  }
-
-  return contributors;
-}
 
 function validateRequest(req) {
   const cookies = parse(req.headers.cookie || "");
@@ -107,8 +64,7 @@ export default async function handler(req, res) {
       end_date,
       lat,
       long,
-      location_title,
-      selectedCollaborators,
+      location_title
     } = req.body;
 
     const researchPayload = {
@@ -123,10 +79,6 @@ export default async function handler(req, res) {
     };
 
     var research = await createResearch(researchPayload, token);
-    var contributors = await addCollaborators(research.id, selectedCollaborators, token);
-
-    research.selectedCollaborators = contributors;
-    research.activities = [];
 
     return res.status(201).json({
       message: "Pesquisa criada e colaboradores adicionados com sucesso!",
