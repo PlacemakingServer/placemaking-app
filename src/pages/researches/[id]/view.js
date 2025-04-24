@@ -9,15 +9,18 @@ import {
   syncLocalToServer,
   syncServerToCache,
 } from "@/services/cache";
+import Button from "@/components/ui/Button_og";
 import { VARIANTS } from "@/config/colors";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
 
 export default function ResearchView() {
   const [researches, setResearches] = useState([]);
+  const [surveys, setSurveys] = useState([]);
   const [selectedResearch, setSelectedResearch] = useState(null);
   const [contributorsData, setContributorsData] = useState(null);
   const [showContributors, setShowContributors] = useState(false);
+  const [showSurveys, setshowSurveys] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -45,11 +48,24 @@ export default function ResearchView() {
     }
   }, [id, setIsLoading, showMessage]);
 
-  const fecthReseachContributorsData = async (id) => {
+  const loadCachedSurveys = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const result = await getCachedData("surveys", { paginated: false });
+      setSurveys(result);
+    } catch (err) {
+      console.error("Erro ao carregar coletas do cache:", err);
+      showMessage("Erro ao carregar coletas.", "vermelho_claro", 5000);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setIsLoading, showMessage]);
+
+  const fetchResearchContributorsData = useCallback(async (id) => {
     try {
       const res = await fetch(`/api/contributors?research_id=${id}`);
       const data = await res.json();
-
+  
       if (!data) {
         showMessage("Colaboradores não encontrados", "vermelho_claro", 5000);
         return;
@@ -58,7 +74,8 @@ export default function ResearchView() {
     } catch (err) {
       console.error("Erro ao buscar colaboradores da pesquisa:", err);
     }
-  };
+  }, [showMessage]);
+  
 
   const handleCopyCoords = () => {
     const name = selectedResearch?.location_title;
@@ -71,6 +88,21 @@ export default function ResearchView() {
     }
   };
 
+  const handleSync = async () => {
+    setIsLoading(true);
+    try {
+      await syncLocalToServer("surveys");
+      await syncServerToCache("surveys");
+      showMessage("Coletas sincronizadas com sucesso!", "azul_claro");
+      loadCachedSurveys();
+    } catch (err) {
+      console.error("Erro ao sincronizar Coletas:", err);
+      showMessage("Erro ao sincronizar Coletas.", "vermelho_claro", 5000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getShortAddress = (fullAddress) => {
     if (!fullAddress) return "";
     const parts = fullAddress.split(",");
@@ -80,9 +112,15 @@ export default function ResearchView() {
   useEffect(() => {
     if (id) {
       loadCachedResearches();
-      fecthReseachContributorsData(id);
+      loadCachedSurveys();
+      fetchResearchContributorsData(id);
     }
-  }, [id, loadCachedResearches]);
+  }, [
+    id,
+    loadCachedResearches,
+    loadCachedSurveys,
+    fetchResearchContributorsData,
+  ]);
 
   useEffect(() => {
     const idx = Math.floor(Math.random() * 5);
@@ -103,6 +141,15 @@ export default function ResearchView() {
         transition={{ duration: 0.6 }}
         className="flex flex-col gap-4 bg-white rounded-lg shadow-md box-border border-2"
       >
+        <Button
+          onClick={handleSync}
+          disabled={isLoading}
+          className="w-full sm:w-fit self-start sm:self-auto px-4 py-2 transition flex items-center justify-center gap-2 text-sm"
+          variant="secondary"
+        >
+          <span className="material-symbols-outlined text-base">sync</span>
+          <span>Atualizar</span>
+        </Button>
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -275,25 +322,39 @@ export default function ResearchView() {
           )}
         </AnimatePresence>
       </motion.div>
-      {/* Botão de Responder Pesquisa */}
-      {selectedResearch && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.3 }}
-          className="mt-6 flex justify-center"
-        >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="flex flex-col gap-4 p-6 md:p-8 bg-white rounded-lg shadow-md box-border border-2 mt-4 h-fit"
+      >
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Coletas</h1>
           <button
-            onClick={() =>
-              router.push(`/researches/${selectedResearch.id}/answers`)
-            }
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition font-semibold text-sm"
+            onClick={() => setshowSurveys((prev) => !prev)}
+            className="flex items-center gap-1 text-sm text-blue-600 underline hover:text-blue-800 transition"
           >
-            Responder Pesquisa
+            <motion.div
+              animate={{ rotate: showSurveys ? 90 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronDown size={28} />
+            </motion.div>
           </button>
-        </motion.div>
-      )}
+        </div>
+
+        {showSurveys && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-4 text-sm text-gray-700 border rounded-md p-4 bg-gray-50 space-y-4 "
+          >
+            <p className="text-gray-400">Nenhuma coleta encontrada.</p>
+          </motion.div>
+        )}
+      </motion.div>
     </motion.section>
   );
 }

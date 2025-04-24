@@ -28,7 +28,7 @@ export async function initResearchsDB() {
 export async function initCachedDB() {
   return openDB("CachedDB", 1, {
     upgrade(db) {
-      const stores = ["users", "researches", "itemTobeCreated"];
+      const stores = ["users", "researches", "surveys", "itemTobeCreated"];
       for (const storeName of stores) {
         if (!db.objectStoreNames.contains(storeName)) {
           db.createObjectStore(storeName, { keyPath: "id" });

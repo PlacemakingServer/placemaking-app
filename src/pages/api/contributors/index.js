@@ -48,8 +48,6 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    console.log("Data from API:", data);
-
     const formattedData = data.contributors.map((c) => ({
       value: c.user?.id,
       id: c.user?.id,
