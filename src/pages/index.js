@@ -4,7 +4,7 @@ import { useLoading } from "@/context/LoadingContext";
 import FiltersComponent from "@/components/ui/FiltersComponent";
 import { useMessage } from "@/context/MessageContext";
 import { useRouter } from "next/router";
-import ResearchCard from "@/components/ui/Research/ResearchCard"
+import ResearchCardDashboard from "@/components/ui/Research/ResearchCardDashboard"
 import Button from "@/components/ui/Button_og";
 import {
   getCachedData,
@@ -239,7 +239,7 @@ export default function Home() {
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.3 }}
                               >
-                                <ResearchCard
+                                <ResearchCardDashboard
                                   research={research}
                                 />
                               </motion.div>
