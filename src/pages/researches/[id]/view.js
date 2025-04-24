@@ -61,21 +61,23 @@ export default function ResearchView() {
     }
   }, [setIsLoading, showMessage]);
 
-  const fetchResearchContributorsData = useCallback(async (id) => {
-    try {
-      const res = await fetch(`/api/contributors?research_id=${id}`);
-      const data = await res.json();
-  
-      if (!data) {
-        showMessage("Colaboradores não encontrados", "vermelho_claro", 5000);
-        return;
+  const fetchResearchContributorsData = useCallback(
+    async (id) => {
+      try {
+        const res = await fetch(`/api/contributors?research_id=${id}`);
+        const data = await res.json();
+
+        if (!data) {
+          showMessage("Colaboradores não encontrados", "vermelho_claro", 5000);
+          return;
+        }
+        setContributorsData(data);
+      } catch (err) {
+        console.error("Erro ao buscar colaboradores da pesquisa:", err);
       }
-      setContributorsData(data);
-    } catch (err) {
-      console.error("Erro ao buscar colaboradores da pesquisa:", err);
-    }
-  }, [showMessage]);
-  
+    },
+    [showMessage]
+  );
 
   const handleCopyCoords = () => {
     const name = selectedResearch?.location_title;
@@ -92,7 +94,10 @@ export default function ResearchView() {
     setIsLoading(true);
     try {
       await syncLocalToServer("surveys");
-      await syncServerToCache("surveys");
+      await syncServerToCache("surveys", {
+        research_id: selectedResearch?.id,
+        survey_type: "Formulário",
+      });
       showMessage("Coletas sincronizadas com sucesso!", "azul_claro");
       loadCachedSurveys();
     } catch (err) {
@@ -342,16 +347,53 @@ export default function ResearchView() {
             </motion.div>
           </button>
         </div>
-
         {showSurveys && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="mt-4 text-sm text-gray-700 border rounded-md p-4 bg-gray-50 space-y-4 "
+            className="mt-4 text-sm text-gray-700 border rounded-md p-4 bg-gray-50 space-y-4"
           >
-            <p className="text-gray-400">Nenhuma coleta encontrada.</p>
+            {Object.entries(
+              surveys
+                .filter((s) => s.research_id === selectedResearch.id)
+                .reduce((acc, survey) => {
+                  const type = survey.survey_type || "outros";
+                  acc[type] = acc[type] || [];
+                  acc[type].push(survey);
+                  return acc;
+                }, {})
+            ).map(([type, group]) => (
+              <div key={type}>
+                <h3 className="text-sm font-semibold text-gray-800 capitalize mb-2">
+                  {type}
+                </h3>
+                <ul className="list-disc list-inside space-y-1">
+                  {group.map((survey) => (
+                    <li key={survey.id}>
+                      {survey.title || `Survey ${survey.id}`}
+                      <span className="text-gray-500 text-xs ml-2">
+                        {survey.description}
+                      </span>
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/researches/${selectedResearch.id}/surveys/${survey.id}`
+                          )
+                        }
+                        className="text-blue-600 hover:text-blue-800 transition ml-2"
+                      >
+                        Ver detalhes
+                      </button>
+                      <span className="text-gray-500 text-xs ml-2">
+                        {survey._syncStatus}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </motion.div>
         )}
       </motion.div>

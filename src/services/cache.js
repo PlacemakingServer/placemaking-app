@@ -33,6 +33,8 @@ const configMap = {
     createEndpoint: "/api/surveys/create",
     updateEndpoint: "/api/surveys/update",
     deleteEndpoint: "/api/surveys/delete",
+    extract: (res) => res.surveys || [],
+    single: (res) => res.research || null,
   },
 };
 
@@ -312,16 +314,28 @@ export async function syncLocalToServer(store) {
   return { success: true };
 }
 
-export async function syncServerToCache(store) {
+export async function syncServerToCache(store, queryParams = {}) {
   const config = configMap[store];
   if (!config) throw new Error(`Sem config para ${store}`);
+
   try {
-    const res = await fetch(config.endpoint);
+    // 🔧 Constrói a URL com os parâmetros, se houver
+    const url = new URL(config.endpoint, window.location.origin);
+    Object.entries(queryParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.set(key, value);
+      }
+    });
+
+    const res = await fetch(url.toString());
     if (!res.ok) throw new Error(`Erro ao sync servidor->cache de ${store}`);
+
     const serverItems = config.extract(await res.json());
+
     const storeRef = await getStore(store, "readwrite");
     const localItems = await storeRef.getAll();
     const localMap = new Map(localItems.map((item) => [item.id, item]));
+
     for (const serverItem of serverItems) {
       const local = localMap.get(serverItem.id);
       if (
@@ -333,6 +347,7 @@ export async function syncServerToCache(store) {
         await storeRef.put({ ...serverItem, _syncStatus: "synced" });
       }
     }
+
     return { success: true, updated: serverItems.length };
   } catch (err) {
     throw err;
