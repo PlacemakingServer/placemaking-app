@@ -101,6 +101,10 @@ async function pullUpdates() {
       if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
       const data = await res.json();
       const items = data[store];
+      console.log(`[SW] Atualizandom data ${store}`, data);
+      console.log(`[SW] Atualizando items ${store}`, items);
+
+
       if (!items || items.length === 0) return;
       for (const item of items) {
         await updateItem(store, item.id, {

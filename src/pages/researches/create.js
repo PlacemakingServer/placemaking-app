@@ -1,49 +1,34 @@
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import ResearchForm from "@/components/research/ResearchForm";
-import { initAuthDB } from "@/lib/db";
 import { useMessage } from "@/context/MessageContext";
 import { useLoading } from "@/context/LoadingContext";
-import { set } from "zod";
+import { useUsers, useAuthentication, useResearches } from "@/hooks";
 
 export default function CreateResearch() {
+  const { users: rawUsers, loading: usersLoading, error: usersError } = useUsers();
+  const { addResearch } = useResearches();
+  const { user } = useAuthentication();
   const { showMessage } = useMessage();
   const { setIsLoading } = useLoading();
   const router = useRouter();
-  const [users, setUsers] = useState([]);
 
-  useEffect(() => { 
-    fetchUsers();
-  }, []);
+  const users = useMemo(() => {
+    if (!Array.isArray(rawUsers)) return [];
+    return rawUsers.map((user) => ({
+      value: user.id,
+      id: user.id,
+      label: user.name,
+      role: user.role,
+      status: user.status,
+      email: user.email,
+    }));
+  }, [rawUsers]);
 
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch("/api/users");
-      const data = await res.json();
-
-      const formatted = data.users?.map((c) => ({
-        value: c.id,
-        id: c.id,
-        label: c.name,
-        role: c.role,
-        status: c.status,
-        email: c.email,
-      }));
-      setUsers(formatted || []);
-    } catch (error) {
-      console.error("Erro ao buscar colaboradores:", error);
-    }
-  };
-      
-  
   const handleCreate = async (payload) => {
     setIsLoading(true);
-
     try {
-      const db = await initAuthDB();
-      const stored = await db.get("user-data", "user-data");
-      const userId = stored?.user?.id;
-
+      const userId = user?.id;
       if (!userId) {
         showMessage("Usuário não encontrado", "vermelho", 5000);
         return;
@@ -63,26 +48,10 @@ export default function CreateResearch() {
         created_by: userId,
       };
 
-      const res = await fetch("/api/researches/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId,
-        },
-        body: JSON.stringify(finalPayload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        const message = data?.error || "Erro ao criar a pesquisa.";
-        showMessage(message, "vermelho", 5000);
-        return;
-      }
+      const created = await addResearch(finalPayload);
 
       showMessage("Pesquisa criada com sucesso!", "verde", 4000);
-
-      router.push(`/researches/${data.research.id}`);
+      router.push(`/researches/${created?.id || ""}`);
     } catch (error) {
       console.error("Erro ao criar pesquisa:", error);
       showMessage("Erro interno ao criar pesquisa.", "vermelho", 5000);
@@ -94,7 +63,7 @@ export default function CreateResearch() {
   return (
     <div className="pb-20">
       <ResearchForm
-        isEdit={false} 
+        isEdit={false}
         onSubmit={handleCreate}
         users={users}
       />

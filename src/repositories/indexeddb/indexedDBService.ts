@@ -54,7 +54,7 @@ export async function getAllItems<K extends keyof StoreTypes>(store: K): Promise
   return db.getAll(store);
 }
 
-export async function updateItem<K extends keyof StoreTypes>(store: K, id: string, data: Partial<StoreTypes[K]>): Promise<void> {
+export async function updateItem<T = any>(store: string, id: string, data: Partial<T>): Promise<void> {
   const db = await getDB();
   const current = await db.get(store, id);
   if (current) {

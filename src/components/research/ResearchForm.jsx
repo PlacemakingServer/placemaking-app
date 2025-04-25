@@ -51,19 +51,13 @@ export default function ResearchForm({
   const [showCollaborators, setShowCollaborators] = useState(false);
   const [originalCollaborators, setOriginalCollaborators] = useState([]);
 
-  
   const [allCollaborators, setAllCollaborators] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
-  
+
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  // useEffect(() => {
-  //   console.log("Form data:", form);
-  // }, []);
-
-  
   const handleLocationSelect = (data) => {
     setForm((prev) => ({
       ...prev,
@@ -75,7 +69,6 @@ export default function ResearchForm({
     }));
   };
 
-  
   const handleDiscard = () => {
     setForm({
       ...initialData,
@@ -89,13 +82,13 @@ export default function ResearchForm({
     const originalArray = Array.isArray(originalCollaborators)
       ? originalCollaborators
       : [];
-  
+
     const originalIds = new Set(originalArray.map((c) => c.value));
     const newIds = new Set(newSelected.map((c) => c.value));
-  
+
     const toAdd = newSelected.filter((c) => !originalIds.has(c.value));
     const toRemove = originalArray.filter((c) => !newIds.has(c.value));
-  
+
     setForm((prev) => ({
       ...prev,
       selectedCollaborators: newSelected,
@@ -103,7 +96,6 @@ export default function ResearchForm({
       collaboratorsToRemove: toRemove,
     }));
   }
-  
 
   const handleSelectChange = (newValue) => {
     if (!isEdit) {
@@ -113,7 +105,6 @@ export default function ResearchForm({
     }
   };
 
-
   const handleRemoveAdd = (user) => {
     const newSelected = form.selectedCollaborators.filter(
       (u) => u.value !== user.value
@@ -121,12 +112,10 @@ export default function ResearchForm({
     refreshCollaboratorsDiff(newSelected);
   };
 
-
   const handleUndoRemove = (user) => {
     const newSelected = [...form.selectedCollaborators, user];
     refreshCollaboratorsDiff(newSelected);
   };
-
 
   const handleSubmit = () => {
     const selected = form.selectedCollaborators.map((c) => ({
@@ -173,7 +162,7 @@ export default function ResearchForm({
     if (users) {
       setAllCollaborators(users);
     }
-  
+
     if (contributorsData && isEdit) {
       setOriginalCollaborators(contributorsData || []);
       setForm((prev) => ({
@@ -187,7 +176,6 @@ export default function ResearchForm({
     const idx = Math.floor(Math.random() * 5);
     setImageUrl(`/img/cards/img-${idx}.jpg`);
   }, []);
-  
 
   return (
     <div className="max-w-4xl mx-auto mt-6 bg-white rounded-2xl shadow-md">
@@ -347,104 +335,107 @@ export default function ResearchForm({
           </>
         )}
 
-        <hr className="my-6 border-gray-200" />
-
-        <SectionToggle
-          title="Colaboradores"
-          isChecked={showCollaborators}
-          onChange={setShowCollaborators}
-        />
-        {showCollaborators && (
+        {isEdit && (
           <>
-            <MultiSelect
-              options={allCollaborators}
-              value={form.selectedCollaborators}
-              onChange={handleSelectChange}
-              placeholder="Selecione colaboradores"
-            />
-            <p className="text-xs text-gray-500">
-              Você pode escolher múltiplos colaboradores para participar.
-            </p>
+            <hr className="my-6 border-gray-200" />
 
-            {/* Em modo edição, exibimos "adicionados" e "removidos" */}
-            {isEdit && (
-              <div className="mt-6 space-y-6">
-                {form.collaboratorsToAdd?.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                      Colaboradores que serão adicionados
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {form.collaboratorsToAdd.map((usr) => (
-                        <UserCardCompact
-                          key={usr.value}
-                          user={{
-                            id: usr.value,
-                            name: usr.label,
-                            role: usr.role,
-                            status: usr.status,
-                            email: usr.email,
-                          }}
-                          borderColor="border-green-500"
-                          showRemoveButton={true}
-                          onRemove={() => handleRemoveAdd(usr)}
-                        />
-                      ))}
-                    </div>
+            <SectionToggle
+              title="Colaboradores"
+              isChecked={showCollaborators}
+              onChange={setShowCollaborators}
+            />
+            {showCollaborators && (
+              <>
+                <MultiSelect
+                  options={allCollaborators}
+                  value={form.selectedCollaborators}
+                  onChange={handleSelectChange}
+                  placeholder="Selecione colaboradores"
+                />
+                <p className="text-xs text-gray-500">
+                  Você pode escolher múltiplos colaboradores para participar.
+                </p>
+
+                {/* Em modo edição, exibimos "adicionados" e "removidos" */}
+                {isEdit && (
+                  <div className="mt-6 space-y-6">
+                    {form.collaboratorsToAdd?.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                          Colaboradores que serão adicionados
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {form.collaboratorsToAdd.map((usr) => (
+                            <UserCardCompact
+                              key={usr.value}
+                              user={{
+                                id: usr.value,
+                                name: usr.label,
+                                role: usr.role,
+                                status: usr.status,
+                                email: usr.email,
+                              }}
+                              borderColor="border-green-500"
+                              showRemoveButton={true}
+                              onRemove={() => handleRemoveAdd(usr)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {form.collaboratorsToRemove?.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                          Colaboradores que serão removidos
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {form.collaboratorsToRemove.map((user) => (
+                            <UserCardCompact
+                              key={user.value}
+                              user={{
+                                id: user.value,
+                                name: user.label,
+                                role: user.role,
+                                status: user.status,
+                                email: user.email,
+                              }}
+                              borderColor="border-red-500"
+                              showRemoveButton={true}
+                              onRemove={() => handleUndoRemove(user)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {form.collaboratorsToRemove?.length > 0 && (
-                  <div>
+                {form.selectedCollaborators?.length > 0 && (
+                  <div className="mt-6 border-t pt-4 space-y-2">
                     <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                      Colaboradores que serão removidos
+                      Colaboradores Selecionados (Estado Final)
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {form.collaboratorsToRemove.map((user) => (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[14rem] overflow-y-auto">
+                      {form.selectedCollaborators.map((user) => (
                         <UserCardCompact
                           key={user.value}
                           user={{
-                            id: user.value,
+                            id: user.id,
                             name: user.label,
                             role: user.role,
                             status: user.status,
                             email: user.email,
                           }}
-                          borderColor="border-red-500"
-                          showRemoveButton={true}
-                          onRemove={() => handleUndoRemove(user)}
                         />
                       ))}
                     </div>
                   </div>
                 )}
-              </div>
-            )}
-
-            {form.selectedCollaborators?.length > 0 && (
-              <div className="mt-6 border-t pt-4 space-y-2">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                  Colaboradores Selecionados (Estado Final)
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[14rem] overflow-y-auto">
-                  {form.selectedCollaborators.map((user) => (
-                    <UserCardCompact
-                      key={user.value}
-                      user={{
-                        id: user.id,
-                        name: user.label,
-                        role: user.role,
-                        status: user.status,
-                        email: user.email,
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
+              </>
             )}
           </>
         )}
-
         {/* Botões finais */}
         <div className="flex justify-center pt-4 gap-6">
           <Button

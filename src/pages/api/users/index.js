@@ -22,12 +22,11 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       return res.status(response.status).json(data);
     }
 
-    return res.status(200).json(data);
+    return res.status(200).json(data.users);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Erro ao conectar com o servidor" });

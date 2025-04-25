@@ -7,7 +7,6 @@ export const DB_VERSION = 1;
 const storeSchema = [
   'auth',
   'users',
-  'activity_answers',
   'fields',
   'researches',
   'survey_time_ranges',
