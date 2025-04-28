@@ -91,7 +91,7 @@ export default function ResearchForm({
           backgroundPosition: "center",
         }}
       >
-        <div className="bg-black/50 px-6 py-8 sm:px-8 sm:py-10">
+        <div className="bg-black/50 px-6 py-8 sm:px-8 sm:py-10 rounded-t-lg">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <h1 className="text-2xl font-bold text-white drop-shadow">

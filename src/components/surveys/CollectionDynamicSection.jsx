@@ -11,7 +11,7 @@ import Switch from "@/components/ui/Switch";
  * - onSubmit: função chamada ao salvar
  * - isEdit: booleano, se é modo de edição
  */
-export default function DynamicCollectionSection({
+export default function CollectionDynamicSection({
   initialData = {},
   onSubmit,
   isEdit = false,

@@ -4,7 +4,7 @@ import { DynamicSurvey } from '@/lib/types/indexeddb';
 import { createDynamicSurvey } from '@/repositories/server/dynamicSurveyApi';
 import { createItem, getAllItems } from '@/repositories/indexeddb/indexedDBService';
 
-export function useDynamicSurveys() {
+export function useDynamicSurveys(research_id: string) {
   type LocalDynamicSurvey = DynamicSurvey & { _syncStatus?: 'pending' | 'synced' | 'error' };
   const [surveys, setSurveys] = useState<LocalDynamicSurvey[]>([]);
   const [loading, setLoading] = useState(true);

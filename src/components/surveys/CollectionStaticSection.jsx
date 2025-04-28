@@ -12,7 +12,7 @@ import Button from "@/components/ui/Button";
  *  - onSubmit: função chamada ao enviar
  *  - isEdit: booleano para distinguir entre criação e edição
  */
-export default function StaticCollectionSection({
+export default function CollectionStaticSection({
   initialData = {},
   onSubmit,
   isEdit = false,

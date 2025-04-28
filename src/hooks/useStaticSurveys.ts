@@ -4,7 +4,7 @@ import { StaticSurvey } from '@/lib/types/indexeddb';
 import { createStaticSurvey } from '@/repositories/server/staticSurveyApi';
 import { createItem, getAllItems } from '@/repositories/indexeddb/indexedDBService';
 
-export function useStaticSurveys() {
+export function useStaticSurveys(research_id: string) {
   type LocalStaticSurvey = StaticSurvey & { _syncStatus?: 'pending' | 'synced' | 'error' };
   const [surveys, setSurveys] = useState<LocalStaticSurvey[]>([]);
   const [loading, setLoading] = useState(true);

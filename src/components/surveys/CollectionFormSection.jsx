@@ -10,13 +10,12 @@ import LocationForm from "@/components/surveys/LocationForm";
 import BasicInformation from "@/components/surveys/BasicInformation";
 import CollaboratorSelector from "@/components/surveys/CollaboratorSelector";
 import TimeRanges from "@/components/surveys/TimeRanges";
-
+import { useFormSurveys } from "@/hooks";
 export default function CollectionFormSection({
   initialData = {},
   survey_type,
   research_id,
   handleCancelCreateSurvey,
-  handleCreateSurvey,
 }) {
   const [enabled, setEnabled] = useState(false);
   const [form, setForm] = useState({
@@ -36,6 +35,7 @@ export default function CollectionFormSection({
   const [formStructure, setFormStructure] = useState(
     initialData?.structure || {}
   );
+  const { addFormSurvey } = useFormSurveys();
 
   useEffect(() => {
     console.log("Survey:", initialData);

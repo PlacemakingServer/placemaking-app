@@ -1,74 +1,65 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import { useResearches } from "@/hooks/useResearches";
-import { useUsers } from "@/hooks/useUsers"; // <-- IMPORTA AQUI
+import { useUsers } from "@/hooks/useUsers";
 import ResearchForm from "@/components/research/ResearchForm";
 import { useMessage } from "@/context/MessageContext";
 import ResearchLoadingSkeleton from "@/components/research/ResearchLoadingSkeleton";
 import SideBarSectionsFilter from "@/components/ui/SideBarSectionsFilter";
-import CollectionFormSection from "@/components/surveys/CollectionFormSection";
 import AddSurveyPrompt from "@/components/surveys/AddSurveyPrompt";
+import CollectionFormSection from "@/components/surveys/CollectionFormSection";
+import CollectionStaticSection from "@/components/surveys/CollectionStaticSection";
+import CollectionDynamicSection from "@/components/surveys/CollectionDynamicSection";
 import { formatDataByModel } from "@/lib/types/models";
+
+const SURVEY_TYPES = [
+  { id: "formulario", label: "Formulário", icon: "description" },
+  { id: "estatica", label: "Estática", icon: "insights" },
+  { id: "dinamica", label: "Dinâmica", icon: "sync_alt" },
+];
 
 export default function EditResearch() {
   const router = useRouter();
   const { id } = router.query;
   const { showMessage } = useMessage();
   const { researchData, loading: loadingResearch, updateResearch } = useResearches(true, id);
-  const { users, loading: loadingUsers } = useUsers(); 
+  const { users, loading: loadingUsers } = useUsers();
+
   const [renderedSurveys, setRenderedSurveys] = useState([]);
   const [isCreatingSurvey, setIsCreatingSurvey] = useState(false);
 
-  const SURVEY_TYPES = [
-    { id: "formulario", label: "Formulário", icon: "description" },
-    { id: "estatica", label: "Estática", icon: "insights" },
-    { id: "dinamica", label: "Dinâmica", icon: "sync_alt" },
-  ];
+  const sidebarSections = [{ id: "pesquisa", label: "Pesquisa", icon: "search" }, ...SURVEY_TYPES];
 
-  useEffect(() => {
-    if (!id) return;
-    loadAllSurveyTypes();
-  }, [id]);
-
-  const loadAllSurveyTypes = () => {
-    SURVEY_TYPES.forEach(({ label }) => loadSurveyByType(label));
-  };
-
-  const loadSurveyByType = async (surveyType) => {
-    try {
-      if (!id) return;
-      const params = new URLSearchParams({
-        research_id: id,
-        survey_type: surveyType,
-      });
-      const res = await fetch(`/api/surveys?${params.toString()}`);
-      const data = await res.json();
-
-      if (!data.surveys || data.surveys.length === 0) return;
-
-      renderSurveyComponent(surveyType, data);
-    } catch (err) {
-      console.error("Erro ao buscar survey do tipo", surveyType, err);
-    }
-  };
-
-  const renderSurveyComponent = (surveyLabel, data) => {
+  const renderSurveyComponent = (surveyLabel) => {
     const surveyType = SURVEY_TYPES.find((t) => t.label === surveyLabel);
-    const surveyData = data?.surveys[0] || null;
-    if (!surveyType || renderedSurveys.find((s) => s.id === surveyType.id)) return;
+    if (!surveyType || renderedSurveys.some((s) => s.id === surveyType.id)) return;
+
+    let SurveyComponent = null;
+
+    switch (surveyLabel.toLowerCase()) {
+      case "formulário":
+        SurveyComponent = CollectionFormSection;
+        break;
+      case "estática":
+        SurveyComponent = CollectionStaticSection;
+        break;
+      case "dinâmica":
+        SurveyComponent = CollectionDynamicSection;
+        break;
+      default:
+        console.warn(`Tipo de coleta desconhecido: ${surveyLabel}`);
+        return;
+    }
 
     setRenderedSurveys((prev) => [
       ...prev,
       {
         ...surveyType,
         component: (
-          <CollectionFormSection
+          <SurveyComponent
             key={`survey-${surveyType.id}`}
-            survey_type={surveyType.label}
             research_id={id}
-            initialData={surveyData}
             handleCancelCreateSurvey={handleCancelCreateSurvey}
-            handleCreateSurvey={handleCreateSurvey}
           />
         ),
       },
@@ -79,7 +70,7 @@ export default function EditResearch() {
     const typeObj = SURVEY_TYPES.find((t) => t.id === selectedTypeId);
     if (!typeObj) return;
 
-    renderSurveyComponent(typeObj.label, null);
+    renderSurveyComponent(typeObj.label);
 
     setTimeout(() => {
       const element = document.getElementById(`survey-${selectedTypeId}`);
@@ -97,10 +88,10 @@ export default function EditResearch() {
   };
 
   const handleResearchUpdate = async (payload) => {
+    if (!id) return;
+
     try {
-      if (!id) return;
-      const finalPayload = { ...payload, id };
-      const formattedPayload = formatDataByModel(finalPayload, "researches");
+      const formattedPayload = formatDataByModel({ ...payload, id }, "researches");
       await updateResearch(id, formattedPayload);
       showMessage("Pesquisa atualizada com sucesso", "verde", 5000);
       router.reload();
@@ -110,46 +101,11 @@ export default function EditResearch() {
     }
   };
 
-  const handleCreateSurvey = async (payload) => {
-    try {
-      const res = await fetch("/api/surveys/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(`Falha ao criar uma coleta. Status: ${res.status}`);
-      }
-      if (!data) {
-        showMessage("Erro ao criar uma coleta", "vermelho_claro", 5000);
-        return null;
-      }
-      showMessage("Coleta criada com sucesso", "verde", 5000);
-      setIsCreatingSurvey(true);
-      return data?.survey;
-    } catch (err) {
-      console.error("Erro ao criar uma coleta:", err);
-      showMessage("Erro ao criar uma coleta", "vermelho_claro", 5000);
-      return null;
-    }
-  };
-
   if (!id || loadingResearch || loadingUsers) return <ResearchLoadingSkeleton />;
 
   if (!researchData) {
-    return (
-      <div className="p-6 text-red-500">
-        Não foi possível carregar a pesquisa.
-      </div>
-    );
+    return <div className="p-6 text-red-500">Não foi possível carregar a pesquisa.</div>;
   }
-
-  const sidebarSections = [
-    { id: "pesquisa", label: "Pesquisa", icon: "search" },
-    ...SURVEY_TYPES,
-  ];
 
   return (
     <div className="relative">
