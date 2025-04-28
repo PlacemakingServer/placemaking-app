@@ -1,7 +1,7 @@
 // components/forms/MultipleChoiceEditor.jsx
 import { useState } from "react";
 import { Trash2, Plus } from "lucide-react";
-import Button from "@/components/ui/Button_og";
+import Button from "@/components/ui/Button";
 import FormField from "@/components/forms/FormField";
 import { motion, AnimatePresence } from "framer-motion";
 

@@ -94,11 +94,7 @@ export default function UserCard({ user, onViewDetails }) {
       <div className="flex items-center justify-between mt-2">
         {user._syncStatus && (
           <span
-<<<<<<< HEAD
             className={`flex-shrink-0 truncate max-w-[100px] px-2 py-1 text-[10px] font-semibold rounded ${getBadgeVariant(
-=======
-            className={`flex-shrink-0 truncate max-w-[100px] px-2 py-1 text-xs font-semibold rounded ${getBadgeVariant(
->>>>>>> dashboard
               user._syncStatus
             )}`}
           >

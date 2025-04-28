@@ -6,7 +6,7 @@ import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
 import { getCachedData } from "@/services/cache";
 import UserCardCompact from "@/components/ui/UserCardCompact";
-import Button from "@/components/ui/Button_og";
+import Button from "@/components/ui/Button";
 
 import { VARIANTS } from "@/config/colors";
 

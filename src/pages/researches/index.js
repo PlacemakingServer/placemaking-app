@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
-import Button from "@/components/ui/Button_og";
+import Button from "@/components/ui/Button";
 import FiltersComponent from "@/components/ui/FiltersComponent";
 import ResearchCard from "@/components/ui/Research/ResearchCard";
 import ResearchCardSkeleton from "@/components/ui/Research/ResearchCardSkeleton";

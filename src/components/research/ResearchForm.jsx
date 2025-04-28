@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import FormField from "@/components/forms/FormField";
-import Button from "@/components/ui/Button_og";
+import Button from "@/components/ui/Button";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
 import Switch from "@/components/ui/Switch";
 import Contributors from "@/components/research/Contributors"; 

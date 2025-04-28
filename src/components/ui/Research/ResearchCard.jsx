@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import Button from "@/components/ui/Button_og";
+import Button from "@/components/ui/Button";
 import { VARIANTS } from "@/config/colors";
 import { motion } from "framer-motion";
 

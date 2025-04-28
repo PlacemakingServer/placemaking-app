@@ -9,7 +9,7 @@ import {
   syncLocalToServer,
   syncServerToCache,
 } from "@/services/cache";
-import Button from "@/components/ui/Button_og";
+import Button from "@/components/ui/Button";
 import { VARIANTS } from "@/config/colors";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 import MapPreview from "@/components/map/MapPreviewNoSSR";

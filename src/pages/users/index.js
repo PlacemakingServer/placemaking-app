@@ -3,7 +3,7 @@ import Button from "@/components/ui/Button";
 import ModalUser from "@/components/ui/ModalUser";
 import ModalRegisterUser from "@/components/ui/ModalRegisterUser";
 import FiltersComponent from "@/components/ui/FiltersComponent";
-import UserCard from "@/components/ui/UserCard";
+import  UserCard from "@/components/ui/UserCard";
 import { useUsers } from "@/hooks/useUsers"; // agora usa seu hook
 import { useMessage } from "@/context/MessageContext";
 import { VARIANTS } from "@/config/colors";

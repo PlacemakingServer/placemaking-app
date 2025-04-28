@@ -1,9 +1,9 @@
 import { useRouter } from "next/router";
-import Button from "@/components/ui/Button_og";
+import Button from "@/components/ui/Button";
 import { VARIANTS } from "@/config/colors";
 import { motion } from "framer-motion";
 
-export default function ResearchCard({ research }) {
+export default function ResearchCard({ research, showButton = true }) {
   const router = useRouter();
   const imageIndex = Math.floor(Math.random() * 5); // 0 a 4
   const imageUrl = `/img/cards/img-${imageIndex}.jpg`;
@@ -52,7 +52,8 @@ export default function ResearchCard({ research }) {
           </span>
         )}
         <div className="flex items-center gap-2 ml-auto">
-          <Button
+          {showButton && (
+            <Button
             variant="transparent_cinza"
             className="p-2"
             title="Ver Detalhes"
@@ -62,6 +63,7 @@ export default function ResearchCard({ research }) {
               visibility
             </span>
           </Button>
+          )}
         </div>
       </div>
     </motion.div>

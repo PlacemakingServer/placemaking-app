@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import MapLeafletNoSSR from "@/components/map/MapLeafletNoSSR";
-import Button from "@/components/ui/Button_og";
+import Button from "@/components/ui/Button";
 import { useLoading } from "@/context/LoadingContext";
 
 export default function OfflineMapButton({ onLocationSelect }) {
