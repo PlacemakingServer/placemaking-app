@@ -1,129 +1,98 @@
-import { useState, useEffect, useCallback } from "react";
-import clsx from "clsx";
+import { useState, useMemo } from "react";
 import Button from "@/components/ui/Button";
 import ModalUser from "@/components/ui/ModalUser";
 import ModalRegisterUser from "@/components/ui/ModalRegisterUser";
-import { useLoading } from "@/context/LoadingContext";
-import { useMessage } from "@/context/MessageContext";
+import FiltersComponent from "@/components/ui/FiltersComponent";
 import UserCard from "@/components/ui/UserCard";
-import {
-  getCachedData,
-  syncLocalToServer,
-  syncServerToCache,
-} from "@/services/cache";
+import { useUsers } from "@/hooks/useUsers"; // agora usa seu hook
+import { useMessage } from "@/context/MessageContext";
 import { VARIANTS } from "@/config/colors";
 import { USER_ROLES, USER_STATUS } from "@/config/data_types";
-import { useAuth } from "@/context/AuthContext";
-import FiltersComponent from "@/components/ui/FiltersComponent";
+import UserCardSkeleton from "@/components/ui/UserCardSkeleton";
 
 export default function Users() {
-  const [users, setUsers] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const perPage = 10;
+  const { users, addUser, updateUser, loading } = useUsers();
+  const { showMessage } = useMessage();
   const [selectedUser, setSelectedUser] = useState(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const { isLoading, setIsLoading } = useLoading();
-  const { showMessage } = useMessage();
-  const [showFilters, setShowFilters] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [perPage] = useState(10);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [order, setOrder] = useState("desc");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterRole, setFilterRole] = useState("");
-  const { userData } = useAuth();
+  const [showFilters, setShowFilters] = useState(false);
 
-  const loadCachedUsers = useCallback(async () => {
-    setIsLoading(true);
+  const filteredUsers = useMemo(() => {
+    let filtered = users;
+
+    if (searchTerm)
+      filtered = filtered.filter(
+        (u) =>
+          u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          u.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+    if (filterStatus)
+      filtered = filtered.filter((u) => u.status === filterStatus);
+    if (filterRole) filtered = filtered.filter((u) => u.role === filterRole);
+
+    if (order === "desc")
+      filtered = filtered.sort((a, b) =>
+        b.created_at.localeCompare(a.created_at)
+      );
+    else
+      filtered = filtered.sort((a, b) =>
+        a.created_at.localeCompare(b.created_at)
+      );
+
+    return filtered;
+  }, [users, searchTerm, filterStatus, filterRole, order]);
+
+  const paginatedUsers = useMemo(() => {
+    const start = (page - 1) * perPage;
+    return filteredUsers.slice(start, start + perPage);
+  }, [filteredUsers, page, perPage]);
+
+  const totalPages = Math.ceil(filteredUsers.length / perPage);
+
+  const handleUserCreated = async (newUser) => {
     try {
-      const result = await getCachedData("users", {
-        paginated: false,
-        order,
-        search: searchTerm,
-        filterStatus,
-        filterRole,
-      });
-
-      const filtered = result.filter((user) => user.id !== userData?.id);
-
-      const total = filtered.length;
-      const totalPagesCalc = Math.ceil(total / perPage);
-      const start = (page - 1) * perPage;
-      const paginatedUsers = filtered.slice(start, start + perPage);
-
-      setUsers(paginatedUsers);
-      setTotalPages(totalPagesCalc);
+      await addUser(newUser);
+      showMessage("Usuário criado com sucesso!", "verde");
     } catch (err) {
-      console.error("Erro ao carregar dados do cache:", err);
-      showMessage("Erro ao carregar dados do cache.", "vermelho_claro", 5000);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    page,
-    perPage,
-    order,
-    searchTerm,
-    filterStatus,
-    filterRole,
-    setIsLoading,
-    showMessage,
-    userData?.id,
-  ]);
-
-  useEffect(() => {
-    loadCachedUsers();
-  }, [loadCachedUsers]);
-
-  const handleSync = async () => {
-    setIsLoading(true);
-    try {
-      await syncLocalToServer("users");
-      await syncServerToCache("users");
-      showMessage("Dados sincronizados com sucesso!", "azul_claro");
-      loadCachedUsers();
-    } catch (err) {
-      console.error("Erro ao sincronizar dados:", err);
-      showMessage("Erro ao sincronizar dados.", "vermelho_claro", 5000);
-    } finally {
-      setIsLoading(false);
+      console.error(err);
+      showMessage("Erro ao criar usuário.", "vermelho_claro");
     }
   };
 
-  const handlePrevious = () => {
-    if (page > 1) setPage((prev) => prev - 1);
-  };
-  const handleNext = () => {
-    if (page < totalPages) setPage((prev) => prev + 1);
-  };
-
-  const handleUserUpdated = (updatedUser) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
-    );
-  };
-  const handleUserDeleted = (userId) => {
-    setUsers((prev) => prev.filter((u) => u.id !== userId));
+  const handleUserUpdated = async (updatedUser) => {
+    try {
+      console.log("Atualizando usuário:", updatedUser);
+      await updateUser(updatedUser.id, updatedUser);
+      showMessage("Usuário atualizado!", "verde");
+    } catch (err) {
+      console.error(err);
+      showMessage("Erro ao atualizar usuário.", "vermelho_claro");
+    }
   };
 
-  const getBadgeVariant = (status) => {
-    switch (status) {
-      case "pendingCreate":
-        return VARIANTS.azul_escuro;
-      case "pendingUpdate":
-        return VARIANTS.warning;
-      case "pendingDelete":
-        return VARIANTS.vermelho;
-      default:
-        return VARIANTS.verde;
+  const handleUserDeleted = async (userId) => {
+    try {
+      await removeUser(userId);
+      showMessage("Usuário deletado!", "verde");
+    } catch (err) {
+      console.error(err);
+      showMessage("Erro ao deletar usuário.", "vermelho_claro");
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="p-2 md:p-8 max-w-7xl mx-auto">
-        {/* Botão de cadastro */}
         <div className="flex justify-end mb-4">
-          {/* Botão completo para desktop */}
           <Button
             onClick={() => setIsRegisterOpen(true)}
             variant="dark"
@@ -134,30 +103,13 @@ export default function Users() {
           </Button>
         </div>
 
-        {/* Seção de Gerenciamento */}
         <section className="bg-white rounded-lg shadow p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
             <h2 className="text-2xl font-bold mb-2 md:mb-0">
               Usuários Cadastrados
             </h2>
           </div>
-          <p className="text-xs text-gray-500 mb-4">
-            Os dados podem estar desatualizados. Clique em “Atualizar” para
-            sincronizar com o servidor.
-          </p>
-          <div className="flex items-center space-x-2 mb-4">
-            <Button
-              onClick={handleSync}
-              disabled={isLoading}
-              className="px-4 py-2 transition flex justify-evenly items-center gap-2"
-              variant="dark"
-            >
-              <span className="material-symbols-outlined">sync</span>
-              <span>Atualizar</span>
-            </Button>
-          </div>
 
-          {/* Filtros expandíveis com animação leve */}
           <FiltersComponent
             showFilters={showFilters}
             setShowFilters={setShowFilters}
@@ -214,23 +166,26 @@ export default function Users() {
               if (key === "order") setOrder(value);
               if (key === "filterStatus") setFilterStatus(value);
               if (key === "filterRole") setFilterRole(value);
+              setPage(1); // Resetar para página 1 ao mudar filtros
             }}
             onClear={() => {
               setSearchTerm("");
               setOrder("desc");
               setFilterStatus("");
               setFilterRole("");
+              setPage(1);
             }}
           />
 
-          {users.length === 0 ? (
-            <p className="text-gray-500">
-              Nenhum usuário encontrado. Tente alterar os filtros ou clique em
-              “Atualizar”.
-            </p>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, idx) => (
+                <UserCardSkeleton key={idx} />
+              ))}
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {users.map((u) => (
+              {paginatedUsers.map((u) => (
                 <UserCard
                   key={u.id}
                   user={u}
@@ -242,9 +197,8 @@ export default function Users() {
 
           <div className="flex items-center justify-between mt-6">
             <Button
-              onClick={handlePrevious}
+              onClick={() => page > 1 && setPage(page - 1)}
               disabled={page === 1}
-              className="disabled:opacity-80"
               variant="dark"
             >
               Anterior
@@ -253,9 +207,8 @@ export default function Users() {
               Página {page} de {totalPages}
             </span>
             <Button
-              onClick={handleNext}
+              onClick={() => page < totalPages && setPage(page + 1)}
               disabled={page === totalPages}
-              className="disabled:opacity-80"
               variant="dark"
             >
               Próxima
@@ -276,7 +229,7 @@ export default function Users() {
       <ModalRegisterUser
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
-        onUserCreated={(newUser) => setUsers((prev) => [...prev, newUser])}
+        onUserCreated={handleUserCreated}
         showMessage={showMessage}
       />
     </div>

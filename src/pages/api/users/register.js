@@ -12,7 +12,8 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Token não fornecido" });
   }
 
-  const { name, email, confirmation_email, role, status } = req.body;
+  const { name, email, role, status } = req.body;
+  const confirmation_email = req.body.confirmation_email || email;
 
   try {
     const response = await fetch(`${process.env.SERVER_URL}/auth/register`, {
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
       return res.status(response.status).json(data);
     }
 
-    return res.status(200).json(data);
+    return res.status(200).json(data.user);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Erro ao conectar com o servidor" });

@@ -1,9 +1,7 @@
-// src/components/ui/ModalRegisterUser.jsx
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "@/components/ui/Button";
 import { USER_ROLES, USER_STATUS } from "@/config/data_types";
-import { addCachedItem, markItemForCreate } from "@/services/cache";
 
 export default function ModalRegisterUser({
   isOpen,
@@ -44,36 +42,26 @@ export default function ModalRegisterUser({
       return;
     }
     setIsProcessing(true);
-    try {
-      const res = await fetch("/api/users/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erro ao cadastrar");
-      showMessage("Usuário cadastrado com sucesso!", "verde");
 
-      await addCachedItem("users", { ...data.user, _syncStatus: "synced" });
+    try {
+      // Cria objeto sem confirmation_email
+      const userToCreate = {
+        name: form.name,
+        email: form.email,
+        role: form.role,
+        status: form.status,
+      };
+
+      // Aqui usamos o onUserCreated passado pelo componente pai (Users.jsx)
       if (onUserCreated) {
-        onUserCreated(data.user);
+        await onUserCreated(userToCreate);
       }
+
+      showMessage("Usuário cadastrado com sucesso!", "verde");
       onClose();
     } catch (err) {
-      try {
-        const pendingUser = await markItemForCreate("users", form);
-        if (onUserCreated) {
-          onUserCreated(pendingUser);
-        }
-        showMessage(
-          "Servidor indisponível. Usuário salvo localmente e ficará pendente de sincronização.",
-          "vermelho",
-          5000
-        );
-      } catch (err) {
-        showMessage(err.message, "vermelho_claro", 5000);
-        onClose();
-      }
+      console.error("Erro ao criar usuário:", err);
+      showMessage("Erro ao cadastrar usuário. Tente novamente.", "vermelho_claro", 5000);
     } finally {
       setIsProcessing(false);
     }
@@ -112,6 +100,7 @@ export default function ModalRegisterUser({
                 <span className="material-symbols-outlined text-xl">close</span>
               </button>
             </div>
+
             <div className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -127,6 +116,7 @@ export default function ModalRegisterUser({
                     required
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     E-mail
@@ -140,6 +130,7 @@ export default function ModalRegisterUser({
                     required
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Confirmar E-mail
@@ -153,6 +144,7 @@ export default function ModalRegisterUser({
                     required
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Papel
@@ -172,6 +164,7 @@ export default function ModalRegisterUser({
                     ))}
                   </select>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Status
@@ -191,6 +184,7 @@ export default function ModalRegisterUser({
                     ))}
                   </select>
                 </div>
+
                 <div className="flex justify-center">
                   <Button
                     type="submit"

@@ -1,12 +1,5 @@
-// src/components/ui/ModalUser.jsx
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  updateCachedItemById,
-  deleteCachedItemById,
-  markItemForUpdate,
-  markItemForDelete,
-} from "@/services/cache";
 import Button from "@/components/ui/Button";
 import { USER_ROLES, USER_STATUS } from "@/config/data_types";
 import Link from "next/link";
@@ -16,7 +9,6 @@ export default function ModalUser({
   user,
   onClose,
   onUserUpdated,
-  onUserDeleted,
   showMessage,
 }) {
   const [form, setForm] = useState({
@@ -54,76 +46,14 @@ export default function ModalUser({
   const handleUpdate = async () => {
     setIsProcessing(true);
     const updateData = { ...form, status: cleanStatus(form.status) };
-    try {
-      const res = await fetch("/api/users/update", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        // Se a API falhar, marca para sincronização
-        await markItemForUpdate("users", form.id, updateData);
-        showMessage(
-          "Falha na atualização. Alteração pendente de sincronização.",
-          "vermelho",
-          5000
-        );
-      } else {
-        // Em caso de sucesso, force a atualização removendo o status pendente
-        const updatedDataWithSync = { ...updateData, _syncStatus: "synced" };
-        await updateCachedItemById("users", form.id, updatedDataWithSync);
-        onUserUpdated({
-          ...form,
-          _syncStatus: "synced",
-          updated_at: data.updated_at || new Date().toISOString(),
-        });
-        showMessage("Usuário atualizado com sucesso!", "azul_claro");
-      }
-      onClose();
-    } catch (err) {
-      await markItemForUpdate("users", form.id, updateData);
-      showMessage(
-        "Erro ao atualizar. Alteração ficará pendente de sincronização.",
-        "vermelho",
-        5000
-      );
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  
 
-  const handleDelete = async () => {
-    setIsProcessing(true);
     try {
-      const res = await fetch("/api/users/delete", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: user.id }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        // Se a exclusão falhar, marca para sincronização
-        await markItemForDelete("users", user.id);
-        showMessage(
-          "Falha ao deletar. Exclusão pendente de sincronização.",
-          "vermelho",
-          5000
-        );
-      } else {
-        await deleteCachedItemById("users", user.id);
-        onUserDeleted(user.id);
-        showMessage("Usuário deletado com sucesso!", "verde");
-      }
+      await onUserUpdated(updateData);  // chama o handler do componente pai
+      showMessage("Usuário atualizado com sucesso!", "verde");
       onClose();
     } catch (err) {
-      await markItemForDelete("users", user.id);
-      showMessage(
-        "Erro ao deletar. Exclusão ficará pendente de sincronização.",
-        "vermelho",
-        5000
-      );
+      console.error("Erro ao atualizar usuário:", err);
+      showMessage("Erro ao atualizar usuário. Tente novamente.", "vermelho_claro", 5000);
     } finally {
       setIsProcessing(false);
     }
@@ -165,6 +95,7 @@ export default function ModalUser({
                 </span>
               </button>
             </div>
+
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -178,6 +109,7 @@ export default function ModalUser({
                   className="mt-1 border border-gray-300 rounded w-full p-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   E-mail
@@ -190,6 +122,7 @@ export default function ModalUser({
                   className="mt-1 border border-gray-300 rounded w-full p-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Papel
@@ -208,6 +141,7 @@ export default function ModalUser({
                   ))}
                 </select>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Status
@@ -226,6 +160,7 @@ export default function ModalUser({
                   ))}
                 </select>
               </div>
+
               <div className="flex flex-row justify-center items-center">
                 <Link href={`/users/${form.id}`} passHref>
                   <Button variant="dark" className="w-full">
@@ -235,23 +170,7 @@ export default function ModalUser({
               </div>
             </div>
 
-            <div className="flex justify-between items-center space-x-2 p-4 border-t">
-              <Button
-                onClick={handleDelete}
-                variant="transparent_vermelho"
-                disabled={isProcessing}
-              >
-                {isProcessing ? (
-                  "Excluindo..."
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <span>Excluir</span>
-                    <span className="material-symbols-outlined text-base">
-                      delete
-                    </span>
-                  </div>
-                )}
-              </Button>
+            <div className="flex justify-end items-center space-x-2 p-4 border-t">
               <Button
                 onClick={handleUpdate}
                 variant="transparent_verde"
@@ -275,7 +194,3 @@ export default function ModalUser({
     </AnimatePresence>
   );
 }
-
-
-
-
