@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Token não fornecido" });
     }
 
-    const { research_id, user_id } = req.query;
+    const { research_id, user_id } = req.body;
 
     const missingFields = checkMissingFields({ research_id, user_id });
 

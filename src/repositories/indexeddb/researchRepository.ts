@@ -6,12 +6,10 @@ import {
     deleteItem,
   } from './indexedDBService';
   import type { Research } from '@/lib/types/indexeddb';
-  import { LocalResearch } from '@/hooks/useResearches'; 
-
+  
   const store = 'researches' as const;
   
   export async function createResearch(research: Research) {
-    console.log('Creating research local:', research);
     return createItem(store, research);
   }
   
@@ -23,7 +21,7 @@ import {
     return getAllItems(store);
   }
   
-  export async function updateResearch(id: string, data: Partial<LocalResearch>) {
+  export async function updateResearch(id: string, data: Research) {
     return updateItem('researches', id, data);
   }
   

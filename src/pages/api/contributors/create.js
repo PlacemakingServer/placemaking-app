@@ -18,16 +18,17 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Token não fornecido" });
     }
 
-    const { research_id, user_id  } = req.query;
-    const missingFields = checkMissingFields({ research_id, user_id });
+    const { research_id, user_id } = req.body;
+    console.log("dataa", req.body);
 
+    const missingFields = checkMissingFields({ research_id, user_id });
     if (missingFields.length > 0) {
       return res.status(400).json({
         error: `Os campos são obrigatórios: ${missingFields.join(", ")}`,
       });
     }
 
-    const url = `${process.env.SERVER_URL}/research/${research_id}/contributors`;
+    const url = `${process.env.SERVER_URL}/research/${research_id}/contributors/${user_id}`;
 
     const response = await fetch(url, {
       method: "POST",
@@ -35,9 +36,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        user_id
-      }),
+      body: JSON.stringify({}),
     });
 
     if (!response.ok) {
@@ -46,8 +45,9 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    return res.status(201).json(data);
+    return res.status(201).json(data.contributor);
   } catch (err) {
+    console.error("Erro geral:", err);
     return res.status(500).json({ error: "Erro ao conectar com o servidor" });
   }
 }

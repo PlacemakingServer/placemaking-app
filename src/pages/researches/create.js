@@ -4,6 +4,8 @@ import ResearchForm from "@/components/research/ResearchForm";
 import { useMessage } from "@/context/MessageContext";
 import { useLoading } from "@/context/LoadingContext";
 import { useUsers, useAuthentication, useResearches } from "@/hooks";
+import {formatDataByModel} from "@/lib/types/models";
+
 
 export default function CreateResearch() {
   const { users: rawUsers, loading: usersLoading, error: usersError } = useUsers();
@@ -12,6 +14,7 @@ export default function CreateResearch() {
   const { showMessage } = useMessage();
   const { setIsLoading } = useLoading();
   const router = useRouter();
+  
 
   const users = useMemo(() => {
     if (!Array.isArray(rawUsers)) return [];
@@ -48,7 +51,12 @@ export default function CreateResearch() {
         created_by: userId,
       };
 
-      const created = await addResearch(finalPayload);
+      const formattedPayload = formatDataByModel(
+        finalPayload,
+        "researches"
+      );
+
+      const created = await addResearch(formattedPayload);
 
       showMessage("Pesquisa criada com sucesso!", "verde", 4000);
       router.push(`/researches/${created?.id || ""}`);

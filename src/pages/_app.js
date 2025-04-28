@@ -9,7 +9,7 @@ import { initBackgroundSync } from "@/utils/periodicSync";
 import PublicLayout from "@/components/layouts/PublicLayout";
 import PrivateLayout from "@/components/layouts/PrivateLayout";
 import Head from "next/head";
-
+import { initPlacemakingDB } from "@/lib/db"; // << IMPORTA AQUI
 
 function AppContent({ Component, pageProps }) {
   const { isLoading } = useLoading();
@@ -44,23 +44,32 @@ function AppContent({ Component, pageProps }) {
 
 function MyApp({ Component, pageProps }) {
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then(() => {
-          console.log('SW registrado com sucesso!');
-          if (!navigator.serviceWorker.controller) {
-            sessionStorage.setItem('sw-activated', '1');
-            window.location.reload();
-          } else {
-            initBackgroundSync();
-          }
-        })
-        .catch(console.error);
-    }
-  }, []);
+    async function setupApp() {
+      try {
+        await initPlacemakingDB();
+        console.log("[DB] IndexedDB inicializado com sucesso.");
+      } catch (error) {
+        console.error("[DB] Erro ao inicializar IndexedDB:", error);
+      }
 
-  
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker
+          .register('/sw.js')
+          .then(() => {
+            console.log('SW registrado com sucesso!');
+            if (!navigator.serviceWorker.controller) {
+              sessionStorage.setItem('sw-activated', '1');
+              window.location.reload();
+            } else {
+              initBackgroundSync();
+            }
+          })
+          .catch(console.error);
+      }
+    }
+
+    setupApp();
+  }, []);
 
   return (
     <AuthProvider>

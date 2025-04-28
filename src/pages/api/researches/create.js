@@ -80,10 +80,9 @@ export default async function handler(req, res) {
 
     var research = await createResearch(researchPayload, token);
 
-    return res.status(201).json({
-      message: "Pesquisa criada e colaboradores adicionados com sucesso!",
+    return res.status(201).json(
       research,
-    });
+    );
   } catch (error) {
     console.error("Erro interno:", error);
     return res.status(error.status || 500).json({

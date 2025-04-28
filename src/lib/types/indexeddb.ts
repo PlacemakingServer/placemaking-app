@@ -1,3 +1,5 @@
+import modelSamples from '@/lib/types/models'
+
 export interface User {
   id: string; // UUID
   name: string;
@@ -32,11 +34,12 @@ export interface Research {
   created_at?: string;
   updated_at?: string;
   end_date?: string;
+  status? : boolean;
 }
 
 export interface SurveyTimeRange {
   id: string;
-  start_time: string; // formato HH:mm:ss
+  start_time: string;
   end_time: string;
   survey_id: string;
   survey_type: string;
@@ -132,6 +135,12 @@ export interface FieldOption {
   updated_at: string;
 }
 
+export interface UnsyncedData {
+  id: string;
+  store: keyof StoreTypes; 
+  payload: any;
+}
+
 export type StoreTypes = {
   users: User;
   fields: Field;
@@ -147,4 +156,10 @@ export type StoreTypes = {
   research_contributors: ResearchContributor;
   input_types: InputType;
   field_options: FieldOption;
+  unsynced_data: UnsyncedData;
 };
+
+
+
+
+

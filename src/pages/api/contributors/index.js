@@ -45,22 +45,8 @@ export default async function handler(req, res) {
       const errorData = await response.json();
       return res.status(response.status).json(errorData);
     }
-
     const data = await response.json();
-
-
-    const formattedData = data.contributors.map((c) => ({
-      value: c.user?.id,
-      id: c.user?.id,
-      name: c.user?.name,
-      label: c.user?.name,
-      email: c.user?.email,
-      role: c.user?.role,
-      status: c.user?.status,
-    }));
-
-
-    return res.status(200).json(formattedData);
+    return res.status(200).json(data.contributors);
 
   } catch (err) {
     return res.status(500).json({ error: "Erro ao conectar com o servidor" });

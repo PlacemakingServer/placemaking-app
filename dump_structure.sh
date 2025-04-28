@@ -6,9 +6,9 @@
 set -euo pipefail
 
 # ROOT_DIR="$(pwd)"
-ROOT_DIR="./src/pages/api"
+ROOT_DIR="./src"
 TIMESTAMP="$(date +'%Y-%m-%d_%H-%M-%S')"
-OUTPUT_FILE="${ROOT_DIR}/nextjs_structure_dump_${TIMESTAMP}.txt"
+OUTPUT_FILE="${ROOT_DIR}/fastapi_structure_dump_${TIMESTAMP}.txt"
 
 # extensões que queremos incluir
 EXTENSIONS=(
@@ -25,7 +25,7 @@ EXTENSIONS=(
 EXCLUDE_DIRS=(
   ".git" ".next" "node_modules" "out" "dist" ".vercel"
   ".turbo" ".cache" "coverage" "reports" "storybook-static"
-  "public"       # comente essa linha se quiser incluir imagens/assets
+  "public", "venv"       # comente essa linha se quiser incluir imagens/assets
 )
 
 # preparar output

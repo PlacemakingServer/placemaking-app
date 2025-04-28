@@ -1,20 +1,17 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 import Button from "@/components/ui/Button";
 import FiltersComponent from "@/components/ui/FiltersComponent";
 import ResearchCard from "@/components/ui/Research/ResearchCard";
+import ResearchCardSkeleton from "@/components/ui/Research/ResearchCardSkeleton";
 import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
-import {
-  getCachedData,
-  syncLocalToServer,
-  syncServerToCache,
-} from "@/services/cache";
+import { useResearches } from "@/hooks/useResearches";
 import { VARIANTS } from "@/config/colors";
 
 export default function Researches() {
-  const [researches, setResearches] = useState([]);
+  const { researches, unSyncedResearchs, loading, error } = useResearches();
   const [filters, setFilters] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [showCategory, setShowCategory] = useState({
@@ -28,67 +25,33 @@ export default function Researches() {
     future: 1,
   });
   const perPage = 3;
-  const { isLoading, setIsLoading } = useLoading();
+  const { setIsLoading } = useLoading();
   const { showMessage } = useMessage();
   const router = useRouter();
   const [showFilters, setShowFilters] = useState(false);
 
-const loadResearches = async () => {
-  try {
-    const res = await fetch("/api/researches");
-    if (!res.ok) throw new Error("Network response was not ok");
-    const json = await res.json();
-    const list = Array.isArray(json) ? json : json.researches || [];
-    setResearches(list);
-  } catch (e) {
-    console.error("Erro ao carregar pesquisas:", e);
-    showMessage("Erro ao carregar pesquisas.", "vermelho_claro", 5000);
-  }
-};
+  const currentDate = useMemo(() => new Date(), []);
 
-
-  const loadCachedResearches = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const result = await getCachedData("researches", { paginated: false });
-      setResearches(result);
-    } catch (err) {
-      console.error("Erro ao carregar pesquisas do cache:", err);
-      showMessage("Erro ao carregar pesquisas.", "vermelho_claro", 5000);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [setIsLoading, showMessage]);
-
-  
-  useEffect(() => {
-    loadResearches();
-  }, []);
-
-  
   const categorizedResearches = useMemo(() => {
-    const currentDate = new Date();
-    const list = Array.isArray(researches) ? researches : [];
     const cat = { completed: [], ongoing: [], future: [] };
-    list.forEach((research) => {
+    researches.forEach((research) => {
       const endDate = new Date(research.end_date);
       const startDate = new Date(research.release_date);
-  
-      if (endDate < currentDate)      cat.completed.push(research);
-      else if (startDate > currentDate) cat.future.push(research);
-      else                              cat.ongoing.push(research);
-    });
-  
-    return cat;
-  }, [researches]);
 
-  const filterAndSortResearches = (list) => {
+      if (endDate < currentDate) cat.completed.push(research);
+      else if (startDate > currentDate) cat.future.push(research);
+      else cat.ongoing.push(research);
+    });
+    return cat;
+  }, [researches, currentDate]);
+
+  const filterAndSortResearches = useCallback((list) => {
     return list
       .filter(
         (research) =>
-          research.title.toLowerCase().includes(filters.toLowerCase()) ||
-          research.description.toLowerCase().includes(filters.toLowerCase()) ||
-          research.location_title.toLowerCase().includes(filters.toLowerCase())
+          research.title?.toLowerCase().includes(filters.toLowerCase()) ||
+          research.description?.toLowerCase().includes(filters.toLowerCase()) ||
+          research.location_title?.toLowerCase().includes(filters.toLowerCase())
       )
       .sort((a, b) => {
         const aDate = a?.created_at ?? "";
@@ -97,20 +60,23 @@ const loadResearches = async () => {
           ? aDate.localeCompare(bDate)
           : bDate.localeCompare(aDate);
       });
-      
-  };
+  }, [filters, sortOrder]);
+
+  const paginatedResearches = useCallback((list, category) => {
+    const filteredAndSorted = filterAndSortResearches(list);
+    const totalPages = Math.ceil(filteredAndSorted.length / perPage);
+    const currentPage = page[category] ?? 1;
+    const sliced = filteredAndSorted.slice((currentPage - 1) * perPage, currentPage * perPage);
+    return { sliced, totalPages };
+  }, [filterAndSortResearches, page]);
 
   const handleSync = async () => {
-    setIsLoading(true);
     try {
-      await syncLocalToServer("researches");
-      await syncServerToCache("researches");
-      showMessage("Pesquisas sincronizadas com sucesso!", "azul_claro");
-      // Atualiza a listagem no estado local
-      loadCachedResearches();
+      setIsLoading(true);
+      showMessage("Dados atualizados com sucesso!", "azul_claro");
     } catch (err) {
-      console.error("Erro ao sincronizar pesquisas:", err);
-      showMessage("Erro ao sincronizar pesquisas.", "vermelho_claro", 5000);
+      console.error("Erro ao sincronizar:", err);
+      showMessage("Erro ao sincronizar dados.", "vermelho_claro");
     } finally {
       setIsLoading(false);
     }
@@ -131,7 +97,7 @@ const loadResearches = async () => {
             </h2>
             <Button
               onClick={handleSync}
-              disabled={isLoading}
+              disabled={loading}
               className="w-full sm:w-fit self-start sm:self-auto px-4 py-2 transition flex items-center justify-center gap-2 text-sm"
               variant="secondary"
             >
@@ -139,6 +105,41 @@ const loadResearches = async () => {
               <span>Atualizar</span>
             </Button>
           </div>
+
+          {/* Se existirem pesquisas não sincronizadas */}
+          {(unSyncedResearchs.length > 0) && (
+            <div className="mb-10">
+              <h3 className="text-2xl font-semibold mb-4 text-orange-600">
+                Pesquisas Não Sincronizadas
+              </h3>
+              <motion.div
+                layout
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+              >
+                {loading
+                  ? Array.from({ length: 6 }).map((_, index) => (
+                      <ResearchCardSkeleton key={index} />
+                    ))
+                  : unSyncedResearchs.map((research) => (
+                      <motion.div
+                        key={research.id}
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ResearchCard
+                          research={research}
+                          onViewDetails={() =>
+                            router.push(`/researches/${research.id}`)
+                          }
+                        />
+                      </motion.div>
+                    ))}
+              </motion.div>
+              <hr className="my-6 border-gray-300" />
+            </div>
+          )}
 
           <FiltersComponent
             showFilters={showFilters}
@@ -170,30 +171,16 @@ const loadResearches = async () => {
                 label: "Mostrar categorias",
                 type: "switch-group",
                 options: [
-                  {
-                    label: "Pesquisas Já Realizadas",
-                    value: "completed",
-                    checked: showCategory.completed,
-                  },
-                  {
-                    label: "Pesquisas em Andamento",
-                    value: "ongoing",
-                    checked: showCategory.ongoing,
-                  },
-                  {
-                    label: "Pesquisas Futuras",
-                    value: "future",
-                    checked: showCategory.future,
-                  },
+                  { label: "Pesquisas Já Realizadas", value: "completed", checked: showCategory.completed },
+                  { label: "Pesquisas em Andamento", value: "ongoing", checked: showCategory.ongoing },
+                  { label: "Pesquisas Futuras", value: "future", checked: showCategory.future },
                 ],
               },
             ]}
             onChange={(key, value) => {
               if (key === "filters") setFilters(value);
               if (key === "sortOrder") setSortOrder(value);
-              if (key === "showCategory") {
-                setShowCategory((prev) => ({ ...prev, ...value }));
-              }
+              if (key === "showCategory") setShowCategory((prev) => ({ ...prev, ...value }));
             }}
             onClear={() => {
               setFilters("");
@@ -202,11 +189,11 @@ const loadResearches = async () => {
             }}
           />
 
+          {/* Renderização das Categorias */}
           {Object.entries(categorizedResearches).map(([key, list]) => {
             if (!showCategory[key]) return null;
 
-            const filteredAndSorted = filterAndSortResearches(list);
-            const totalPages = Math.ceil(filteredAndSorted.length / perPage);
+            const { sliced, totalPages } = paginatedResearches(list, key);
 
             const handlePrevious = () => {
               setPage((prev) => ({
@@ -231,37 +218,44 @@ const loadResearches = async () => {
                     ? "Pesquisas em Andamento"
                     : "Pesquisas Futuras"}
                 </h3>
-                {filteredAndSorted.length === 0 ? (
+                {loading ? (
+                  <motion.div
+                    layout
+                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+                  >
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <ResearchCardSkeleton key={index} />
+                    ))}
+                  </motion.div>
+                ) : sliced.length === 0 ? (
                   <p className="text-gray-500 text-sm">
                     Nenhuma pesquisa encontrada.
                   </p>
                 ) : (
                   <motion.div
                     layout
-                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
                   >
-                    {filteredAndSorted
-                      .slice((page[key] - 1) * perPage, page[key] * perPage)
-                      .map((research) => (
-                        <motion.div
-                          key={research.id}
-                          layout
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <ResearchCard
-                            research={research}
-                            onViewDetails={() =>
-                              router.push(`/researches/${research.id}`)
-                            }
-                          />
-                        </motion.div>
-                      ))}
+                    {sliced.map((research) => (
+                      <motion.div
+                        key={research.id}
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ResearchCard
+                          research={research}
+                          onViewDetails={() =>
+                            router.push(`/researches/${research.id}`)
+                          }
+                        />
+                      </motion.div>
+                    ))}
                   </motion.div>
                 )}
 
-                {filteredAndSorted.length > perPage && (
+                {sliced.length > 0 && (
                   <div className="flex items-center justify-between gap-6 mt-6">
                     <Button
                       onClick={handlePrevious}
@@ -271,7 +265,7 @@ const loadResearches = async () => {
                     >
                       Anterior
                     </Button>
-                    <span className="text-sm text-gray-70">
+                    <span className="text-sm text-gray-700">
                       Página {page[key]} de {totalPages}
                     </span>
                     <Button

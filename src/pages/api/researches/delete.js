@@ -8,7 +8,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Obtém o token do cookie
     const cookies = parse(req.headers.cookie || "");
     const token = cookies.token;
 
@@ -22,7 +21,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "ID é obrigatório para deletar a pesquisa." });
     }
 
-    // Envia a requisição para o backend para deletar a pesquisa
     const response = await fetch(`${process.env.SERVER_URL}/research/${id}`, {
       method: "DELETE",
       headers: {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 export function useNetworkStatus() {
-  const [isOnline, setIsOnline] = useState(true); // Inicialmente assume online para evitar mismatch no SSR
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     const updateStatus = () => setIsOnline(navigator.onLine);
@@ -9,7 +9,7 @@ export function useNetworkStatus() {
     window.addEventListener("online", updateStatus);
     window.addEventListener("offline", updateStatus);
 
-    updateStatus(); // Atualiza com o estado real do navegador
+    updateStatus();
 
     return () => {
       window.removeEventListener("online", updateStatus);

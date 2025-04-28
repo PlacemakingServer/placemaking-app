@@ -1,8 +1,8 @@
 // lib/db.js
 import { openDB } from 'idb';
-
 export const DB_NAME = 'placemaking-db';
 export const DB_VERSION = 1;
+import { v4 as uuidv4 } from 'uuid'; 
 
 const storeSchema = [
   'auth',
@@ -19,7 +19,8 @@ const storeSchema = [
   'dynamic_surveys',
   'research_contributors',
   'input_types',
-  'field_options'
+  'field_options',
+  'unsynced_items'
 ];
 
 export async function initPlacemakingDB() {
@@ -33,8 +34,6 @@ export async function initPlacemakingDB() {
     },
   });
 }
-
-// AUTH MANAGEMENT
 export async function saveAuth(auth) {
   const db = await initPlacemakingDB();
   await db.put('auth', { ...auth, id: 'current' });
@@ -48,4 +47,25 @@ export async function getAuth() {
 export async function deleteAuth() {
   const db = await initPlacemakingDB();
   return db.delete('auth', 'current');
+}
+
+
+
+// SALVAR ITEM NÃO SINCRONIZADO
+export async function saveUnsyncedItem(type, payload) {
+  const db = await initPlacemakingDB();
+  const id = uuidv4();
+  await db.put('unsynced_items', { id, type, payload });
+}
+
+// PEGAR TODOS ITENS NÃO SINCRONIZADOS
+export async function getUnsyncedItems() {
+  const db = await initPlacemakingDB();
+  return db.getAll('unsynced_items');
+}
+
+// DELETAR ITEM JÁ SINCRONIZADO
+export async function deleteUnsyncedItem(id) {
+  const db = await initPlacemakingDB();
+  return db.delete('unsynced_items', id);
 }

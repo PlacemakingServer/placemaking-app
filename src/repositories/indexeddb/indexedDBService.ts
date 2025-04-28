@@ -16,11 +16,15 @@ export function getDB(): Promise<IDBPDatabase<any>> {
             db.createObjectStore(store, { keyPath: 'id' });
           }
         }
+        if (!db.objectStoreNames.contains('unsynced_data')) {
+          db.createObjectStore('unsynced_data', { keyPath: 'id' });
+        }
       },
     });
   }
   return dbPromise;
 }
+
 
 export const storeSchema: Record<keyof StoreTypes, { keyPath: keyof any }> = {
   users: { keyPath: 'id' },
@@ -37,6 +41,7 @@ export const storeSchema: Record<keyof StoreTypes, { keyPath: keyof any }> = {
   research_contributors: { keyPath: 'id' },
   input_types: { keyPath: 'id' },
   field_options: { keyPath: 'id' },
+  unsynced_data: { keyPath: 'id' },
 };
 
 export async function createItem<K extends keyof StoreTypes>(store: K, data: StoreTypes[K]): Promise<void> {

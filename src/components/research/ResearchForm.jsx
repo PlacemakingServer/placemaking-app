@@ -1,34 +1,25 @@
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import FormField from "@/components/forms/FormField";
 import Button from "@/components/ui/Button";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
 import Switch from "@/components/ui/Switch";
-import MultiSelect from "@/components/ui/Multiselect/Multiselect";
-import UserCardCompact from "@/components/ui/UserCardCompact";
+import Contributors from "@/components/research/Contributors"; 
 
 const OfflineMapButton = dynamic(
   () => import("@/components/OfflineMapButton"),
-  {
-    ssr: false,
-  }
+  { ssr: false }
 );
 
-/**
- * ResearchForm
- * - isEdit (boolean): true -> edição, false -> criação
- * - initialData (obj): valores iniciais da pesquisa
- * - onSubmit (função): callback para enviar payload final
- */
 export default function ResearchForm({
   initialData = {},
-  contributorsData = [],
   onSubmit,
   isEdit = false,
   users = [],
 }) {
   const [form, setForm] = useState({
+    id: "",
     title: "",
     description: "",
     release_date: "",
@@ -36,22 +27,14 @@ export default function ResearchForm({
     lat: "",
     long: "",
     location_title: "",
-    weather_celsius: null,
-    weather_fahrenheit: null,
-    selectedCollaborators: contributorsData || [],
-    collaboratorsToAdd: [],
-    collaboratorsToRemove: [],
+    status: undefined,
+    created_by: "",
     ...initialData,
   });
 
   const [showBasicInfo, setShowBasicInfo] = useState(false);
   const [showDates, setShowDates] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
-  const [showLocationInfo, setShowLocationInfo] = useState(true);
-  const [showCollaborators, setShowCollaborators] = useState(false);
-  const [originalCollaborators, setOriginalCollaborators] = useState([]);
-
-  const [allCollaborators, setAllCollaborators] = useState([]);
   const [imageUrl, setImageUrl] = useState("");
 
   const handleChange = (field) => (e) => {
@@ -69,108 +52,28 @@ export default function ResearchForm({
     }));
   };
 
-  const handleDiscard = () => {
-    setForm({
-      ...initialData,
-      selectedCollaborators: originalCollaborators,
-      collaboratorsToAdd: [],
-      collaboratorsToRemove: [],
-    });
-  };
+  const handleChangeStatus = () => {
+    const action = form.status ? "desativar" : "ativar";
+    if (window.confirm(`Tem certeza que deseja ${action} a pesquisa?`)) {
+      const newStatus = !form.status;
+      setForm((prev) => ({
+        ...prev,
+        status: newStatus,
+      }));
 
-  function refreshCollaboratorsDiff(newSelected) {
-    const originalArray = Array.isArray(originalCollaborators)
-      ? originalCollaborators
-      : [];
-
-    const originalIds = new Set(originalArray.map((c) => c.value));
-    const newIds = new Set(newSelected.map((c) => c.value));
-
-    const toAdd = newSelected.filter((c) => !originalIds.has(c.value));
-    const toRemove = originalArray.filter((c) => !newIds.has(c.value));
-
-    setForm((prev) => ({
-      ...prev,
-      selectedCollaborators: newSelected,
-      collaboratorsToAdd: toAdd,
-      collaboratorsToRemove: toRemove,
-    }));
-  }
-
-  const handleSelectChange = (newValue) => {
-    if (!isEdit) {
-      setForm((prev) => ({ ...prev, selectedCollaborators: newValue }));
-    } else {
-      refreshCollaboratorsDiff(newValue);
+      const payload = { ...form, status: newStatus };
+      console.log("payload mudar status", payload);
+      onSubmit?.(payload);
     }
-  };
-
-  const handleRemoveAdd = (user) => {
-    const newSelected = form.selectedCollaborators.filter(
-      (u) => u.value !== user.value
-    );
-    refreshCollaboratorsDiff(newSelected);
-  };
-
-  const handleUndoRemove = (user) => {
-    const newSelected = [...form.selectedCollaborators, user];
-    refreshCollaboratorsDiff(newSelected);
   };
 
   const handleSubmit = () => {
-    const selected = form.selectedCollaborators.map((c) => ({
-      id: c.value,
-      name: c.label,
-      role: c.role,
-      status: c.status,
-      email: c.email,
-    }));
-    const toAdd = form.collaboratorsToAdd.map((c) => ({
-      id: c.value,
-      name: c.label,
-      role: c.role,
-      status: c.status,
-      email: c.email,
-    }));
-    const toRemove = form.collaboratorsToRemove.map((c) => ({
-      id: c.value,
-      name: c.label,
-      role: c.role,
-      status: c.status,
-      email: c.email,
-    }));
-
-    const payload = {
-      ...(form.id && { id: form.id }),
-      title: form.title,
-      description: form.description,
-      release_date: form.release_date || null,
-      end_date: form.end_date || null,
-      lat: form.lat,
-      long: form.long,
-      location_title: form.location_title,
-      weather_celsius: form.weather_celsius,
-      weather_fahrenheit: form.weather_fahrenheit,
-      selectedCollaborators: selected,
-      collaboratorsToAdd: toAdd,
-      collaboratorsToRemove: toRemove,
-    };
-
-    onSubmit?.(payload);
+    if (window.confirm("Tem certeza que deseja salvar as alterações?")) {
+      const payload = { ...form };
+      console.log("payload alterações", payload);
+      onSubmit?.(payload);
+    }
   };
-  useEffect(() => {
-    if (users) {
-      setAllCollaborators(users);
-    }
-
-    if (contributorsData && isEdit) {
-      setOriginalCollaborators(contributorsData || []);
-      setForm((prev) => ({
-        ...prev,
-        selectedCollaborators: contributorsData,
-      }));
-    }
-  }, [users, contributorsData, isEdit]);
 
   useEffect(() => {
     const idx = Math.floor(Math.random() * 5);
@@ -191,101 +94,62 @@ export default function ResearchForm({
         }}
       >
         <div className="bg-black/50 px-6 py-8 sm:px-8 sm:py-10">
-          <h1 className="text-2xl font-bold text-white drop-shadow">
-            {isEdit ? "Editar Pesquisa" : "Criar Pesquisa"}
-          </h1>
-          <p className="text-sm text-gray-200 mt-1">
-            {isEdit
-              ? "Atualize os campos abaixo para editar a pesquisa."
-              : "Preencha os campos abaixo para iniciar uma nova pesquisa."}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h1 className="text-2xl font-bold text-white drop-shadow">
+                {isEdit ? "Editar Pesquisa" : "Criar Pesquisa"}
+              </h1>
+              <p className="text-sm text-gray-200 mt-1">
+                {isEdit
+                  ? "Atualize os campos abaixo para editar a pesquisa."
+                  : "Preencha os campos abaixo para iniciar uma nova pesquisa."}
+              </p>
+            </div>
+
+            {isEdit && (
+              <Button
+                variant={form.status ? "warning" : "success"}
+                onClick={handleChangeStatus}
+                className="active:scale-95 mt-2 sm:mt-0"
+              >
+                {form.status ? "Desativar Pesquisa" : "Ativar Pesquisa"}
+              </Button>
+            )}
+          </div>
         </div>
       </motion.div>
 
       <div className="p-6 space-y-6">
-        <SectionToggle
-          title="Informações Básicas"
-          isChecked={showBasicInfo}
-          onChange={setShowBasicInfo}
-        />
+        <SectionToggle title="Informações Básicas" isChecked={showBasicInfo} onChange={setShowBasicInfo} />
         {showBasicInfo && (
           <div className="space-y-4">
-            <FormField
-              legend="Título"
-              type="text"
-              value={form.title}
-              onChange={handleChange("title")}
-            />
-            <FormField
-              legend="Descrição"
-              type="textarea"
-              value={form.description}
-              onChange={handleChange("description")}
-            />
+            <FormField legend="Título" type="text" value={form.title} onChange={handleChange("title")} />
+            <FormField legend="Descrição" type="textarea" value={form.description} onChange={handleChange("description")} />
           </div>
         )}
 
         <hr className="my-6 border-gray-200" />
 
-        <SectionToggle
-          title="Período da Pesquisa"
-          isChecked={showDates}
-          onChange={setShowDates}
-        />
+        <SectionToggle title="Período da Pesquisa" isChecked={showDates} onChange={setShowDates} />
         {showDates && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField
-              legend="Data de Início"
-              type="date"
-              value={form.release_date || ""}
-              onChange={handleChange("release_date")}
-            />
-            <FormField
-              legend="Data de Fim"
-              type="date"
-              value={form.end_date || ""}
-              onChange={handleChange("end_date")}
-            />
+            <FormField legend="Data de Início" type="date" value={form.release_date || ""} onChange={handleChange("release_date")} />
+            <FormField legend="Data de Fim" type="date" value={form.end_date || ""} onChange={handleChange("end_date")} />
           </div>
         )}
 
         <hr className="my-6 border-gray-200" />
 
-        <SectionToggle
-          title="Localização"
-          isChecked={showLocation}
-          onChange={setShowLocation}
-        />
+        <SectionToggle title="Localização" isChecked={showLocation} onChange={setShowLocation} />
         {showLocation && (
           <>
             <div className="p-4 rounded-lg space-y-4 bg-gray-50 border">
-              <p className="text-sm text-gray-600">
-                Defina manualmente ou pelo mapa interativo.
-              </p>
+              <p className="text-sm text-gray-600">Defina manualmente ou pelo mapa interativo.</p>
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  legend="Latitude"
-                  type="text"
-                  value={form.lat}
-                  onChange={handleChange("lat")}
-                  disabled
-                />
-                <FormField
-                  legend="Longitude"
-                  type="text"
-                  value={form.long}
-                  onChange={handleChange("long")}
-                  disabled
-                />
+                <FormField legend="Latitude" type="text" value={form.lat} onChange={handleChange("lat")} disabled />
+                <FormField legend="Longitude" type="text" value={form.long} onChange={handleChange("long")} disabled />
               </div>
-
-              <FormField
-                legend="Localização (Título)"
-                type="text"
-                value={form.location_title}
-                onChange={handleChange("location_title")}
-              />
-
+              <FormField legend="Localização (Título)" type="text" value={form.location_title} onChange={handleChange("location_title")} />
               <div className="flex flex-col items-center border-t pt-4 gap-2">
                 <OfflineMapButton onLocationSelect={handleLocationSelect} />
                 <p className="text-xs text-gray-500 text-center">
@@ -294,175 +158,25 @@ export default function ResearchForm({
                 </p>
               </div>
             </div>
-
-            {!!form.lat && !!form.long && (
-              <>
-                <div className="flex items-center justify-between border-b pb-2 mt-4">
-                  <p className="text-sm text-gray-700 font-medium">
-                    Exibir Informações da localização
-                  </p>
-                  <Switch
-                    checked={showLocationInfo}
-                    onChange={setShowLocationInfo}
-                  />
-                </div>
-                {showLocationInfo && (
-                  <div className="mt-4 text-sm text-gray-700 border rounded-md p-4 bg-gray-50 space-y-4">
-                    <div>
-                      <strong className="block mb-1">
-                        Resumo da Localização:
-                      </strong>
-                      <p>{form.location_title}</p>
-                      <p>Lat: {Number(form.lat).toFixed(6)}</p>
-                      <p>Long: {Number(form.long).toFixed(6)}</p>
-                      {form.weather_celsius && form.weather_fahrenheit && (
-                        <p>
-                          Clima: {form.weather_celsius}°C /{" "}
-                          {Number(form.weather_fahrenheit).toFixed(1)}°F
-                        </p>
-                      )}
-                    </div>
-                    <MapPreview
-                      lat={Number(form.lat)}
-                      lng={Number(form.long)}
-                      height="200px"
-                      width="100%"
-                    />
-                  </div>
-                )}
-              </>
-            )}
           </>
         )}
 
         {isEdit && (
           <>
             <hr className="my-6 border-gray-200" />
-
-            <SectionToggle
-              title="Colaboradores"
-              isChecked={showCollaborators}
-              onChange={setShowCollaborators}
-            />
-            {showCollaborators && (
-              <>
-                <MultiSelect
-                  options={allCollaborators}
-                  value={form.selectedCollaborators}
-                  onChange={handleSelectChange}
-                  placeholder="Selecione colaboradores"
-                />
-                <p className="text-xs text-gray-500">
-                  Você pode escolher múltiplos colaboradores para participar.
-                </p>
-
-                {/* Em modo edição, exibimos "adicionados" e "removidos" */}
-                {isEdit && (
-                  <div className="mt-6 space-y-6">
-                    {form.collaboratorsToAdd?.length > 0 && (
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                          Colaboradores que serão adicionados
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {form.collaboratorsToAdd.map((usr) => (
-                            <UserCardCompact
-                              key={usr.value}
-                              user={{
-                                id: usr.value,
-                                name: usr.label,
-                                role: usr.role,
-                                status: usr.status,
-                                email: usr.email,
-                              }}
-                              borderColor="border-green-500"
-                              showRemoveButton={true}
-                              onRemove={() => handleRemoveAdd(usr)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {form.collaboratorsToRemove?.length > 0 && (
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                          Colaboradores que serão removidos
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {form.collaboratorsToRemove.map((user) => (
-                            <UserCardCompact
-                              key={user.value}
-                              user={{
-                                id: user.value,
-                                name: user.label,
-                                role: user.role,
-                                status: user.status,
-                                email: user.email,
-                              }}
-                              borderColor="border-red-500"
-                              showRemoveButton={true}
-                              onRemove={() => handleUndoRemove(user)}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {form.selectedCollaborators?.length > 0 && (
-                  <div className="mt-6 border-t pt-4 space-y-2">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                      Colaboradores Selecionados (Estado Final)
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[14rem] overflow-y-auto">
-                      {form.selectedCollaborators.map((user) => (
-                        <UserCardCompact
-                          key={user.value}
-                          user={{
-                            id: user.id,
-                            name: user.label,
-                            role: user.role,
-                            status: user.status,
-                            email: user.email,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+            <Contributors researchId={form.id} allUsers={users} />
           </>
         )}
-        {/* Botões finais */}
         <div className="flex justify-center pt-4 gap-6">
-          <Button
-            type="submit"
-            variant="dark"
-            className="text-lg py-3 active:scale-95"
-            onClick={handleSubmit}
-          >
+          <Button type="submit" variant="dark" className="text-lg py-3 active:scale-95" onClick={handleSubmit}>
             {isEdit ? "Salvar Alterações" : "Criar Pesquisa"}
           </Button>
-
-          {isEdit && (
-            <Button
-              variant="warning"
-              onClick={handleDiscard}
-              className="active:scale-95"
-            >
-              Descartar Alterações
-            </Button>
-          )}
         </div>
       </div>
     </div>
   );
 }
 
-// Subcomponente para mostrar título + switch
 function SectionToggle({ title, isChecked, onChange }) {
   return (
     <div className="flex justify-between items-center">
