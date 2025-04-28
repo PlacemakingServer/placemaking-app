@@ -20,10 +20,10 @@ export const TABS = {
       },
     },
   },
-  Relatórios: {
-    link: "/reports",
-    icon: "analytics",
-  },
+  // Relatórios: {
+  //   link: "/reports",
+  //   icon: "analytics",
+  // },
 };
 
 export const PERMISSION_TABS = {

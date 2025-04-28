@@ -18,6 +18,7 @@ export async function middleware(request) {
   if (token) {
     try {
       const { payload: verifiedPayload } = await jwtVerify(token, JWT_SECRET);
+      // console.log("Payload:", verifiedPayload);
       payload = verifiedPayload;
     } catch (error) {
       // Token inválido ou expirado: payload continua null

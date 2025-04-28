@@ -67,7 +67,8 @@ export function useResearches(especifico: boolean = false, id?: string) {
       console.warn("[App] Falha ao buscar pesquisas do servidor. Usando IndexedDB local.", err);
       try {
         const localResearches = await getAllLocalResearchs();
-        setResearches(localResearches);
+        const filteredResearches = localResearches.filter((research) => research.status === true);
+        setResearches(filteredResearches);
       } catch (errLocal) {
         console.error("[App] Falha ao carregar pesquisas locais:", errLocal);
         setError("Erro ao carregar pesquisas locais");
@@ -134,23 +135,6 @@ export function useResearches(especifico: boolean = false, id?: string) {
   };
   
 
-  const removeResearch = async (id: string) => {
-    try {
-      await deleteLocalResearch(id);
-      setResearches((prev) => prev.filter((r) => r.id !== id));
-
-      try {
-        await deleteRemoteResearch(id);
-      } catch (error) {
-        console.error("[App] Erro ao deletar pesquisa remotamente:", error);
-        setError("Falha ao sincronizar remoção.");
-        await saveUnsyncedItem("researches", { id, delete: true } as any);
-        setUnSyncedResearchs((prev) => [...prev, { id, delete: true } as any]);
-      }
-    } catch {
-      setError("Erro ao deletar pesquisa local");
-    }
-  };
 
   return {
     researches,
