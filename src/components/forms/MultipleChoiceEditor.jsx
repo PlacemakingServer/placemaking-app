@@ -1,7 +1,7 @@
 // components/forms/MultipleChoiceEditor.jsx
 import { useState } from "react";
 import { Trash2, Plus } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 import FormField from "@/components/forms/FormField";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,7 +25,9 @@ export default function MultipleChoiceEditor({ options = [], setOptions }) {
       transition={{ duration: 0.3 }}
       className="space-y-4 p-5 rounded-xl bg-gray-100"
     >
-      <h4 className="text-base font-semibold text-gray-800">Opções da pergunta:</h4>
+      <h4 className="text-base font-semibold text-gray-800">
+        Opções da pergunta:
+      </h4>
 
       {/* Campos de entrada */}
       <div className="flex flex-col sm:flex-row gap-3">

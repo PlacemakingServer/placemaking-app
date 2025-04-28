@@ -15,17 +15,25 @@ const configMap = {
   users: {
     endpoint: "/api/users", // Usado para leitura e sincronização geral
     createEndpoint: "/api/auth/register", // Usado para criar usuário
-    updateEndpoint: "/api/users/update",   // Usado para atualizar usuário
-    deleteEndpoint: "/api/users/delete",   // Usado para deletar usuário
+    updateEndpoint: "/api/users/update", // Usado para atualizar usuário
+    deleteEndpoint: "/api/users/delete", // Usado para deletar usuário
     extract: (res) => res.users || [],
     single: (res) => res.user || null,
   },
-  researches: { 
+  researches: {
     endpoint: "/api/researches",
     createEndpoint: "/api/researches/create",
     updateEndpoint: "/api/researches/update",
     deleteEndpoint: "/api/researches/delete",
     extract: (res) => res.researches || [],
+    single: (res) => res.research || null,
+  },
+  surveys: {
+    endpoint: "/api/surveys",
+    createEndpoint: "/api/surveys/create",
+    updateEndpoint: "/api/surveys/update",
+    deleteEndpoint: "/api/surveys/delete",
+    extract: (res) => res.surveys || [],
     single: (res) => res.research || null,
   },
 };
@@ -53,7 +61,7 @@ export async function getCachedData(
   try {
     const pendingStore = await getStore("itemTobeCreated");
     const allPending = await pendingStore.getAll();
-    pendingItems = allPending.filter(item => item._originStore === storeName);
+    pendingItems = allPending.filter((item) => item._originStore === storeName);
   } catch (err) {
     // Se a store pending não estiver disponível, ignora
   }
@@ -64,18 +72,18 @@ export async function getCachedData(
   if (search) {
     const lowerSearch = search.toLowerCase();
     allItems = allItems.filter(
-      item =>
+      (item) =>
         item.name?.toLowerCase().includes(lowerSearch) ||
         item.email?.toLowerCase().includes(lowerSearch)
     );
   }
 
   if (filterStatus) {
-    allItems = allItems.filter(item => item.status === filterStatus);
+    allItems = allItems.filter((item) => item.status === filterStatus);
   }
 
   if (filterRole) {
-    allItems = allItems.filter(item => item.role === filterRole);
+    allItems = allItems.filter((item) => item.role === filterRole);
   }
 
   allItems.sort((a, b) => {
@@ -99,7 +107,6 @@ export async function getCachedData(
     totalPages,
   };
 }
-
 
 export async function getCachedItemById(storeName, id) {
   const store = await getStore(storeName);
@@ -134,13 +141,15 @@ export async function deleteCachedItemById(storeName, id) {
 export const markItemForCreate = async (store, item) => {
   const mainStore = await getStore(store, "readonly");
   const mainItems = await mainStore.getAll();
-  const duplicateInMain = mainItems.find(i => i.email === item.email);
+  const duplicateInMain = mainItems.find((i) => i.email === item.email);
 
   let duplicateInPending = false;
   try {
     const pendingStore = await getStore("itemTobeCreated", "readonly");
     const pendingItems = await pendingStore.getAll();
-    duplicateInPending = pendingItems.some(i => i._originStore === store && i.email === item.email);
+    duplicateInPending = pendingItems.some(
+      (i) => i._originStore === store && i.email === item.email
+    );
   } catch (err) {
     // Se não conseguir verificar duplicidade, segue sem bloquear.
   }
@@ -168,7 +177,10 @@ export const markItemForUpdate = (store, id, updates) =>
 export async function markItemForDelete(store, id) {
   const item = await getCachedItemById(store, id);
   if (item) {
-    await updateCachedItemById(store, id, { ...item, _syncStatus: "pendingDelete" });
+    await updateCachedItemById(store, id, {
+      ...item,
+      _syncStatus: "pendingDelete",
+    });
   }
 }
 
@@ -177,10 +189,12 @@ export async function markItemForDelete(store, id) {
 // ======================
 
 export const sanitizeData = (data, fields = ["_syncStatus"]) =>
-  Object.fromEntries(Object.entries(data || {}).filter(([key]) => !fields.includes(key)));
+  Object.fromEntries(
+    Object.entries(data || {}).filter(([key]) => !fields.includes(key))
+  );
 
 export const sanitizeDataArray = (arr, fields) =>
-  arr.map(item => sanitizeData(item, fields));
+  arr.map((item) => sanitizeData(item, fields));
 
 // ======================
 // SYNC FUNCTIONS
@@ -230,12 +244,18 @@ export async function syncLocalToServer(store) {
   // Sincroniza pendingCreate
   const mainItems = await db.getAll(store);
   const pendingItems = await db.getAll("itemTobeCreated");
-  const toBeCreated = pendingItems.filter(item => item._originStore === store);
+  const toBeCreated = pendingItems.filter(
+    (item) => item._originStore === store
+  );
 
   await Promise.all(
     toBeCreated.map(async (item) => {
       try {
-        const payload = sanitizeData(item, ["_syncStatus", "_originStore", "id"]);
+        const payload = sanitizeData(item, [
+          "_syncStatus",
+          "_originStore",
+          "id",
+        ]);
         const endpointForCreation = config.createEndpoint || config.endpoint;
         const res = await fetch(endpointForCreation, {
           method: "POST",
@@ -262,7 +282,8 @@ export async function syncLocalToServer(store) {
       const status = item._syncStatus;
       if (!status?.startsWith("pending")) return;
       const action = status.replace("pending", "").toLowerCase();
-      const endpointForAction = action === "delete" ? config.deleteEndpoint : config.updateEndpoint;
+      const endpointForAction =
+        action === "delete" ? config.deleteEndpoint : config.updateEndpoint;
       const method = action === "delete" ? "DELETE" : "PUT";
       const body = JSON.stringify(sanitizeData(item));
       try {
@@ -293,16 +314,32 @@ export async function syncLocalToServer(store) {
   return { success: true };
 }
 
-export async function syncServerToCache(store) {
+export async function syncServerToCache(store, queryParams = {}) {
   const config = configMap[store];
   if (!config) throw new Error(`Sem config para ${store}`);
+
   try {
-    const res = await fetch(config.endpoint);
+    const url = new URL(config.endpoint, window.location.origin);
+    Object.entries(queryParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.set(key, value);
+      }
+    });
+
+    const res = await fetch(url.toString());
+    
+    if (res.status === 404  ) {
+      return { success: false, message: "Nenhum dado encontrado" };
+    }
+
     if (!res.ok) throw new Error(`Erro ao sync servidor->cache de ${store}`);
+
     const serverItems = config.extract(await res.json());
+
     const storeRef = await getStore(store, "readwrite");
     const localItems = await storeRef.getAll();
-    const localMap = new Map(localItems.map(item => [item.id, item]));
+    const localMap = new Map(localItems.map((item) => [item.id, item]));
+
     for (const serverItem of serverItems) {
       const local = localMap.get(serverItem.id);
       if (
@@ -314,6 +351,7 @@ export async function syncServerToCache(store) {
         await storeRef.put({ ...serverItem, _syncStatus: "synced" });
       }
     }
+
     return { success: true, updated: serverItems.length };
   } catch (err) {
     throw err;

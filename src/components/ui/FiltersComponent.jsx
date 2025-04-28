@@ -1,6 +1,6 @@
 import { useState } from "react";
 import clsx from "clsx";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 import Switch from "@/components/ui/Switch";
 
 export default function FiltersComponent({
@@ -21,7 +21,9 @@ export default function FiltersComponent({
           return (
             <div key={filter.key}>
               <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1">
-                <span className="material-symbols-outlined text-base">{filter.icon}</span>
+                <span className="material-symbols-outlined text-base">
+                  {filter.icon}
+                </span>
                 {filter.label}
               </label>
               <input
@@ -39,7 +41,9 @@ export default function FiltersComponent({
           return (
             <div key={filter.key}>
               <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-1">
-                <span className="material-symbols-outlined text-base">{filter.icon}</span>
+                <span className="material-symbols-outlined text-base">
+                  {filter.icon}
+                </span>
                 {filter.label}
               </label>
               <div className="flex gap-2 flex-wrap">
@@ -66,7 +70,9 @@ export default function FiltersComponent({
           return (
             <div key={filter.key}>
               <label className="text-sm font-semibold text-gray-700 flex items-center gap-1 mb-2">
-                <span className="material-symbols-outlined text-base">visibility</span>
+                <span className="material-symbols-outlined text-base">
+                  visibility
+                </span>
                 {filter.label}
               </label>
               <div className="space-y-2">

@@ -8,7 +8,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 import SearchControl from "@/components/map/SearchControl";
 import LocationMarker from "@/components/map/LocationMarker";
 

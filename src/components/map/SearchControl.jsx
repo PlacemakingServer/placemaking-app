@@ -1,11 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 
 let debounceTimer;
 
 export default function SearchControl({ onNavigate }) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [results, setResults] = useState([]);
@@ -24,7 +24,9 @@ export default function SearchControl({ onNavigate }) {
 
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          searchQuery
+        )}`
       );
       const data = await response.json();
       setResults(data);
@@ -36,12 +38,11 @@ export default function SearchControl({ onNavigate }) {
   };
 
   const handleSelectResult = (place) => {
-    setQuery('');
+    setQuery("");
     setResults([]);
     setExpanded(false);
     setHasSearched(false);
     onNavigate([parseFloat(place.lat), parseFloat(place.lon)]);
-
   };
 
   // Busca com debounce enquanto digita
@@ -66,7 +67,7 @@ export default function SearchControl({ onNavigate }) {
 
   const closeSearch = () => {
     setExpanded(false);
-    setQuery('');
+    setQuery("");
     setResults([]);
     setHasSearched(false);
   };
@@ -105,7 +106,9 @@ export default function SearchControl({ onNavigate }) {
                 onClick={closeSearch}
                 className="text-gray-600 hover:text-gray-800 transition"
               >
-                <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                <span className="material-symbols-outlined text-2xl">
+                  arrow_back
+                </span>
               </button>
               <input
                 ref={inputRef}
@@ -116,7 +119,9 @@ export default function SearchControl({ onNavigate }) {
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
               />
               {loading && (
-                <span className="material-symbols-outlined animate-spin text-gray-500">refresh</span>
+                <span className="material-symbols-outlined animate-spin text-gray-500">
+                  refresh
+                </span>
               )}
             </div>
 
@@ -131,7 +136,8 @@ export default function SearchControl({ onNavigate }) {
                   {results.length > 0 ? (
                     <>
                       <p className="text-xs text-gray-500 px-4 pt-2 pb-1">
-                        Resultados para busca: <span className="font-medium italic">"{query}"</span>
+                        Resultados para busca:{" "}
+                        <span className="font-medium italic">"{query}"</span>
                       </p>
                       <ul className="max-h-64 overflow-y-auto border-t border-gray-200">
                         {results.map((place, index) => (
@@ -147,7 +153,9 @@ export default function SearchControl({ onNavigate }) {
                     </>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-6 px-4 text-gray-400 text-sm">
-                      <span className="material-symbols-outlined text-5xl mb-2">search_off</span>
+                      <span className="material-symbols-outlined text-5xl mb-2">
+                        search_off
+                      </span>
                       Nenhum resultado encontrado para "{query}"
                     </div>
                   )}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button_og";
 import { USER_ROLES, USER_STATUS } from "@/config/data_types";
 
 export default function ModalRegisterUser({

@@ -90,9 +90,7 @@ export default function ModalUser({
                 className="absolute top-3 right-3 text-white hover:text-gray-200"
                 onClick={onClose}
               >
-                <span className="material-symbols-outlined text-xl">
-                  close
-                </span>
+                <span className="material-symbols-outlined text-xl">close</span>
               </button>
             </div>
 
