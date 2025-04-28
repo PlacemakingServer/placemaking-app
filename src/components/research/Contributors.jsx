@@ -68,7 +68,11 @@ export default function Contributors({ researchId, allUsers = [] }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-800">Colaboradores</h2>
-        <Switch type="arrow" checked={showCollaborators} onChange={setShowCollaborators} />
+        <Switch
+          type="arrow"
+          checked={showCollaborators}
+          onChange={setShowCollaborators}
+        />
       </div>
 
       {showCollaborators && (
@@ -85,10 +89,14 @@ export default function Contributors({ researchId, allUsers = [] }) {
           </p>
 
           <div className="mt-6 border-t pt-4 space-y-2">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Colaboradores Atuais</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">
+              Colaboradores Atuais
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[14rem] overflow-y-auto">
               {contributors.map((contributor) => {
-                const user = allUsers.find((u) => u.value === contributor.user_id);
+                const user = allUsers.find(
+                  (u) => u.value === contributor.user_id
+                );
                 return (
                   <UserCardCompact
                     key={`${contributor.research_id}-${contributor.user_id}`}

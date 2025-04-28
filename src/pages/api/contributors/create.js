@@ -19,8 +19,6 @@ export default async function handler(req, res) {
     }
 
     const { research_id, user_id } = req.body;
-    console.log("dataa", req.body);
-
     const missingFields = checkMissingFields({ research_id, user_id });
     if (missingFields.length > 0) {
       return res.status(400).json({

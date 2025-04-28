@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
 import Switch from "@/components/ui/Switch";
 import Contributors from "@/components/research/Contributors"; 
+import { useRouter } from "next/router";
 
 const OfflineMapButton = dynamic(
   () => import("@/components/OfflineMapButton"),
@@ -36,6 +37,7 @@ export default function ResearchForm({
   const [showDates, setShowDates] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const router = useRouter();
 
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -46,9 +48,7 @@ export default function ResearchForm({
       ...prev,
       lat: data.lat,
       long: data.lng,
-      location_title: data.location || "",
-      weather_celsius: data.weather_celsius ?? null,
-      weather_fahrenheit: data.weather_fahrenheit ?? null,
+      location_title: data.location || ""
     }));
   };
 
@@ -60,17 +60,15 @@ export default function ResearchForm({
         ...prev,
         status: newStatus,
       }));
-
       const payload = { ...form, status: newStatus };
-      console.log("payload mudar status", payload);
       onSubmit?.(payload);
+      router.push(`/researches`);
     }
   };
 
   const handleSubmit = () => {
     if (window.confirm("Tem certeza que deseja salvar as alterações?")) {
       const payload = { ...form };
-      console.log("payload alterações", payload);
       onSubmit?.(payload);
     }
   };
@@ -108,7 +106,7 @@ export default function ResearchForm({
 
             {isEdit && (
               <Button
-                variant={form.status ? "warning" : "success"}
+                variant={form.status ? "warning" : "verde"}
                 onClick={handleChangeStatus}
                 className="active:scale-95 mt-2 sm:mt-0"
               >
@@ -157,6 +155,14 @@ export default function ResearchForm({
                   <strong>“Abrir mapa”</strong>.
                 </p>
               </div>
+              <div className="flex justify-center">
+                <MapPreview
+                  key={`${form.lat}-${form.long}`}
+                  lat={form.lat}
+                  lng={form.long}
+                  className="w-full h-48 sm:h-64 rounded-lg shadow-md"
+                />
+                </div>  
             </div>
           </>
         )}

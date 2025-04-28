@@ -101,8 +101,6 @@ export default function EditResearch() {
       if (!id) return;
       const finalPayload = { ...payload, id };
       const formattedPayload = formatDataByModel(finalPayload, "researches");
-
-      console.log("Final Payload--:", formattedPayload);
       await updateResearch(id, formattedPayload);
       showMessage("Pesquisa atualizada com sucesso", "verde", 5000);
       router.reload();

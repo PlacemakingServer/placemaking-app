@@ -28,10 +28,6 @@ export default async function handler(req, res) {
     if (!token) {
       return res.status(401).json({ error: "Token não fornecido" });
     }
-    console.log("------------------");
-    console.log(req.body);
-    console.log("------------------");
-
 
     const {
       id,

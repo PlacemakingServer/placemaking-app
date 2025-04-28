@@ -58,7 +58,8 @@ export function useResearchContributors(researchId?: string) {
       console.warn("[App] Falha ao buscar colaboradores do servidor. Usando IndexedDB local.", err);
       try {
         const localContributors = await getAllItems('research_contributors');
-        setContributors(localContributors);
+        const filteredContributors = localContributors.filter(c => c.research_id === id);
+        setContributors(filteredContributors);
       } catch (errLocal) {
         console.error("[App] Falha ao carregar colaboradores locais:", errLocal);
         setError("Erro ao carregar colaboradores locais");

@@ -34,7 +34,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // Caso o método seja POST, cria uma nova pesquisa
   if (req.method === "POST") {
     const { titulo, descricao, data_criacao } = req.body;
 
