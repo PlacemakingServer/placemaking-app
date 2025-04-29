@@ -16,12 +16,12 @@ import Button from "@/components/ui/Button";
 
 export default function ResearchSurvey() {
   const router = useRouter();
-  const { surveyid } = router.query || {};
+  const { surveyid } = router.query;
 
   const { isLoading } = useLoading();
-  const { dynamicSurvey, isLoading: loadingSurvey } = useDynamicSurveys(surveyid);
-  const { formSurvey, isLoading: loadingFormSurvey } = useFormSurveys(surveyid);
-  const { staticSurvey, isLoading: loadingStaticSurvey } = useStaticSurveys(surveyid);
+  const { dynamicSurvey, isLoading: loadingSurvey } = useDynamicSurveys(surveyid) || null;
+  const { formSurvey, isLoading: loadingFormSurvey } = useFormSurveys(surveyid) || null;
+  const { staticSurvey, isLoading: loadingStaticSurvey } = useStaticSurveys(surveyid) || null;
   const { contributors, isLoading: loadingContributors } = useSurveyContributors(surveyid);
 
   const [showContributors, setShowContributors] = useState(false);
@@ -39,8 +39,8 @@ export default function ResearchSurvey() {
   };
 
   useEffect(() => {
-    console.log("Survey:", surveyid);
-  }, [dynamicSurvey]);
+    console.log("Survey data:", dynamicSurvey, formSurvey, staticSurvey);
+  }, [dynamicSurvey, formSurvey, staticSurvey]);
 
   return (
     <motion.section

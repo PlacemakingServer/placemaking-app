@@ -2,8 +2,9 @@ import { SurveyContributor } from '@/lib/types/indexeddb';
 
 const baseUrl = '/api/survey_contributors';
 
-export async function getSurveyContributors(survey_id: string, survey_type: string): Promise<SurveyContributor[]> {
-  const res = await fetch(baseUrl + '?survey_id=' + survey_id + '&survey_type=' + survey_type);
+export async function getSurveyContributors(survey_id: string): Promise<SurveyContributor[]> {
+  const new_url = `${baseUrl}?survey_id=${encodeURIComponent(survey_id)}`;
+  const res = await fetch(new_url);
   if (!res.ok) throw new Error('Erro ao buscar colaboradores da coleta');
   return res.json();
 }
@@ -18,11 +19,10 @@ export async function createSurveyContributor(data: SurveyContributor): Promise<
   return res.json();
 }
 
-export async function deleteSurveyContributor(data: Pick<SurveyContributor, 'survey_id' | 'survey_type' | 'user_id'>): Promise<{ message: string }> {
-  const res = await fetch(`${baseUrl}/delete`, {
+export async function deleteSurveyContributor(survey_id: string, contributor_id: string): Promise<{ message: string }> {
+  const res = await fetch(`${baseUrl}/delete?survey_id=${encodeURIComponent(survey_id)}&contributor_id=${encodeURIComponent(contributor_id)}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Erro ao deletar colaborador');
   return res.json();

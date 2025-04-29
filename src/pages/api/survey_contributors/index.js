@@ -36,7 +36,7 @@ const handler = async (req, res) => {
       return res.status(response.status).json(errorData);
     }
 
-    return res.status(200).json(data);
+    return res.status(200).json(data.contributors);
   } catch (err) {
     console.error("Erro ao buscar survey_contributors:", err);
     return res.status(500).json({ error: "Erro ao conectar com o servidor" });
