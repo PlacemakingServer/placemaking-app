@@ -4,80 +4,38 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/router";
 import { useLoading } from "@/context/LoadingContext";
 import { useMessage } from "@/context/MessageContext";
-import {
-  getCachedData,
-  syncLocalToServer,
-  syncServerToCache,
-} from "@/services/cache";
-import Button from "@/components/ui/Button";
 import { VARIANTS } from "@/config/colors";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
 
+import { useDynamicSurveys } from "@/hooks/useDynamicSurveys";
+import { useFormSurveys } from "@/hooks/useFormSurveys";
+import { useStaticSurveys } from "@/hooks/useStaticSurveys";
+import { useResearchContributors } from "@/hooks/useResearchContributors";
+import { useResearches } from "@/hooks/useResearches";
+import { useUsers } from "@/hooks/useUsers";
+
 export default function ResearchView() {
-  const [researches, setResearches] = useState([]);
-  const [surveys, setSurveys] = useState([]);
-  const [selectedResearch, setSelectedResearch] = useState(null);
-  const [contributorsData, setContributorsData] = useState(null);
+  const router = useRouter();
+  const { id } = router.query;
+
+  const { survey: dynamicSurvey, dynamicSurveyError } = useDynamicSurveys(id);
+  const { survey: formSurvey, formSurveyError } = useFormSurveys(id);
+  const { survey: staticSurvey, unSyncedstaticSurveys } = useStaticSurveys(id);
+  const { contributors: contributorsData } = useResearchContributors(id);
+  const { researchData: selectedResearch } = useResearches(true, id);
   const [showContributors, setShowContributors] = useState(false);
   const [showSurveys, setshowSurveys] = useState(false);
-  const [showMap, setShowMap] = useState(false);
+  const [showMap, setShowMap] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const { isLoading, setIsLoading } = useLoading();
   const { showMessage } = useMessage();
-  const router = useRouter();
-  const { id } = router.query;
   const [imageUrl, setImageUrl] = useState("");
 
-  const loadCachedResearches = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const result = await getCachedData("researches", { paginated: false });
-      setResearches(result);
+  const { userData: author } = useUsers(true ,selectedResearch?.created_by) || null;
 
-      if (id && Array.isArray(result)) {
-        const found = result.find((r) => r.id === id);
-        setSelectedResearch(found);
-      }
-    } catch (err) {
-      console.error("Erro ao carregar pesquisas do cache:", err);
-      showMessage("Erro ao carregar pesquisas.", "vermelho_claro", 5000);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id, setIsLoading, showMessage]);
-
-  const loadCachedSurveys = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const result = await getCachedData("surveys", { paginated: false });
-      setSurveys(result);
-    } catch (err) {
-      console.error("Erro ao carregar coletas do cache:", err);
-      showMessage("Erro ao carregar coletas.", "vermelho_claro", 5000);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [setIsLoading, showMessage]);
-
-  const fetchResearchContributorsData = useCallback(
-    async (id) => {
-      try {
-        const res = await fetch(`/api/contributors?research_id=${id}`);
-        const data = await res.json();
-
-        if (!data) {
-          showMessage("Colaboradores não encontrados", "vermelho_claro", 5000);
-          return;
-        }
-        setContributorsData(data);
-      } catch (err) {
-        console.error("Erro ao buscar colaboradores da pesquisa:", err);
-      }
-    },
-    [showMessage]
-  );
+  const surveys = [dynamicSurvey, formSurvey, staticSurvey]
 
   const handleCopyCoords = () => {
     const name = selectedResearch?.location_title;
@@ -90,24 +48,6 @@ export default function ResearchView() {
     }
   };
 
-  const handleSync = async () => {
-    setIsLoading(true);
-    try {
-      await syncLocalToServer("surveys");
-      await syncServerToCache("surveys", {
-        research_id: selectedResearch?.id,
-        survey_type: "all",
-      });
-      showMessage("Coletas sincronizadas com sucesso!", "azul_claro");
-      loadCachedSurveys();
-    } catch (err) {
-      console.error("Erro ao sincronizar Coletas:", err);
-      showMessage("Erro ao sincronizar Coletas.", "vermelho_claro", 5000);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const getShortAddress = (fullAddress) => {
     if (!fullAddress) return "";
     const parts = fullAddress.split(",");
@@ -115,22 +55,13 @@ export default function ResearchView() {
   };
 
   useEffect(() => {
-    if (id) {
-      loadCachedResearches();
-      loadCachedSurveys();
-      fetchResearchContributorsData(id);
-    }
-  }, [
-    id,
-    loadCachedResearches,
-    loadCachedSurveys,
-    fetchResearchContributorsData,
-  ]);
-
-  useEffect(() => {
     const idx = Math.floor(Math.random() * 5);
     setImageUrl(`/img/cards/img-${idx}.jpg`);
   }, []);
+
+  useEffect(() => {
+    console.log("surveys:", dynamicSurvey);
+  }, [dynamicSurvey]);
 
   return (
     <motion.section
@@ -152,15 +83,6 @@ export default function ResearchView() {
             segundos.
           </motion.p>
         </div>
-        <Button
-          onClick={handleSync}
-          disabled={isLoading}
-          className="w-full sm:w-fit self-start sm:self-auto px-4 py-2 transition flex items-center justify-center gap-2 text-sm h-fit m-4"
-          variant="secondary"
-        >
-          <span className="material-symbols-outlined text-base">sync</span>
-          <span>Atualizar</span>
-        </Button>
       </div>
 
       <motion.div
@@ -200,7 +122,7 @@ export default function ResearchView() {
           </motion.p>
           <motion.div className="flex justify-between gap-2">
             <motion.p>
-              <strong>Criada por:</strong> {selectedResearch?.created_by?.name}
+              <strong>Criada por:</strong> {author?.name}
             </motion.p>
 
             <motion.p
@@ -213,7 +135,77 @@ export default function ResearchView() {
           </motion.div>
         </div>
       </motion.div>
+                    {/* Seção Mapa com Toggle */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="flex flex-col gap-4 p-6 md:p-8 bg-white rounded-lg shadow-md box-border border-2 mt-4 h-fit"
+      >
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Mapa</h1>
+          <button
+            onClick={() => setShowMap((prev) => !prev)}
+            className="flex items-center gap-1 text-sm text-blue-600 underline hover:text-blue-800 transition"
+          >
+            <motion.div
+              animate={{ rotate: showMap ? 90 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronDown size={28} />
+            </motion.div>
+          </button>
+        </div>
 
+        <AnimatePresence>
+          {showMap && selectedResearch?.lat && selectedResearch?.long && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mt-4 text-sm text-gray-700 border rounded-md p-4 bg-gray-50 space-y-4 "
+            >
+              <MapPreview
+                lat={selectedResearch.lat}
+                lng={selectedResearch.long}
+                height="200px"
+                width="100"
+              />
+              <div className="flex flex-row justify-between items-center gap-4">
+                <motion.p>
+                  <strong>Localização:</strong>{" "}
+                  {getShortAddress(selectedResearch?.location_title)}
+                </motion.p>
+                <div className="flex flex-row  justify-end gap-4">
+                  <motion.p>
+                    <strong>Latitude:</strong> {selectedResearch?.lat}
+                  </motion.p>
+                  <motion.p>
+                    <strong>Longitude:</strong> {selectedResearch?.long}
+                  </motion.p>
+                </div>
+              </div>
+              <button
+                onClick={handleCopyCoords}
+                className="flex items-center gap-2 text-sm text-blue-600 underline hover:text-blue-800 transition"
+              >
+                {copied ? (
+                  <>
+                    <Check size={16} className="text-green-600" />
+                    Copiado!
+                  </>
+                ) : (
+                  <>
+                    <ClipboardCopy size={20} />
+                    Copiar localização
+                  </>
+                )}
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
       {/* Seção Colaboradores com Toggle */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -265,78 +257,6 @@ export default function ResearchView() {
                   ))}
                 </div>
               )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Seção Mapa com Toggle */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="flex flex-col gap-4 p-6 md:p-8 bg-white rounded-lg shadow-md box-border border-2 mt-4 h-fit"
-      >
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Mapa</h1>
-          <button
-            onClick={() => setShowMap((prev) => !prev)}
-            className="flex items-center gap-1 text-sm text-blue-600 underline hover:text-blue-800 transition"
-          >
-            <motion.div
-              animate={{ rotate: showMap ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown size={28} />
-            </motion.div>
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {showMap && selectedResearch?.lat && selectedResearch?.long && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mt-4 text-sm text-gray-700 border rounded-md p-4 bg-gray-50 space-y-4 "
-            >
-                <MapPreview
-                  lat={selectedResearch.lat}
-                  lng={selectedResearch.long}
-                  height="200px"
-                  width="100"
-                />
-              <div className="flex flex-row justify-between items-center gap-4">
-                <motion.p>
-                  <strong>Localização:</strong>{" "}
-                  {getShortAddress(selectedResearch?.location_title)}
-                </motion.p>
-                <div className="flex flex-row  justify-end gap-4">
-                  <motion.p>
-                    <strong>Latitude:</strong> {selectedResearch?.lat}
-                  </motion.p>
-                  <motion.p>
-                    <strong>Longitude:</strong> {selectedResearch?.long}
-                  </motion.p>
-                </div>
-              </div>
-              <button
-                onClick={handleCopyCoords}
-                className="flex items-center gap-2 text-sm text-blue-600 underline hover:text-blue-800 transition"
-              >
-                {copied ? (
-                  <>
-                    <Check size={16} className="text-green-600" />
-                    Copiado!
-                  </>
-                ) : (
-                  <>
-                    <ClipboardCopy size={20} />
-                    Copiar localização
-                  </>
-                )}
-              </button>
             </motion.div>
           )}
         </AnimatePresence>

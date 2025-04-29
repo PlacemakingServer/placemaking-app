@@ -12,7 +12,7 @@ const handler = async (req, res) => {
     if (!token) {
       return res.status(401).json({ error: "Token não fornecido" });
     }
-    
+
     const { research_id, survey_type } = req.query;
 
     const missingFields = checkMissingFields({ research_id, survey_type });
@@ -22,14 +22,18 @@ const handler = async (req, res) => {
       });
     }
 
-    const url = `${process.env.SERVER_URL}/research/${research_id}/survey?survey_type=${encodeURIComponent(survey_type)}`;
+    const url = `${
+      process.env.SERVER_URL
+    }/research/${research_id}/survey?survey_type=${encodeURIComponent(
+      survey_type
+    )}`;
 
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-      }
+      },
     });
 
     if (!response.ok) {
@@ -38,8 +42,7 @@ const handler = async (req, res) => {
     }
 
     const data = await response.json();
-    return res.status(200).json(data);
-
+    return res.status(200).json(data.surveys[0] || {});
   } catch (err) {
     console.error("Erro ao buscar surveys:", err);
     return res.status(500).json({ error: "Erro ao conectar com o servidor" });
