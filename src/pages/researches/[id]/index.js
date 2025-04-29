@@ -30,7 +30,6 @@ export default function EditResearch() {
   const { formSurvey } = useFormSurveys(id, true, "Formulário");
   const { staticSurvey } = useStaticSurveys(id, true, "Estática");
   const { dynamicSurvey } = useDynamicSurveys(id, true, "Dinâmica");
-
   const [renderedSurveys, setRenderedSurveys] = useState([]);
   const [isCreatingSurvey, setIsCreatingSurvey] = useState(false);
 
