@@ -23,10 +23,7 @@ const handler = async (req, res) => {
       location_title,
       research_id,
     });
-
-
-
-
+    
     if (missingFields.length > 0) {
       return res
         .status(400)
@@ -46,7 +43,7 @@ const handler = async (req, res) => {
           lat: lat,
           long: long,
           location_title: location_title,
-          research_id: research_id,
+          research_id: research_id
         }),
       }
     );
@@ -59,7 +56,8 @@ const handler = async (req, res) => {
     if (!data) {
       return res.status(404).json({ error: "Erro ao adicionar um contribuidor à coleta." });
     }
-    return res.status(200).json(data);
+
+    return res.status(200).json(data.survey);
   } catch (err) {
     return res.status(500).json({ error: "Erro ao conectar com o servidor" });
   }
