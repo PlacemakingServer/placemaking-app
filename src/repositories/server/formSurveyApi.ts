@@ -1,7 +1,7 @@
 // src/repositories/server/formSurveyApi.ts
 import { FormSurvey } from '@/lib/types/indexeddb';
 
-const baseUrl = '/api/surveys'; // ⚠️ Este endpoint ainda NÃO está implementado em /pages/api
+const baseUrl = '/api/surveys'; 
 
 export async function getFormSurveys(): Promise<FormSurvey[]> {
   const res = await fetch(baseUrl);
@@ -20,7 +20,7 @@ export async function createFormSurvey(data: FormSurvey): Promise<FormSurvey> {
 }
 
 export async function updateFormSurvey(data: FormSurvey): Promise<FormSurvey> {
-  const res = await fetch(`${baseUrl}/${data.id}`, {
+  const res = await fetch(`${baseUrl}/update`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -29,14 +29,24 @@ export async function updateFormSurvey(data: FormSurvey): Promise<FormSurvey> {
   return res.json();
 }
 
-export async function deleteFormSurvey(id: string): Promise<void> {
-  const res = await fetch(`${baseUrl}/${id}`, {
+export async function deleteFormSurvey(data: FormSurvey): Promise<void> {
+  const res = await fetch(`${baseUrl}/delete`, {
     method: 'DELETE',
+    body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error('Erro ao deletar survey de formulário');
 }
-export async function getFormSurveyByResearchId(research_id: string): Promise<FormSurvey[]> {
-  const res = await fetch(`${baseUrl}/research/${research_id}`);
+
+
+
+export async function getFormSurveyByResearchId(
+  research_id: string,
+  survey_type: string
+): Promise<FormSurvey[]> {
+  const url = `/api/surveys?research_id=${encodeURIComponent(research_id)}&survey_type=${encodeURIComponent(survey_type)}`;
+
+  const res = await fetch(url);
   if (!res.ok) throw new Error('Erro ao buscar surveys de formulário');
+
   return res.json();
 }

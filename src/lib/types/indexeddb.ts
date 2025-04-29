@@ -91,6 +91,7 @@ export interface StaticSurvey {
   long: number;
   location_title: string;
   research_id?: string;
+  survey_type: string;
 }
 
 export interface FormSurvey {
@@ -101,6 +102,7 @@ export interface FormSurvey {
   long: number;
   location_title: string;
   research_id?: string;
+  survey_type: string;
 }
 
 export interface DynamicSurvey {
@@ -111,6 +113,7 @@ export interface DynamicSurvey {
   long: number;
   location_title: string;
   research_id?: string;
+  survey_type: string;
 }
 
 export interface ResearchContributor {
