@@ -1,23 +1,29 @@
+// src/hooks/useFormSurveys.ts
 import { useEffect, useState } from "react";
 import { FormSurvey } from "@/lib/types/indexeddb";
 import {
-  createFormSurvey as createRemoteFormSurvey,
-  updateFormSurvey as updateRemoteFormSurvey,
   deleteFormSurvey as deleteRemoteFormSurvey,
-  getFormSurveys as getAllRemoteFormSurveys,
+  createFormSurvey as createRemoteFormSurvey,
+  getFormSurvey as getRemoteFormSurvey,
+  updateFormSurvey as updateRemoteFormSurvey,
 } from "@/repositories/server/formSurveyApi";
+
 import {
   createFormSurvey as createLocalFormSurvey,
-  getFormSurvey as getLocalFormSurvey,
   getAllFormSurveys as getAllLocalFormSurveys,
+  getFormSurvey as getLocalFormSurvey,
   updateFormSurvey as updateLocalFormSurvey,
   deleteFormSurvey as deleteLocalFormSurvey,
 } from "@/repositories/indexeddb/formSurveyRepository";
+
 import { getUnsyncedItems, saveUnsyncedItem } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 
-export function useFormSurveys(especifico: boolean = false, research_id?: string, survey_type: string = "Formulário") {
-  const [surveys, setSurveys] = useState<FormSurvey[]>([]);
+export function useFormSurveys(
+  research_id?: string,
+  especifico: boolean = true,
+  survey_type: string = "Formulário"
+) {
   const [surveyData, setSurveyData] = useState<FormSurvey | null>(null);
   const [unSyncedSurveys, setUnSyncedSurveys] = useState<FormSurvey[]>([]);
   const [loadingSurveys, setLoadingSurveys] = useState<boolean>(true);
@@ -29,17 +35,13 @@ export function useFormSurveys(especifico: boolean = false, research_id?: string
   }, []);
 
   useEffect(() => {
-    if (especifico) {
-      if (research_id) {
-        fetchSurveyByResearchId(research_id, survey_type);
-      } else {
-        setSurveyData(null);
-        setLoadingSurveys(false);
-      }
+    if (especifico && research_id) {
+      fetchSurveyByResearchAndType(research_id, survey_type);
     } else {
-      fetchSurveys();
+      setSurveyData(null);
+      setLoadingSurveys(false);
     }
-  }, [especifico, research_id]);
+  }, [especifico, research_id, survey_type]);
 
   const fetchUnsyncedSurveys = async () => {
     try {
@@ -49,47 +51,31 @@ export function useFormSurveys(especifico: boolean = false, research_id?: string
         .map((item) => item.payload as FormSurvey);
       setUnSyncedSurveys(surveysPending);
     } catch (error) {
-      console.error("[App] Erro ao carregar form surveys pendentes:", error);
+      console.error("[App] Erro ao carregar surveys pendentes:", error);
     } finally {
       setLoadingUnsynced(false);
     }
   };
 
-  const fetchSurveys = async () => {
+  const fetchSurveyByResearchAndType = async (researchId: string, type: string) => {
     setLoadingSurveys(true);
     try {
-      const remoteSurveys = await getAllRemoteFormSurveys(research_id, survey_type);
-      setSurveys(remoteSurveys);
-      await Promise.allSettled(
-        remoteSurveys.map((survey) => createLocalFormSurvey(survey))
-      );
-    } catch (err) {
-      console.warn("[App] Falha ao buscar form surveys do servidor. Usando IndexedDB local.", err);
-      try {
-        const localSurveys = await getAllLocalFormSurveys();
-        setSurveys(localSurveys);
-      } catch (errLocal) {
-        console.error("[App] Falha ao carregar form surveys locais:", errLocal);
-        setError("Erro ao carregar form surveys locais");
-      }
-    } finally {
-      setLoadingSurveys(false);
-    }
-  };
+      const remote = await getRemoteFormSurvey(researchId, type);
+      const survey = remote?.[0] || null;
+      setSurveyData(survey);
 
-  const fetchSurveyByResearchId = async (surveyId: string, surveyType: string) => {
-    setLoadingSurveys(true);
-    try {
-      const local = await getLocalFormSurvey(surveyId);
-      if (local) {
-        setSurveyData(local);
-      } else {
-        throw new Error("Form survey não encontrado localmente");
+      if (survey) {
+        await createLocalFormSurvey(survey);
       }
     } catch (err) {
-      console.error("[App] Erro ao buscar form survey por ID:", err);
-      setError("Form survey não encontrado localmente");
-      setSurveyData(null);
+      console.warn("[App] Falha ao buscar do servidor, tentando local:", err);
+      try {
+        const local = await getLocalFormSurvey(researchId);
+        setSurveyData(local || null);
+      } catch (errLocal) {
+        console.error("[App] Falha ao buscar local:", errLocal);
+        setError("Erro ao carregar coleta local");
+      }
     } finally {
       setLoadingSurveys(false);
     }
@@ -99,15 +85,15 @@ export function useFormSurveys(especifico: boolean = false, research_id?: string
     const newSurveyId = uuidv4();
     const localSurvey: FormSurvey = { ...survey, id: newSurveyId };
 
-    setSurveys((prev) => [...prev, localSurvey]);
+    setSurveyData(localSurvey);
 
     try {
       const created = await createRemoteFormSurvey(survey);
       await createLocalFormSurvey(created);
       return created;
     } catch (error) {
-      console.error("[App] Erro ao criar form survey remotamente:", error);
-      setError("Falha ao salvar no servidor. Salvo localmente para sincronizar depois.");
+      console.error("[App] Erro ao criar remotamente:", error);
+      setError("Falha ao salvar no servidor. Salvo localmente.");
       await saveUnsyncedItem("form_surveys", localSurvey);
       setUnSyncedSurveys((prev) => [...prev, localSurvey]);
       return localSurvey;
@@ -116,24 +102,33 @@ export function useFormSurveys(especifico: boolean = false, research_id?: string
 
   const updateFormSurvey = async (id: string, updatedData: FormSurvey) => {
     await updateLocalFormSurvey(id, updatedData);
-
-    setSurveys((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updatedData } : s))
-    );
+    setSurveyData((prev) => prev ? { ...prev, ...updatedData } : updatedData);
 
     try {
       await updateRemoteFormSurvey({ ...updatedData, id });
     } catch (error) {
-      console.error("[App] Erro ao atualizar form survey:", error);
-      setError("Falha ao sincronizar atualização.");
+      console.error("[App] Falha ao sincronizar update:", error);
+      setError("Atualização pendente de sincronização.");
       await saveUnsyncedItem("form_surveys", { ...updatedData, id });
       setUnSyncedSurveys((prev) => [...prev, { ...updatedData, id }]);
     }
   };
 
+  const deleteFormSurvey = async (id: string) => {
+    setSurveyData(null);
+  
+    try {
+      await deleteLocalFormSurvey(id);
+      await deleteRemoteFormSurvey({ id } as FormSurvey);
+    } catch (error) {
+      console.error("[App] Erro ao deletar form survey:", error);
+      await saveUnsyncedItem("form_surveys", { id, delete: true } as any);
+    }
+  };
+  
+
   return {
-    surveys,
-    surveyData,
+    survey: surveyData,
     unSyncedSurveys,
     loading: loadingSurveys || loadingUnsynced,
     loadingSurveys,
@@ -141,5 +136,6 @@ export function useFormSurveys(especifico: boolean = false, research_id?: string
     error,
     addFormSurvey,
     updateFormSurvey,
+    deleteFormSurvey
   };
 }

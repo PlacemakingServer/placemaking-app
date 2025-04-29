@@ -1,7 +1,7 @@
 // src/repositories/server/StaticSurveyApi.ts
 import { StaticSurvey } from '@/lib/types/indexeddb';
 const baseUrl = '/api/surveys'; 
-export async function getStaticSurveys(research_id: string, survey_type: string): Promise<StaticSurvey[]> {
+export async function getStaticSurvey(research_id: string, survey_type: string): Promise<StaticSurvey[]> {
   const url = `${baseUrl}?research_id=${encodeURIComponent(research_id)}&survey_type=${encodeURIComponent(survey_type)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Erro ao buscar surveys de Staticulário');
@@ -37,15 +37,3 @@ export async function deleteStaticSurvey(data: StaticSurvey): Promise<void> {
 }
 
 
-
-export async function getStaticSurveyByResearchId(
-  research_id: string,
-  survey_type: string
-): Promise<StaticSurvey[]> {
-  const url = `${baseUrl}?research_id=${encodeURIComponent(research_id)}&survey_type=${encodeURIComponent(survey_type)}`;
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Erro ao buscar surveys de Staticulário');
-
-  return res.json();
-}

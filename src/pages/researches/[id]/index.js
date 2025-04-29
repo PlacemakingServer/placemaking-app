@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useResearches } from "@/hooks/useResearches";
 import { useUsers } from "@/hooks/useUsers";
+import { useFormSurveys } from "@/hooks/useFormSurveys";
+import { useStaticSurveys } from "@/hooks/useStaticSurveys";
+import { useDynamicSurveys } from "@/hooks/useDynamicSurveys";
 import ResearchForm from "@/components/research/ResearchForm";
 import { useMessage } from "@/context/MessageContext";
 import ResearchLoadingSkeleton from "@/components/research/ResearchLoadingSkeleton";
@@ -24,18 +27,31 @@ export default function EditResearch() {
   const { showMessage } = useMessage();
   const { researchData, loading: loadingResearch, updateResearch } = useResearches(true, id);
   const { users, loading: loadingUsers } = useUsers();
+  const { survey: formSurvey } = useFormSurveys(id, true, "Formulário");
+  const { survey: staticSurvey } = useStaticSurveys(id, true, "estatica");
+  const { survey: dynamicSurvey } = useDynamicSurveys(id, true, "dinamica");
 
   const [renderedSurveys, setRenderedSurveys] = useState([]);
   const [isCreatingSurvey, setIsCreatingSurvey] = useState(false);
 
-  const sidebarSections = [{ id: "pesquisa", label: "Pesquisa", icon: "search" }, ...SURVEY_TYPES];
+  const sidebarSections = [
+    { id: "pesquisa", label: "Pesquisa", icon: "search" },
+    ...SURVEY_TYPES,
+  ];
+
+  useEffect(() => {
+    if (!id) return;
+    const list = [];
+    if (formSurvey) list.push(renderSurveyComponent("Formulário"));
+    if (staticSurvey) list.push(renderSurveyComponent("Estática"));
+    if (dynamicSurvey) list.push(renderSurveyComponent("Dinâmica"));
+  }, [id, formSurvey, staticSurvey, dynamicSurvey]);
 
   const renderSurveyComponent = (surveyLabel) => {
     const surveyType = SURVEY_TYPES.find((t) => t.label === surveyLabel);
     if (!surveyType || renderedSurveys.some((s) => s.id === surveyType.id)) return;
 
     let SurveyComponent = null;
-
     switch (surveyLabel.toLowerCase()) {
       case "formulário":
         SurveyComponent = CollectionFormSection;
@@ -89,7 +105,6 @@ export default function EditResearch() {
 
   const handleResearchUpdate = async (payload) => {
     if (!id) return;
-
     try {
       const formattedPayload = formatDataByModel({ ...payload, id }, "researches");
       await updateResearch(id, formattedPayload);
