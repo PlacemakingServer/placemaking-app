@@ -60,6 +60,7 @@ export function useDynamicSurveys(
     setLoadingSurveys(true);
     try {
       const remote = await getRemoteDynamicSurvey(researchId, type);
+      console.log("[App] Surveys do servidor:", remote);
       const survey = remote?.[0] || null;
       setSurveyData(survey);
 
