@@ -1,7 +1,7 @@
 // src/repositories/server/DynamicSurveyApi.ts
 import { DynamicSurvey } from '@/lib/types/indexeddb';
 const baseUrl = '/api/surveys'; 
-export async function getDynamicSurvey(research_id: string, survey_type: string): Promise<DynamicSurvey[]> {
+export async function getDynamicSurvey(research_id: string, survey_type: string): Promise<DynamicSurvey> {
   const url = `${baseUrl}?research_id=${encodeURIComponent(research_id)}&survey_type=${encodeURIComponent(survey_type)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Erro ao buscar surveys de Dynamiculário');
