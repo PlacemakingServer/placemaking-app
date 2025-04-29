@@ -16,7 +16,7 @@ import {
 import { getUnsyncedItems, saveUnsyncedItem } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 
-export function useFormSurveys(especifico: boolean = false, research_id?: string) {
+export function useFormSurveys(especifico: boolean = false, research_id?: string, survey_type: string = "Formulário") {
   const [surveys, setSurveys] = useState<FormSurvey[]>([]);
   const [surveyData, setSurveyData] = useState<FormSurvey | null>(null);
   const [unSyncedSurveys, setUnSyncedSurveys] = useState<FormSurvey[]>([]);
@@ -31,7 +31,7 @@ export function useFormSurveys(especifico: boolean = false, research_id?: string
   useEffect(() => {
     if (especifico) {
       if (research_id) {
-        fetchSurveyByResearchId(research_id);
+        fetchSurveyByResearchId(research_id, survey_type);
       } else {
         setSurveyData(null);
         setLoadingSurveys(false);
@@ -58,7 +58,7 @@ export function useFormSurveys(especifico: boolean = false, research_id?: string
   const fetchSurveys = async () => {
     setLoadingSurveys(true);
     try {
-      const remoteSurveys = await getAllRemoteFormSurveys();
+      const remoteSurveys = await getAllRemoteFormSurveys(research_id, survey_type);
       setSurveys(remoteSurveys);
       await Promise.allSettled(
         remoteSurveys.map((survey) => createLocalFormSurvey(survey))
@@ -77,7 +77,7 @@ export function useFormSurveys(especifico: boolean = false, research_id?: string
     }
   };
 
-  const fetchSurveyByResearchId = async (surveyId: string) => {
+  const fetchSurveyByResearchId = async (surveyId: string, surveyType: string) => {
     setLoadingSurveys(true);
     try {
       const local = await getLocalFormSurvey(surveyId);
