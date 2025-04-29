@@ -75,6 +75,13 @@ export default function EditResearch() {
             key={`survey-${surveyType.id}`}
             research_id={id}
             handleCancelCreateSurvey={handleCancelCreateSurvey}
+            users={users.map((u) => ({
+              value: u.id,
+              label: u.name,
+              role: u.role,
+              status: u.status,
+              email: u.email,
+            }))}
           />
         ),
       },

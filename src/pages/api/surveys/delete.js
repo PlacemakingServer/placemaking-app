@@ -1,4 +1,5 @@
 import { parse } from 'cookie';
+import { json } from 'stream/consumers';
 
 const handler = async (req, res) => {
   if (req.method !== 'DELETE') {
@@ -12,15 +13,14 @@ const handler = async (req, res) => {
     if (!token) {
       return res.status(401).json({ error: 'Token não fornecido' });
     }
-
-    const { survey_id, research_id, survey_type } = req.body;
-
-    const missingFields = checkMissingFields({ survey_id, research_id, survey_type });
+    const data = JSON.parse(req.body);
+    const { id, research_id, survey_type } = data;
+    const missingFields = checkMissingFields({ id, research_id, survey_type });
     if (missingFields.length > 0) {
       return res.status(400).json({ error: `Os campos são obrigatórios: ${missingFields.join(', ')}` });
     }
 
-    const response = await fetch(`${process.env.SERVER_URL}/research/${research_id}/survey/${survey_id}?survey_type=${encodeURIComponent(survey_type)}`, {
+    const response = await fetch(`${process.env.SERVER_URL}/research/${research_id}/survey/${id}?survey_type=${encodeURIComponent(survey_type)}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -41,7 +41,7 @@ const handler = async (req, res) => {
 };
 
 const checkMissingFields = (dataObj) => {
-  const requiredFields = ['survey_id', 'research_id', 'survey_type'];
+  const requiredFields = ['id', 'research_id', 'survey_type'];
   return requiredFields.filter(field => !dataObj[field]);
 };
 

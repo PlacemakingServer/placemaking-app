@@ -85,13 +85,9 @@ export function useFormSurveys(
   const addFormSurvey = async (survey: FormSurvey): Promise<FormSurvey> => {
     const newSurveyId = uuidv4();
     const localSurvey: FormSurvey = { ...survey, id: newSurveyId };
-
     setFormSurvey(localSurvey);
-
     try {
-
       const created = await createRemoteFormSurvey(survey);
-
       await createLocalFormSurvey(created);
       return created;
     } catch (error) {
@@ -106,7 +102,6 @@ export function useFormSurveys(
   const updateFormSurvey = async (id: string, updatedData: FormSurvey) => {
     await updateLocalFormSurvey(id, updatedData);
     setFormSurvey((prev) => prev ? { ...prev, ...updatedData } : updatedData);
-
     try {
       await updateRemoteFormSurvey({ ...updatedData, id });
     } catch (error) {
@@ -117,15 +112,14 @@ export function useFormSurveys(
     }
   };
 
-  const deleteFormSurvey = async (id: string) => {
+  const deleteFormSurvey = async (survey: FormSurvey) => {
     setFormSurvey(null);
-  
     try {
-      await deleteLocalFormSurvey(id);
-      await deleteRemoteFormSurvey({ id } as FormSurvey);
+      await deleteLocalFormSurvey(survey.id);
+      await deleteRemoteFormSurvey(survey);
     } catch (error) {
       console.error("[App] Erro ao deletar form survey:", error);
-      await saveUnsyncedItem("form_surveys", { id, delete: true } as any);
+      await saveUnsyncedItem("form_surveys", {...survey, deleted: true});
     }
   };
   

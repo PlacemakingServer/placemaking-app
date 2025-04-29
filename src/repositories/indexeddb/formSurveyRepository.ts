@@ -26,5 +26,6 @@ import {
   }
   
   export async function deleteFormSurvey(id: string) {
+    console.log('Deleting form survey with ID:', id);
     return deleteItem(store, id);
   }

@@ -13,8 +13,9 @@ const handler = async (req, res) => {
       return res.status(401).json({ error: "Token não fornecido" });
     }
 
+    console.log("upbody:", req.body);
     const {
-      survey_id,
+      id,
       survey_type,
       title,
       description,
@@ -25,7 +26,7 @@ const handler = async (req, res) => {
     } = req.body;
 
     const missingFields = checkMissingFields({
-      survey_id,
+      id,
       survey_type,
       title,
       description,
@@ -39,7 +40,9 @@ const handler = async (req, res) => {
       return res.status(400).json({ error: `Os campos são obrigatórios: ${missingFields.join(', ')}` });
     }
 
-    const response = await fetch(`${process.env.SERVER_URL}/survey/${survey_id}`, {
+    const response = await fetch(`${process.env.SERVER_URL}/survey/${id}?survey_type=${encodeURIComponent(
+      survey_type
+    )}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -72,7 +75,7 @@ const handler = async (req, res) => {
 
 const checkMissingFields = (dataObj) => {
   const requiredFields = [
-    "survey_id",
+    "id",
     "survey_type",
     "title",
     "description",

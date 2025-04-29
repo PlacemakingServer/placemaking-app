@@ -7,9 +7,6 @@ import { HelpCircle } from "lucide-react";
 import * as Tooltip from "@radix-ui/react-tooltip";
 
 export default function CollaboratorSelector({
-  form,
-  setForm,
-  isEdit,
   availableCollaborators = [],
 }) {
   const [useAllFromResearch, setUseAllFromResearch] = useState(true);
