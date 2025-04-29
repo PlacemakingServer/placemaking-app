@@ -17,13 +17,14 @@ import {
 
 import { getUnsyncedItems, saveUnsyncedItem } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
+import dynamic from "next/dynamic";
 
 export function useDynamicSurveys(
   research_id?: string,
   especifico: boolean = true,
   survey_type: string = "Dinâmica"
 ) {
-  const [surveyData, setSurveyData] = useState<DynamicSurvey | null>(null);
+  const [dynamicSurvey, setDynamicSurveyData] = useState<DynamicSurvey | null>(null);
   const [unSyncedSurveys, setUnSyncedSurveys] = useState<DynamicSurvey[]>([]);
   const [loadingSurveys, setLoadingSurveys] = useState(true);
   const [loadingUnsynced, setLoadingUnsynced] = useState(true);
@@ -37,7 +38,7 @@ export function useDynamicSurveys(
     if (especifico && research_id) {
       fetchSurveyByResearch(research_id, survey_type);
     } else {
-      setSurveyData(null);
+      setDynamicSurveyData(null);
       setLoadingSurveys(false);
     }
   }, [especifico, research_id, survey_type]);
@@ -62,7 +63,7 @@ export function useDynamicSurveys(
       const remote = await getRemoteDynamicSurvey(researchId, type);
       console.log("[App] Surveys do servidor:", remote);
       const survey = remote;
-      setSurveyData(survey);
+      setDynamicSurveyData(survey);
 
       if (survey) {
         await createLocalDynamicSurvey(survey);
@@ -71,7 +72,7 @@ export function useDynamicSurveys(
       console.warn("[App] Falha ao buscar do servidor, tentando local:", err);
       try {
         const local = await getLocalDynamicSurvey(researchId);
-        setSurveyData(local || null);
+        setDynamicSurveyData(local || null);
       } catch (errLocal) {
         console.error("[App] Falha ao buscar local:", errLocal);
         setError("Erro ao carregar dynamic survey local");
@@ -85,7 +86,7 @@ export function useDynamicSurveys(
     const newSurveyId = uuidv4();
     const localSurvey: DynamicSurvey = { ...survey, id: newSurveyId };
 
-    setSurveyData(localSurvey);
+    setDynamicSurveyData(localSurvey);
 
     try {
       const created = await createRemoteDynamicSurvey(survey);
@@ -102,7 +103,7 @@ export function useDynamicSurveys(
 
   const updateDynamicSurvey = async (id: string, updatedData: DynamicSurvey) => {
     await updateLocalDynamicSurvey(id, updatedData);
-    setSurveyData((prev) => (prev ? { ...prev, ...updatedData } : updatedData));
+    setDynamicSurveyData((prev) => (prev ? { ...prev, ...updatedData } : updatedData));
 
     try {
       await updateRemoteDynamicSurvey({ ...updatedData, id });
@@ -114,7 +115,7 @@ export function useDynamicSurveys(
   };
 
   const deleteDynamicSurvey = async (id: string) => {
-    setSurveyData(null);
+    setDynamicSurveyData(null);
 
     try {
       await deleteLocalDynamicSurvey(id);
@@ -126,7 +127,7 @@ export function useDynamicSurveys(
   };
 
   return {
-    survey: surveyData,
+    dynamicSurvey,
     unSyncedSurveys,
     loading: loadingSurveys || loadingUnsynced,
     loadingSurveys,

@@ -17,13 +17,14 @@ import {
 
 import { getUnsyncedItems, saveUnsyncedItem } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
+import { stat } from "fs";
 
 export function useStaticSurveys(
   research_id?: string,
   especifico: boolean = true,
   survey_type: string = "Estática"
 ) {
-  const [surveyData, setSurveyData] = useState<StaticSurvey | null>(null);
+  const [staticSurvey, setStaticSurveyData] = useState<StaticSurvey | null>(null);
   const [unSyncedSurveys, setUnSyncedSurveys] = useState<StaticSurvey[]>([]);
   const [loadingSurveys, setLoadingSurveys] = useState(true);
   const [loadingUnsynced, setLoadingUnsynced] = useState(true);
@@ -37,7 +38,7 @@ export function useStaticSurveys(
     if (especifico && research_id) {
       fetchSurveyByResearch(research_id, survey_type);
     } else {
-      setSurveyData(null);
+      setStaticSurveyData(null);
       setLoadingSurveys(false);
     }
   }, [especifico, research_id, survey_type]);
@@ -61,13 +62,13 @@ export function useStaticSurveys(
     try {
       const remote = await getRemoteStaticSurvey(researchId, type);
       const survey = remote?.[0] || null;
-      setSurveyData(survey);
+      setStaticSurveyData(survey);
       if (survey) await createLocalStaticSurvey(survey);
     } catch (err) {
       console.warn("[App] Falha ao buscar do servidor, tentando local:", err);
       try {
         const local = await getLocalStaticSurvey(researchId);
-        setSurveyData(local || null);
+        setStaticSurveyData(local || null);
       } catch (errLocal) {
         console.error("[App] Falha ao buscar local:", errLocal);
         setError("Erro ao carregar static survey local");
@@ -80,7 +81,7 @@ export function useStaticSurveys(
   const addStaticSurvey = async (survey: StaticSurvey): Promise<StaticSurvey> => {
     const newSurveyId = uuidv4();
     const localSurvey = { ...survey, id: newSurveyId };
-    setSurveyData(localSurvey);
+    setStaticSurveyData(localSurvey);
 
     try {
       const created = await createRemoteStaticSurvey(survey);
@@ -96,7 +97,7 @@ export function useStaticSurveys(
 
   const updateStaticSurvey = async (id: string, updatedData: StaticSurvey) => {
     await updateLocalStaticSurvey(id, updatedData);
-    setSurveyData((prev) => (prev ? { ...prev, ...updatedData } : updatedData));
+    setStaticSurveyData((prev) => (prev ? { ...prev, ...updatedData } : updatedData));
 
     try {
       await updateRemoteStaticSurvey({ ...updatedData, id });
@@ -107,7 +108,7 @@ export function useStaticSurveys(
   };
 
   const deleteStaticSurvey = async (id: string) => {
-    setSurveyData(null);
+    setStaticSurveyData(null);
 
     try {
       await deleteLocalStaticSurvey(id);
@@ -119,7 +120,7 @@ export function useStaticSurveys(
   };
 
   return {
-    survey: surveyData,
+    staticSurvey,
     unSyncedSurveys,
     loading: loadingSurveys || loadingUnsynced,
     loadingSurveys,
