@@ -24,7 +24,7 @@ export function useFormSurveys(
   especifico: boolean = true,
   survey_type: string = "Formulário"
 ) {
-  const [surveyData, setSurveyData] = useState<FormSurvey | null>(null);
+  const [formSurvey, setFormSurvey] = useState<FormSurvey | null>(null);
   const [unSyncedSurveys, setUnSyncedSurveys] = useState<FormSurvey[]>([]);
   const [loadingSurveys, setLoadingSurveys] = useState<boolean>(true);
   const [loadingUnsynced, setLoadingUnsynced] = useState<boolean>(true);
@@ -38,7 +38,7 @@ export function useFormSurveys(
     if (especifico && research_id) {
       fetchSurveyByResearchAndType(research_id, survey_type);
     } else {
-      setSurveyData(null);
+      setFormSurvey(null);
       setLoadingSurveys(false);
     }
   }, [especifico, research_id, survey_type]);
@@ -61,8 +61,9 @@ export function useFormSurveys(
     setLoadingSurveys(true);
     try {
       const remote = await getRemoteFormSurvey(researchId, type);
-      const survey = remote?.[0] || null;
-      setSurveyData(survey);
+      console.log("[App] Surveys do servidor:", remote);
+      const survey = remote;
+      setFormSurvey(survey);
 
       if (survey) {
         await createLocalFormSurvey(survey);
@@ -71,7 +72,7 @@ export function useFormSurveys(
       console.warn("[App] Falha ao buscar do servidor, tentando local:", err);
       try {
         const local = await getLocalFormSurvey(researchId);
-        setSurveyData(local || null);
+        setFormSurvey(local || null);
       } catch (errLocal) {
         console.error("[App] Falha ao buscar local:", errLocal);
         setError("Erro ao carregar coleta local");
@@ -85,7 +86,7 @@ export function useFormSurveys(
     const newSurveyId = uuidv4();
     const localSurvey: FormSurvey = { ...survey, id: newSurveyId };
 
-    setSurveyData(localSurvey);
+    setFormSurvey(localSurvey);
 
     try {
 
@@ -104,7 +105,7 @@ export function useFormSurveys(
 
   const updateFormSurvey = async (id: string, updatedData: FormSurvey) => {
     await updateLocalFormSurvey(id, updatedData);
-    setSurveyData((prev) => prev ? { ...prev, ...updatedData } : updatedData);
+    setFormSurvey((prev) => prev ? { ...prev, ...updatedData } : updatedData);
 
     try {
       await updateRemoteFormSurvey({ ...updatedData, id });
@@ -117,7 +118,7 @@ export function useFormSurveys(
   };
 
   const deleteFormSurvey = async (id: string) => {
-    setSurveyData(null);
+    setFormSurvey(null);
   
     try {
       await deleteLocalFormSurvey(id);
@@ -130,7 +131,7 @@ export function useFormSurveys(
   
 
   return {
-    survey: surveyData,
+    formSurvey,
     unSyncedSurveys,
     loading: loadingSurveys || loadingUnsynced,
     loadingSurveys,

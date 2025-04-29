@@ -27,9 +27,9 @@ export default function EditResearch() {
   const { showMessage } = useMessage();
   const { researchData, loading: loadingResearch, updateResearch } = useResearches(true, id);
   const { users, loading: loadingUsers } = useUsers();
-  const { survey: formSurvey } = useFormSurveys(id, true, "Formulário");
-  const { survey: staticSurvey } = useStaticSurveys(id, true, "estatica");
-  const { survey: dynamicSurvey } = useDynamicSurveys(id, true, "dinamica");
+  const { formSurvey } = useFormSurveys(id, true, "Formulário");
+  const { staticSurvey } = useStaticSurveys(id, true, "Estática");
+  const { dynamicSurvey } = useDynamicSurveys(id, true, "Dinâmica");
 
   const [renderedSurveys, setRenderedSurveys] = useState([]);
   const [isCreatingSurvey, setIsCreatingSurvey] = useState(false);
