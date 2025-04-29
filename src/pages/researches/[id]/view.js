@@ -35,7 +35,7 @@ export default function ResearchView() {
 
   const { userData: author } = useUsers(true ,selectedResearch?.created_by) || null;
 
-  const surveys = [dynamicSurvey, formSurvey, staticSurvey]
+  const surveys = [dynamicSurvey, formSurvey, staticSurvey].filter(survey => survey !== null);
 
   const handleCopyCoords = () => {
     const name = selectedResearch?.location_title;
@@ -60,7 +60,7 @@ export default function ResearchView() {
   }, []);
 
   useEffect(() => {
-    console.log("surveys:", dynamicSurvey);
+    console.log("surveys:", surveys);
   }, [dynamicSurvey]);
 
   return (
@@ -70,20 +70,6 @@ export default function ResearchView() {
       transition={{ duration: 0.4 }}
       className="max-w-screen-lg mx-auto p-6 md:p-8 box-border"
     >
-      {/* Cabeçalho e Detalhes da Pesquisa */}
-
-      <div className="flex flex-row gap-2 justify-between items-start">
-        <div className="flex flex-col flex-start">
-          <h1 className="text-2xl font-bold p-4">Sincronizar Coletas: </h1>
-          <motion.p className="text-sm text-gray-500 p-4">
-            Clique no botão "Atualizar" para sincronizar as coletas com o
-            servidor.
-            <br />
-            <strong>Observação:</strong> As coletas podem demorar alguns
-            segundos.
-          </motion.p>
-        </div>
-      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
