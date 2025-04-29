@@ -24,7 +24,7 @@ export default function ResearchView() {
   const { staticSurvey, unSyncedstaticSurveys } = useStaticSurveys(id);
   const { contributors: contributorsData } = useResearchContributors(id);
   const { researchData: selectedResearch } = useResearches(true, id);
-  const { allUsers } = useUsers() || null;
+  const { users: allUsers } = useUsers() || null;
   const [showContributors, setShowContributors] = useState(false);
   const [showSurveys, setshowSurveys] = useState(false);
   const [showMap, setShowMap] = useState(true);
@@ -34,18 +34,22 @@ export default function ResearchView() {
   const { showMessage } = useMessage();
   const [imageUrl, setImageUrl] = useState("");
 
-  const { userData: author } = useUsers(true ,selectedResearch?.created_by) || null;
+  const { userData: author } =
+    useUsers(true, selectedResearch?.created_by) || null;
 
-  const surveys = [dynamicSurvey, formSurvey, staticSurvey].filter(survey => survey !== null);
+  const surveys = [dynamicSurvey, formSurvey, staticSurvey].filter(
+    (survey) => survey !== null
+  );
 
   const userMap = allUsers
-  ? Object.fromEntries(allUsers.map((user) => [user.id, user]))
-  : {};
+    ? Object.fromEntries(allUsers.map((user) => [user.id, user]))
+    : {};
 
-  const contributorsList = contributorsData?.map((contributor) => ({
-    ...contributor,
-    user: userMap[contributor.user_id] || null,
-  })) || [];
+  const contributorsList =
+    contributorsData?.map((contributor) => ({
+      ...contributor,
+      user: userMap[contributor.user_id] || null,
+    })) || [];
 
   const handleCopyCoords = () => {
     const name = selectedResearch?.location_title;
@@ -70,8 +74,8 @@ export default function ResearchView() {
   }, []);
 
   useEffect(() => {
-    console.log("contributors:", contributorsData);
-  }, [contributorsData]);
+    console.log("contributors:", contributorsList);
+  }, [contributorsList]);
 
   return (
     <motion.section
@@ -80,7 +84,6 @@ export default function ResearchView() {
       transition={{ duration: 0.4 }}
       className="max-w-screen-lg mx-auto p-6 md:p-8 box-border"
     >
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -131,7 +134,7 @@ export default function ResearchView() {
           </motion.div>
         </div>
       </motion.div>
-                    {/* Seção Mapa com Toggle */}
+      {/* Seção Mapa com Toggle */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -241,13 +244,14 @@ export default function ResearchView() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {contributorsList.map((user) => (
                     <UserCardCompact
-                      key={user.value}
+                      key={user.id}
                       user={{
-                        id: user.id,
-                        name: user.label,
-                        role: user.role,
-                        status: user.status,
-                        email: user.email,
+                        id: user.user?.id,
+                        name: user.user?.name,
+                        role: user.user?.role,
+                        status: user.user?.status,
+                        email: user.user?.email,
+                        instruction: user.instruction, // se o componente aceitar
                       }}
                     />
                   ))}
