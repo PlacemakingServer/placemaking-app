@@ -61,7 +61,7 @@ export function useFormSurveys(
     setLoadingSurveys(true);
     try {
       const remote = await getRemoteFormSurvey(researchId, type);
-      console.log("[App] Surveys do servidor:", remote);
+      // console.log("[App] Surveys do servidor:", remote);
       const survey = remote;
       setFormSurvey(survey);
 

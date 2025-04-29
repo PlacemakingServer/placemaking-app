@@ -168,11 +168,14 @@ export default function CollectionFormSection({
                   className="space-y-6"
                 >
                   <MicroRegionEditor
-                    regions={microRegions}
-                    setRegions={setMicroRegions}
-                    setForm={setForm}
+                    location={{
+                      location_title: form.location_title,
+                      lat: form.lat,
+                      long: form.long,
+                    }}
+                    survey_id={form.id}
+                    survey_type={form.survey_type}
                   />
-
                   <TimeRanges
                     timeRanges={timeRanges}
                     setTimeRanges={setTimeRanges}
