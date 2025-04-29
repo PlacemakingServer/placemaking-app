@@ -14,7 +14,7 @@ import { useFormSurveys } from "@/hooks";
 import { formatDataByModel } from "@/lib/types/models";
 
 export default function CollectionFormSection({
-  survey_type = "Fomulário",
+  survey_type = "Formulário",
   research_id,
   handleCancelCreateSurvey,
 }) {
@@ -62,6 +62,9 @@ export default function CollectionFormSection({
   }, [initialData]);
 
   const handleCreate = async () => {
+
+    const formatedForm = formatDataByModel(form, "form_surveys");
+    
     const created = await addFormSurvey(formatedForm);
     if (created?.id) {
       setForm((prev) => ({ ...prev, ...created }));

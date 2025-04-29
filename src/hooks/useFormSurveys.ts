@@ -88,7 +88,9 @@ export function useFormSurveys(
     setSurveyData(localSurvey);
 
     try {
+
       const created = await createRemoteFormSurvey(survey);
+
       await createLocalFormSurvey(created);
       return created;
     } catch (error) {
