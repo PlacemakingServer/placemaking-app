@@ -78,6 +78,10 @@ export default function UserCard({ user, onViewDetails }) {
       {/* Meio: Email e Status */}
       <div className="text-xs text-gray-600 space-y-1">
         <p className="truncate">Email: {user.email || "N/A"}</p>
+      </div>
+
+      {/* Rodapé: Badge de Sync + Botão Ver Detalhes */}
+      <div className="flex items-center justify-between mt-2">
         <div
           className={`inline-flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium max-w-fit ${getStatusBackground(
             user.status
@@ -88,10 +92,6 @@ export default function UserCard({ user, onViewDetails }) {
           />
           <p className="truncate">{user.status || "N/A"}</p>
         </div>
-      </div>
-
-      {/* Rodapé: Badge de Sync + Botão Ver Detalhes */}
-      <div className="flex items-center justify-between mt-2">
         {user._syncStatus && (
           <span
             className={`flex-shrink-0 truncate max-w-[100px] px-2 py-1 text-[10px] font-semibold rounded ${getBadgeVariant(
