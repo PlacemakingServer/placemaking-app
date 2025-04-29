@@ -19,11 +19,12 @@ export default function ResearchView() {
   const router = useRouter();
   const { id } = router.query;
 
-  const { survey: dynamicSurvey, dynamicSurveyError } = useDynamicSurveys(id);
-  const { survey: formSurvey, formSurveyError } = useFormSurveys(id);
-  const { survey: staticSurvey, unSyncedstaticSurveys } = useStaticSurveys(id);
+  const { dynamicSurvey, dynamicSurveyError } = useDynamicSurveys(id);
+  const { formSurvey, formSurveyError } = useFormSurveys(id);
+  const { staticSurvey, unSyncedstaticSurveys } = useStaticSurveys(id);
   const { contributors: contributorsData } = useResearchContributors(id);
   const { researchData: selectedResearch } = useResearches(true, id);
+  const { users: allUsers } = useUsers() || null;
   const [showContributors, setShowContributors] = useState(false);
   const [showSurveys, setshowSurveys] = useState(false);
   const [showMap, setShowMap] = useState(true);
@@ -33,9 +34,22 @@ export default function ResearchView() {
   const { showMessage } = useMessage();
   const [imageUrl, setImageUrl] = useState("");
 
-  const { userData: author } = useUsers(true ,selectedResearch?.created_by) || null;
+  const { userData: author } =
+    useUsers(true, selectedResearch?.created_by) || null;
 
-  const surveys = [dynamicSurvey, formSurvey, staticSurvey].filter(survey => survey !== null);
+  const surveys = [dynamicSurvey, formSurvey, staticSurvey].filter(
+    (survey) => survey !== null
+  );
+
+  const userMap = allUsers
+    ? Object.fromEntries(allUsers.map((user) => [user.id, user]))
+    : {};
+
+  const contributorsList =
+    contributorsData?.map((contributor) => ({
+      ...contributor,
+      user: userMap[contributor.user_id] || null,
+    })) || [];
 
   const handleCopyCoords = () => {
     const name = selectedResearch?.location_title;
@@ -60,8 +74,8 @@ export default function ResearchView() {
   }, []);
 
   useEffect(() => {
-    console.log("surveys:", surveys);
-  }, [dynamicSurvey]);
+    console.log("contributors:", contributorsList);
+  }, [contributorsList]);
 
   return (
     <motion.section
@@ -70,7 +84,6 @@ export default function ResearchView() {
       transition={{ duration: 0.4 }}
       className="max-w-screen-lg mx-auto p-6 md:p-8 box-border"
     >
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -121,7 +134,7 @@ export default function ResearchView() {
           </motion.div>
         </div>
       </motion.div>
-                    {/* Seção Mapa com Toggle */}
+      {/* Seção Mapa com Toggle */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -223,21 +236,22 @@ export default function ResearchView() {
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
             >
-              {contributorsData === null ? (
+              {contributorsList === null ? (
                 <p className="text-gray-400">Carregando colaboradores...</p>
-              ) : contributorsData.length === 0 ? (
+              ) : contributorsList.length === 0 ? (
                 <p className="text-gray-400">Nenhum colaborador encontrado.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {contributorsData.map((user) => (
+                  {contributorsList.map((user) => (
                     <UserCardCompact
-                      key={user.value}
+                      key={user.id}
                       user={{
-                        id: user.id,
-                        name: user.label,
-                        role: user.role,
-                        status: user.status,
-                        email: user.email,
+                        id: user.user?.id,
+                        name: user.user?.name,
+                        role: user.user?.role,
+                        status: user.user?.status,
+                        email: user.user?.email,
+                        instruction: user.instruction, // se o componente aceitar
                       }}
                     />
                   ))}

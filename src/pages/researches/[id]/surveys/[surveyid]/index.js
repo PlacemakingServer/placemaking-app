@@ -1,6 +1,6 @@
 // src/app/surveys/[surveyid]/index.tsx
 
-import React, { useState } from "react";
+import React, { use, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/router";
 import { ClipboardCopy, Check, ChevronDown } from "lucide-react";
@@ -8,6 +8,7 @@ import { ClipboardCopy, Check, ChevronDown } from "lucide-react";
 import { useDynamicSurveys } from "@/hooks/useDynamicSurveys";
 import { useFormSurveys } from "@/hooks/useFormSurveys";
 import { useStaticSurveys } from "@/hooks/useStaticSurveys";
+import { useSurveyContributors } from "@/hooks/useSurveyContributors";
 import { useLoading } from "@/context/LoadingContext";
 
 import UserCardCompact from "@/components/ui/UserCardCompact";
@@ -15,13 +16,13 @@ import Button from "@/components/ui/Button";
 
 export default function ResearchSurvey() {
   const router = useRouter();
-  const { surveyid } = router.query.surveyid || {};
+  const { surveyid } = router.query || {};
 
   const { isLoading } = useLoading();
   const { dynamicSurvey, isLoading: loadingSurvey } = useDynamicSurveys(surveyid);
   const { formSurvey, isLoading: loadingFormSurvey } = useFormSurveys(surveyid);
   const { staticSurvey, isLoading: loadingStaticSurvey } = useStaticSurveys(surveyid);
-  const { contributors, isLoading: loadingContributors } = useSurveyContributors(survey_id = surveyid);
+  const { contributors, isLoading: loadingContributors } = useSurveyContributors(surveyid);
 
   const [showContributors, setShowContributors] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -36,6 +37,10 @@ export default function ResearchSurvey() {
       setTimeout(() => setCopied(false), 2000);
     }
   };
+
+  useEffect(() => {
+    console.log("Survey:", surveyid);
+  }, [dynamicSurvey]);
 
   return (
     <motion.section
