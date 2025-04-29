@@ -11,23 +11,21 @@ const handler = async (req, res) => {
         return res.status(401).json({ error: "Token não fornecido" });
       }
   
-      const { survey_id, survey_type, user_id } = req.body;
-      if (!survey_id || !survey_type || !user_id) {
-        return res
-          .status(400)
-          .json({ error: "survey_id e survey_type são obrigatórios" });
+      const { survey_id, user_id } = req.query;
+
+      if (!survey_id || !user_id) {
+        return res.status(400).json({ error: "ID da coleta ou do usuário não fornecido" });
+
       }
+      
       const response = await fetch(
         `${process.env.SERVER_URL}/survey/${survey_id}/contributors/${user_id}`,
         {
-          method: "POST",
+          method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            survey_type: survey_type,
-          }),
         }
       );
   
