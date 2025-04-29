@@ -81,6 +81,7 @@ const modelSamples = {
       long: 0,
       location_title: "",
       research_id: undefined,
+      survey_type: "",
     },
     form_surveys: {
       id: "",
@@ -90,6 +91,7 @@ const modelSamples = {
       long: 0,
       location_title: "",
       research_id: undefined,
+      survey_type: "",
     },
     dynamic_surveys: {
       id: "",
@@ -99,6 +101,7 @@ const modelSamples = {
       long: 0,
       location_title: "",
       research_id: undefined,
+      survey_type: "",
     },
     research_contributors: {
       id: "",
