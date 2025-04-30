@@ -7,6 +7,7 @@ import { useMessage } from "@/context/MessageContext";
 import { VARIANTS } from "@/config/colors";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
+import Switch from "@/components/ui/Switch";
 
 import { useDynamicSurveys } from "@/hooks/useDynamicSurveys";
 import { useFormSurveys } from "@/hooks/useFormSurveys";
@@ -139,20 +140,11 @@ export default function ResearchView() {
         transition={{ duration: 0.6 }}
         className="flex flex-col gap-4 p-6 md:p-8 bg-white rounded-lg shadow-md box-border border-2 mt-4 h-fit"
       >
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Mapa</h1>
-          <button
-            onClick={() => setShowMap((prev) => !prev)}
-            className="flex items-center gap-1 text-sm text-blue-600 underline hover:text-blue-800 transition"
-          >
-            <motion.div
-              animate={{ rotate: showMap ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown size={28} />
-            </motion.div>
-          </button>
-        </div>
+        <SectionToggle
+          title="Mapa"
+          isChecked={showMap}
+          onChange={() => setShowMap((prev) => !prev)}
+        />
 
         <AnimatePresence>
           {showMap && selectedResearch?.lat && selectedResearch?.long && (
@@ -181,24 +173,18 @@ export default function ResearchView() {
                   <motion.p>
                     <strong>Longitude:</strong> {selectedResearch?.long}
                   </motion.p>
+                  <button
+                    onClick={handleCopyCoords}
+                    className="flex items-center gap-2 text-sm text-blue-600 underline hover:text-blue-800 transition"
+                  >
+                    {copied ? (
+                      <Check size={16} className="text-green-600" />
+                    ) : (
+                      <ClipboardCopy size={20} />
+                    )}
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={handleCopyCoords}
-                className="flex items-center gap-2 text-sm text-blue-600 underline hover:text-blue-800 transition"
-              >
-                {copied ? (
-                  <>
-                    <Check size={16} className="text-green-600" />
-                    Copiado!
-                  </>
-                ) : (
-                  <>
-                    <ClipboardCopy size={20} />
-                    Copiar localização
-                  </>
-                )}
-              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -210,20 +196,11 @@ export default function ResearchView() {
         transition={{ duration: 0.6 }}
         className="flex flex-col gap-4 p-6 md:p-8 bg-white rounded-lg shadow-md box-border border-2 mt-4 h-fit"
       >
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Colaboradores</h1>
-          <button
-            onClick={() => setShowContributors((prev) => !prev)}
-            className="flex items-center gap-1 text-sm text-blue-600 underline hover:text-blue-800 transition"
-          >
-            <motion.div
-              animate={{ rotate: showContributors ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown size={28} />
-            </motion.div>
-          </button>
-        </div>
+        <SectionToggle
+          title="Colaboradores"
+          isChecked={showContributors}
+          onChange={() => setShowContributors((prev) => !prev)}
+        />
 
         <AnimatePresence>
           {showContributors && (
@@ -265,20 +242,11 @@ export default function ResearchView() {
         transition={{ duration: 0.6 }}
         className="flex flex-col gap-4 p-6 md:p-8 bg-white rounded-lg shadow-md box-border border-2 mt-4 h-fit"
       >
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Coletas</h1>
-          <button
-            onClick={() => setshowSurveys((prev) => !prev)}
-            className="flex items-center gap-1 text-sm text-blue-600 underline hover:text-blue-800 transition"
-          >
-            <motion.div
-              animate={{ rotate: showSurveys ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown size={28} />
-            </motion.div>
-          </button>
-        </div>
+        <SectionToggle
+          title="Coletas"
+          isChecked={showSurveys}
+          onChange={() => setshowSurveys((prev) => !prev)}
+        />
         {showSurveys && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -327,7 +295,9 @@ export default function ResearchView() {
                           }
                           className="text-blue-600 hover:text-blue-800 transition ml-2"
                         >
-                          Ver detalhes
+                          <span className="material-symbols-outlined text-2xl">
+                            visibility
+                          </span>
                         </button>
                         <span className="text-gray-500 text-xs ml-2">
                           {survey._syncStatus}
@@ -342,6 +312,15 @@ export default function ResearchView() {
         )}
       </motion.div>
     </motion.section>
+  );
+}
+
+function SectionToggle({ title, isChecked, onChange }) {
+  return (
+    <div className="flex justify-between items-center">
+      <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
+      <Switch type="arrow" checked={isChecked} onChange={onChange} />
+    </div>
   );
 }
 

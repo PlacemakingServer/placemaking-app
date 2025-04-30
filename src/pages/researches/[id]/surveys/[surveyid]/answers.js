@@ -9,72 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import  Button  from '@/components/ui/Button';
 import { useMessage } from "@/context/MessageContext";
-import SurveyLoader from '@/components/surveys/SurveyLoader';
-
-const MOCK_FIELDS = [
-  {
-    id: '1',
-    title: 'Nome do Espaço Público',
-    description: 'Qual é o nome do espaço que está sendo analisado?',
-    input_type: 'text',
-    required: true
-  },
-  {
-    id: '2',
-    title: 'Descrição Geral do Espaço',
-    description: 'Descreva brevemente as principais características físicas e sociais do espaço.',
-    input_type: 'long_text',
-    required: true
-  },
-  {
-    id: '3',
-    title: 'O espaço é acessível para pessoas com mobilidade reduzida?',
-    input_type: 'multiple_choice',
-    required: true
-  },
-  {
-    id: '4',
-    title: 'Qual é a sensação de segurança no local durante o dia?',
-    input_type: 'multiple_choice',
-    required: true
-  },
-  {
-    id: '5',
-    title: 'Quais grupos costumam frequentar esse espaço?',
-    description: 'Pode selecionar mais de uma opção.',
-    input_type: 'multiple_choice',
-    required: false
-  },
-  {
-    id: '6',
-    title: 'Sugestões de melhoria para o espaço',
-    input_type: 'long_text',
-    required: false
-  }
-];
-
-const MOCK_OPTIONS = {
-  '3': [
-    { id: 'a', label: 'Sim, totalmente acessível' },
-    { id: 'b', label: 'Parcialmente acessível' },
-    { id: 'c', label: 'Não é acessível' }
-  ],
-  '4': [
-    { id: 'a', label: 'Muito seguro' },
-    { id: 'b', label: 'Razoavelmente seguro' },
-    { id: 'c', label: 'Pouco seguro' },
-    { id: 'd', label: 'Inseguro' }
-  ],
-  '5': [
-    { id: 'a', label: 'Crianças' },
-    { id: 'b', label: 'Jovens' },
-    { id: 'c', label: 'Adultos' },
-    { id: 'd', label: 'Idosos' },
-    { id: 'e', label: 'Pessoas em situação de rua' },
-    { id: 'f', label: 'Turistas' }
-  ]
-};
-
+import { useFields } from '@/hooks/useFields';
 
 export default function ResearchAnswers() {
   const router = useRouter();
@@ -82,6 +17,10 @@ export default function ResearchAnswers() {
 
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  const surveyType = router.query.survey_type;
+
+  const { fields } = useFields(router.query.surveyid, surveyType);
 
   const handleChange = (fieldId, value) => {
     setAnswers((prev) => ({ ...prev, [fieldId]: value }));
@@ -105,9 +44,20 @@ export default function ResearchAnswers() {
     setSubmitting(true);
 
     try {
-      console.log("Respostas submetidas:", answers);
-      showMessage('Respostas enviadas com sucesso (mock)!', 'verde');
-      router.push('/pesquisas/agradecimento');
+      const response = await fetch(`/api/researches/${router.query.id}/answers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ answers }),
+      });
+x
+      if (!response.ok) {
+        throw new Error('Erro ao enviar respostas');
+      }
+
+      showMessage('Respostas enviadas com sucesso!', 'verde_claro');
+      router.push('/pesquisas');
     } catch (err) {
       showMessage('Erro ao enviar respostas.', 'vermelho_claro');
     } finally {
@@ -122,7 +72,7 @@ export default function ResearchAnswers() {
         <p className="text-gray-700 mt-2">Este é um formulário simulado de teste para a interface de respostas.</p>
       </div>
 
-      {MOCK_FIELDS.map((field) => (
+      {fields.map((field) => (
         <Card key={field.id} className={field.required ? 'border-l-4 border-l-blue-500' : ''}>
           <CardContent className="p-4 flex flex-col gap-2">
             <Label className="font-medium flex items-center">
@@ -167,7 +117,7 @@ export default function ResearchAnswers() {
       ))}
 
       <div className="flex justify-between mt-6">
-        <Button variant="outline" onClick={() => router.push('/pesquisas')}>
+        <Button variant="outline" onClick={() => router.push('/')}>
           Cancelar
         </Button>
         <Button onClick={handleSubmit} disabled={submitting}>

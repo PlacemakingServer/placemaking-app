@@ -5,6 +5,8 @@ import FiltersComponent from "@/components/ui/FiltersComponent";
 import { useMessage } from "@/context/MessageContext";
 import { useRouter } from "next/router";
 import ResearchCardDashboard from "@/components/ui/Research/ResearchCardDashboard";
+import ResearchCardSkeleton from "@/components/ui/Research/ResearchCardSkeleton";
+import Switch from "@/components/ui/Switch";
 import Button from "@/components/ui/Button";
 import { VARIANTS } from "@/config/colors";
 import { useResearches } from "@/hooks/useResearches"; // << usando o hook certo!
@@ -94,7 +96,14 @@ export default function Home() {
   ];
 
   // Cores para os gráficos
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28EFF", "#FF6699"];
+  const COLORS = [
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#A28EFF",
+    "#FF6699",
+  ];
 
   // Paginação das Researches do Footer
   const itemsPerPage = 5;
@@ -255,99 +264,100 @@ export default function Home() {
               }}
             />
 
-            {loading ? (
-              <p className="text-center text-gray-500 mt-10">
-                Carregando pesquisas...
-              </p>
-            ) : (
-              Object.entries(categorizedResearches).map(([key, list]) => {
-                if (!showCategory[key]) return null;
-                const filteredAndSorted = filterAndSortResearches(list);
-                const totalPages = Math.ceil(
-                  filteredAndSorted.length / perPage
-                );
+            {loading
+              ? Array.from({ length: 6 }).map((_, index) => (
+                  <ResearchCardSkeleton key={index} />
+                ))
+              : Object.entries(categorizedResearches).map(([key, list]) => {
+                  if (!showCategory[key]) return null;
+                  const filteredAndSorted = filterAndSortResearches(list);
+                  const totalPages = Math.ceil(
+                    filteredAndSorted.length / perPage
+                  );
 
-                const handlePrevious = () => {
-                  setPage((prev) => ({
-                    ...prev,
-                    [key]: Math.max(prev[key] - 1, 1),
-                  }));
-                };
+                  const handlePrevious = () => {
+                    setPage((prev) => ({
+                      ...prev,
+                      [key]: Math.max(prev[key] - 1, 1),
+                    }));
+                  };
 
-                const handleNext = () => {
-                  setPage((prev) => ({
-                    ...prev,
-                    [key]: Math.min(prev[key] + 1, totalPages),
-                  }));
-                };
+                  const handleNext = () => {
+                    setPage((prev) => ({
+                      ...prev,
+                      [key]: Math.min(prev[key] + 1, totalPages),
+                    }));
+                  };
 
-                return (
-                  <div key={key} className="mt-10">
-                    <h3 className="text-2xl font-semibold mb-4 text-gray-700">
-                      {key === "completed"
-                        ? "Pesquisas Passadas"
-                        : key === "ongoing"
-                        ? "Pesquisas em Andamento"
-                        : "Pesquisas Futuras"}
-                    </h3>
+                  return (
+                    <div key={key} className="mt-10">
+                      <h3 className="text-2xl font-semibold mb-4 text-gray-700">
+                        {key === "completed"
+                          ? "Pesquisas Passadas"
+                          : key === "ongoing"
+                          ? "Pesquisas em Andamento"
+                          : "Pesquisas Futuras"}
+                      </h3>
 
-                    {filteredAndSorted.length === 0 ? (
-                      <p className="text-gray-500 text-sm">
-                        Nenhuma pesquisa encontrada.
-                      </p>
-                    ) : (
-                      <motion.div
-                        layout
-                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                      >
-                        {filteredAndSorted
-                          .slice((page[key] - 1) * perPage, page[key] * perPage)
-                          .map((research) => (
-                            <motion.div
-                              key={research.id}
-                              layout
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <ResearchCardDashboard
-                                showButton={false}
-                                research={research}
-                              />
-                            </motion.div>
-                          ))}
-                      </motion.div>
-                    )}
-
-                    {filteredAndSorted.length > perPage && (
-                      <div className="flex items-center justify-between gap-6 mt-6">
-                        <Button
-                          onClick={handlePrevious}
-                          disabled={page[key] === 1}
-                          variant="secondary"
-                          className="px-4 py-2 text-sm"
+                      {filteredAndSorted.length === 0 ? (
+                        <p className="text-gray-500 text-sm">
+                          Nenhuma pesquisa encontrada.
+                        </p>
+                      ) : (
+                        <motion.div
+                          layout
+                          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6"
                         >
-                          Anterior
-                        </Button>
-                        <span className="text-sm text-gray-700">
-                          Página {page[key]} de {totalPages}
-                        </span>
-                        <Button
-                          onClick={handleNext}
-                          disabled={page[key] === totalPages}
-                          variant="secondary"
-                          className="px-4 py-2 text-sm"
-                        >
-                          Próxima
-                        </Button>
-                      </div>
-                    )}
+                          {filteredAndSorted
+                            .slice(
+                              (page[key] - 1) * perPage,
+                              page[key] * perPage
+                            )
+                            .map((research) => (
+                              <motion.div
+                                key={research.id}
+                                layout
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <ResearchCardDashboard
+                                  showButton={true}
+                                  research={research}
+                                />
+                              </motion.div>
+                            ))}
+                        </motion.div>
+                      )}
 
-                    <hr className="my-6 border-gray-200" />
-                  </div>
-                );
-              })
-            )}
+                      {filteredAndSorted.length > perPage && (
+                        <div className="flex items-center justify-between gap-6 mt-6">
+                          <Button
+                            onClick={handlePrevious}
+                            disabled={page[key] === 1}
+                            variant="secondary"
+                            className="px-4 py-2 text-sm"
+                          >
+                            Anterior
+                          </Button>
+                          <span className="text-sm text-gray-700">
+                            Página {page[key]} de {totalPages}
+                          </span>
+                          <Button
+                            onClick={handleNext}
+                            disabled={page[key] === totalPages}
+                            variant="secondary"
+                            className="px-4 py-2 text-sm"
+                          >
+                            Próxima
+                          </Button>
+                        </div>
+                      )}
+
+                      <hr className="my-6 border-gray-200" />
+                    </div>
+                  );
+                })}
             <div className="flex flex-col gap-2">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -478,7 +488,11 @@ export default function Home() {
                                     )}
                                   </Pie>
                                   <Tooltip />
-                                  <Legend verticalAlign="bottom" height={2} fontSize={1} />
+                                  <Legend
+                                    verticalAlign="bottom"
+                                    height={2}
+                                    fontSize={1}
+                                  />
                                 </PieChart>
                               </ResponsiveContainer>
                             </div>

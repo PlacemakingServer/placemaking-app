@@ -164,7 +164,7 @@ export default function ResearchSurvey() {
 
       {/* Botão de Responder */}
       <Button
-        onClick={() => router.push(`/researches/${router.query.id}/surveys/${surveyid}/answers`)}
+        onClick={() => router.push(`/researches/${router.query.id}/surveys/${surveyid}/answers?survey_type=${survey?.survey_type}`)}
         disabled={isLoading}
         variant="primary"
         className="w-full sm:w-auto px-6 py-2 mt-4 flex items-center gap-2 text-sm"
