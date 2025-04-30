@@ -30,8 +30,6 @@ export default function ResearchView() {
   const [showMap, setShowMap] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  const { isLoading, setIsLoading } = useLoading();
-  const { showMessage } = useMessage();
   const [imageUrl, setImageUrl] = useState("");
 
   const { userData: author } =

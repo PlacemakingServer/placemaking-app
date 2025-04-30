@@ -11,6 +11,7 @@ import LocationForm from "@/components/surveys/LocationForm";
 import BasicInformation from "@/components/surveys/BasicInformation";
 import CollaboratorSelector from "@/components/surveys/CollaboratorSelector";
 import TimeRanges from "@/components/surveys/TimeRanges";
+import SurveyCollectionSkeleton from "@/components/surveys/SurveyCollectionSkeleton"; // <-- importado
 
 import { useFormSurveys } from "@/hooks";
 import { formatDataByModel } from "@/lib/types/models";
@@ -21,9 +22,11 @@ export default function CollectionFormSection({
   handleCancelCreateSurvey,
   users,
 }) {
-  const [enabled, setEnabled] = useState(false);
-  const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
+  if (!survey_type || !research_id || !users) {
+    return <SurveyCollectionSkeleton />;
+  }
 
+  const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   const [form, setForm] = useState({
     id: "",
     title: "",
@@ -35,20 +38,22 @@ export default function CollectionFormSection({
     survey_type,
   });
   const [isEdit, setIsEdit] = useState(false);
-  const [microRegions, setMicroRegions] = useState([]);
   const [timeRanges, setTimeRanges] = useState([]);
   const [showLocationForm, setShowLocationForm] = useState(false);
   const [showSurveyInformation, setShowSurveyInformation] = useState(false);
-
+  const [showInitialInfo, setShowInitialInfo] = useState(true);
+  const [showCollaborators, setShowCollaborators] = useState(false);
+  const [showFormBuilder, setShowFormBuilder] = useState(false);
+  const router = useRouter();
   const { formSurvey, addFormSurvey, updateFormSurvey, deleteFormSurvey } =
     useFormSurveys(research_id, true, "Formulário");
-  const router = useRouter();
 
   useEffect(() => {
     if (formSurvey) {
       setForm((prev) => ({ ...prev, ...formSurvey }));
       setIsEdit(true);
-    }
+      setShowInitialInfo(false);
+    } 
   }, [formSurvey]);
 
   const handleCreate = async () => {
@@ -74,7 +79,6 @@ export default function CollectionFormSection({
   };
 
   const handleCancel = () => {
-    setEnabled(false);
     handleCancelCreateSurvey();
   };
 
@@ -92,7 +96,6 @@ export default function CollectionFormSection({
             {isEdit ? `Entrevista: ${form.title}` : "Nova - Entrevista"}
           </h2>
         </div>
-        <Switch checked={enabled} onChange={setEnabled} />
       </div>
 
       <div className="text-sm text-gray-500 space-y-1">
@@ -105,98 +108,159 @@ export default function CollectionFormSection({
       </div>
 
       <AnimatePresence>
-        {enabled && (
-          <motion.div
-            key="form-content"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25 }}
-            className="space-y-6"
-          >
-            <BasicInformation
-              form={form}
-              setForm={setForm}
-              showSurveyInformation={showSurveyInformation}
-              setShowSurveyInformation={setShowSurveyInformation}
-            />
-
-            <LocationForm
-              form={form}
-              setForm={setForm}
-              showLocationForm={showLocationForm}
-              setShowLocationForm={setShowLocationForm}
-            />
-
-            <div className="flex justify-center gap-4 pt-6">
-              <Button
-                variant="verde"
-                onClick={isEdit ? handleUpdate : handleCreate}
-                className="transition-all"
-              >
-                {isEdit ? "Salvar Alterações" : "Criar Coleta"}
-              </Button>
-
-              <Button
-                variant="vermelho"
-                onClick={isEdit ? handleDelete : handleCancel}
-                className="transition-all"
-              >
-                {isEdit ? "Excluir" : "Cancelar"}
-              </Button>
+        <motion.div
+          key="form-content"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.25 }}
+          className="space-y-6"
+        >
+          <div className="space-y-4">
+            <div className="flex justify-between items-center my-4">
+              <h3 className="text-lg font-semibold text-gray-700">
+                Informações Iniciais
+              </h3>
+              <Switch checked={showInitialInfo} onChange={setShowInitialInfo} />
             </div>
 
-            {isEdit && (
-              <div className="flex justify-between items-center my-4">
-                <h3 className="text-lg font-semibold text-gray-700">
-                  Informações Adicionais
-                </h3>
-                <Switch
-                  checked={showAdditionalInfo}
-                  onChange={setShowAdditionalInfo}
-                />
-              </div>
-            )}
-
             <AnimatePresence>
-              {showAdditionalInfo && form.id && (
+              {showInitialInfo && (
                 <motion.div
+                  key="initial-info"
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6"
+                  transition={{ duration: 0.25 }}
+                  className="flex flex-col gap-4"
                 >
-                  <MicroRegionEditor
-                    location={{
-                      location_title: form.location_title,
-                      lat: form.lat,
-                      long: form.long,
-                    }}
-                    survey_id={form.id}
-                    survey_type={form.survey_type}
+                  <BasicInformation
+                    form={form}
+                    setForm={setForm}
+                    showSurveyInformation={showSurveyInformation}
+                    setShowSurveyInformation={setShowSurveyInformation}
                   />
-                  <TimeRanges
-                    timeRanges={timeRanges}
-                    setTimeRanges={setTimeRanges}
+                  <LocationForm
+                    form={form}
+                    setForm={setForm}
+                    showLocationForm={showLocationForm}
+                    setShowLocationForm={setShowLocationForm}
                   />
-
-                  <CollaboratorSelector
-                    availableCollaborators={users || []}
-                    survey_id={form.id}
-                    survey_type={form.survey_type}
-                  />
-
-                  <FormBuilder
-                    survey_id={form.id}
-                    survey_type={form.survey_type}
-                    onChange={() => {}}
-                  />
+                  <div className="flex justify-center gap-4 pt-6">
+                    <Button
+                      variant="verde"
+                      onClick={isEdit ? handleUpdate : handleCreate}
+                      className="transition-all"
+                    >
+                      {isEdit ? "Salvar Alterações" : "Criar Coleta"}
+                    </Button>
+                    <Button
+                      variant="vermelho"
+                      onClick={isEdit ? handleDelete : handleCancel}
+                      className="transition-all"
+                    >
+                      {isEdit ? "Excluir" : "Cancelar"}
+                    </Button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
-        )}
+          </div>
+
+          {isEdit && (
+            <div className="flex justify-between items-center my-4">
+              <h3 className="text-lg font-semibold text-gray-700">
+                Informações Complementares
+              </h3>
+              <Switch
+                checked={showAdditionalInfo}
+                onChange={setShowAdditionalInfo}
+              />
+            </div>
+          )}
+
+          <AnimatePresence>
+            {showAdditionalInfo && form.id && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                <MicroRegionEditor
+                  location={{
+                    location_title: form.location_title,
+                    lat: form.lat,
+                    long: form.long,
+                  }}
+                  survey_id={form.id}
+                  survey_type={form.survey_type}
+                />
+                <TimeRanges
+                  timeRanges={timeRanges}
+                  setTimeRanges={setTimeRanges}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {isEdit && (
+            <>
+              <div className="flex justify-between items-center my-4">
+                <h3 className="text-lg font-semibold text-gray-700">
+                  Colaboradores
+                </h3>
+                <Switch
+                  checked={showCollaborators}
+                  onChange={setShowCollaborators}
+                />
+              </div>
+              <AnimatePresence>
+                {showCollaborators && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <CollaboratorSelector
+                      availableCollaborators={users || []}
+                      survey_id={form.id}
+                      survey_type={form.survey_type}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="flex justify-between items-center my-4">
+                <h3 className="text-lg font-semibold text-gray-700">
+                  Formulário de perguntas
+                </h3>
+                <Switch
+                  checked={showFormBuilder}
+                  onChange={setShowFormBuilder}
+                />
+              </div>
+              <AnimatePresence>
+                {showFormBuilder && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <FormBuilder
+                      survey_id={form.id}
+                      survey_type={form.survey_type}
+                      onChange={() => {}}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
+        </motion.div>
       </AnimatePresence>
     </motion.div>
   );
