@@ -276,35 +276,38 @@ export default function ResearchView() {
               }, {});
 
               return Object.entries(grouped).map(([type, group]) => (
-                <div key={type}>
+                <div className="flex flex-col items-center w-full" key={type}>
                   <h3 className="text-sm font-semibold text-gray-800 capitalize mb-2">
                     {type}
                   </h3>
-                  <ul className="list-disc list-inside space-y-1">
                     {group.map((survey) => (
-                      <li key={survey.id}>
-                        {survey.title || `Survey ${survey.id}`}
-                        <span className="text-gray-500 text-xs ml-2">
-                          {survey.description}
-                        </span>
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/researches/${selectedResearch.id}/surveys/${survey.id}`
-                            )
-                          }
-                          className="text-blue-600 hover:text-blue-800 transition ml-2"
-                        >
-                          <span className="material-symbols-outlined text-2xl">
-                            visibility
+                      <div
+                        className="flex flex-row items-center justify-between w-full"
+                        key={survey.id}
+                      >
+                        <div className="flex flex-col w-full items-start justify-start gap-1">  
+                          {survey.title || `Survey ${survey.id}`}
+                          <span className="text-gray-500 text-xs">
+                            {survey.description}
                           </span>
-                        </button>
-                        <span className="text-gray-500 text-xs ml-2">
-                          {survey._syncStatus}
-                        </span>
-                      </li>
+                          </div>
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/researches/${selectedResearch.id}/surveys/${survey.id}`
+                              )
+                            }
+                            className="text-blue-600 hover:text-blue-800 transition ml-2"
+                          >
+                            <span className="material-symbols-outlined text-2xl">
+                              visibility
+                            </span>
+                          </button>
+                          <span className="text-gray-500 text-xs ml-2">
+                            {survey._syncStatus}
+                          </span>
+                      </div>
                     ))}
-                  </ul>
                 </div>
               ));
             })()}
