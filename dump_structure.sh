@@ -8,7 +8,7 @@ set -euo pipefail
 # ROOT_DIR="$(pwd)"
 ROOT_DIR="./src"
 TIMESTAMP="$(date +'%Y-%m-%d_%H-%M-%S')"
-OUTPUT_FILE="${ROOT_DIR}/fastapi_structure_dump_${TIMESTAMP}.txt"
+OUTPUT_FILE="${ROOT_DIR}/nextjs_structure_dump_${TIMESTAMP}.txt"
 
 # extensões que queremos incluir
 EXTENSIONS=(

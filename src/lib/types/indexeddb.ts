@@ -37,13 +37,16 @@ export interface Research {
   status? : boolean;
 }
 
+// src/lib/types/indexeddb.ts
+
 export interface SurveyTimeRange {
   id: string;
-  start_time: string;
-  end_time: string;
   survey_id: string;
+  start_time: string;  // formato: "09:00"
+  end_time: string;    // formato: "10:30"
   survey_type: string;
 }
+
 
 export interface SurveyRegion {
   id: string;

@@ -1,31 +1,16 @@
-import {
-    createItem,
-    getItem,
-    getAllItems,
-    updateItem,
-    deleteItem,
-  } from './indexedDBService';
-  import type { SurveyTimeRange } from '@/lib/types/indexeddb';
-  
-  const store = 'survey_time_ranges' as const;
-  
-  export async function createSurveyTimeRange(data: SurveyTimeRange) {
-    return createItem(store, data);
-  }
-  
-  export async function getSurveyTimeRange(id: string) {
-    return getItem(store, id);
-  }
-  
-  export async function getAllSurveyTimeRanges() {
-    return getAllItems(store);
-  }
-  
-  export async function updateSurveyTimeRange(id: string, data: Partial<SurveyTimeRange>) {
-    return updateItem(store, id, data);
-  }
-  
-  export async function deleteSurveyTimeRange(id: string) {
-    return deleteItem(store, id);
-  }
-  
+// src/repositories/indexeddb/surveyTimeRangeRepository.ts
+
+import { SurveyTimeRange } from '@/lib/types/indexeddb';
+import { getAllItems, createItem, deleteItem } from './indexedDBService';
+
+export async function getAllSurveyTimeRanges(): Promise<SurveyTimeRange[]> {
+  return await getAllItems('survey_time_ranges');
+}
+
+export async function createSurveyTimeRange(range: SurveyTimeRange) {
+  return await createItem('survey_time_ranges', range);
+}
+
+export async function deleteSurveyTimeRange(id: string) {
+  return await deleteItem('survey_time_ranges', id);
+}
