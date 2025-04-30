@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Switch from "@/components/ui/Switch";
 import MultiSelect from "@/components/ui/Multiselect/Multiselect";
@@ -21,8 +21,16 @@ export default function CollaboratorSelector({
     loading,
   } = useSurveyContributors(survey_id);
 
-  const [useAllFromResearch, setUseAllFromResearch] = useState(true);
+  // Inicializa como true apenas se não houver colaboradores
+  const [useAllFromResearch, setUseAllFromResearch] = useState(() => contributors.length === 0);
   const [processingIds, setProcessingIds] = useState(new Set());
+
+  // Atualiza o estado inicial do switch se surgirem colaboradores
+  useEffect(() => {
+    if (contributors.length > 0 && useAllFromResearch) {
+      setUseAllFromResearch(false);
+    }
+  }, [contributors]);
 
   const selectedCollaborators = useMemo(() => {
     return contributors.map((c) => {
@@ -38,8 +46,6 @@ export default function CollaboratorSelector({
   }, [contributors, availableCollaborators]);
 
   const handleToggleAll = async (checked) => {
-    setUseAllFromResearch(checked);
-
     if (checked && contributors.length > 0) {
       const idsToRemove = contributors.map((c) => c.user_id);
       setProcessingIds(new Set(idsToRemove));
@@ -50,6 +56,7 @@ export default function CollaboratorSelector({
       );
       setProcessingIds(new Set());
     }
+    setUseAllFromResearch(checked);
   };
 
   const handleSelectChange = async (newSelected) => {
@@ -88,7 +95,7 @@ export default function CollaboratorSelector({
       return newSet;
     });
   };
-  
+
   return (
     <div className="rounded-lg space-y-4">
       <div className="flex items-center justify-between px-4 py-3">
@@ -101,7 +108,10 @@ export default function CollaboratorSelector({
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                   <button>
-                    <HelpCircle className="text-gray-400 hover:text-gray-600 transition" size={16} />
+                    <HelpCircle
+                      className="text-gray-400 hover:text-gray-600 transition"
+                      size={16}
+                    />
                   </button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
@@ -110,7 +120,8 @@ export default function CollaboratorSelector({
                     className="z-50 px-3 py-2 text-sm bg-gray-800 text-white rounded-md shadow-lg max-w-xs"
                     sideOffset={6}
                   >
-                    Defina manualmente os colaboradores ou use todos os que já fazem parte da pesquisa.
+                    Defina manualmente os colaboradores ou use todos os que já
+                    fazem parte da pesquisa.
                     <Tooltip.Arrow className="fill-gray-800" />
                   </Tooltip.Content>
                 </Tooltip.Portal>
@@ -123,7 +134,12 @@ export default function CollaboratorSelector({
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-700 whitespace-nowrap">Todos da Pesquisa</span>
-          <Switch checked={useAllFromResearch} onChange={handleToggleAll} type="checkbox" />
+          <Switch
+            checked={useAllFromResearch}
+            onChange={handleToggleAll}
+            type="checkbox"
+            disabled={processingIds.size > 0}
+          />
         </div>
       </div>
 
