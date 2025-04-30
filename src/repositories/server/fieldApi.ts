@@ -1,3 +1,4 @@
+// repositories/server/fieldApi.ts
 import { Field } from '@/lib/types/indexeddb';
 
 const baseUrl = '/api/fields';
@@ -6,31 +7,50 @@ export async function getFields(survey_id: string, survey_type: string): Promise
   const url = `${baseUrl}?survey_id=${survey_id}&survey_type=${survey_type}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Erro ao buscar campos');
-  return res.json();
+  const data = await res.json();
+  return data.fields || [];
 }
 
-export async function createField(data: Field): Promise<Field> {
-  const res = await fetch(`${baseUrl}/create`, {
+export async function createField(
+  survey_id: string,
+  survey_type: string,
+  payload: Partial<Field>
+): Promise<Field> {
+  const url = `${baseUrl}?survey_id=${survey_id}&survey_type=${survey_type}`;
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error('Erro ao criar campo');
-  return res.json();
+  const data = await res.json();
+  return data.field;
 }
 
-export async function updateField(data: Field): Promise<Field> {
-  const res = await fetch(`${baseUrl}/update`, {
+export async function updateField(
+  field_id: string,
+  survey_id: string,
+  survey_type: string,
+  payload: Partial<Field>
+): Promise<Field> {
+  const url = `${baseUrl}?field_id=${field_id}&survey_id=${survey_id}&survey_type=${survey_type}`;
+  const res = await fetch(url, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error('Erro ao atualizar campo');
-  return res.json();
+  const data = await res.json();
+  return data.field;
 }
 
-export async function deleteField(params: { field_id: string, survey_id: string, survey_type: string }): Promise<{ message: string }> {
-  const res = await fetch(`${baseUrl}/delete?` + new URLSearchParams(params), {
+export async function deleteField(
+  field_id: string,
+  survey_id: string,
+  survey_type: string
+): Promise<{ message: string }> {
+  const params = new URLSearchParams({ field_id, survey_id, survey_type });
+  const res = await fetch(`${baseUrl}?${params}`, {
     method: 'DELETE',
   });
   if (!res.ok) throw new Error('Erro ao deletar campo');

@@ -1,52 +1,113 @@
-// src/hooks/useFields.ts
 import { useEffect, useState } from "react";
 import { Field } from "@/lib/types/indexeddb";
-import { createField } from "@/repositories/server/fieldApi";
 import {
-  createItem,
-  getAllItems,
-} from "@/repositories/indexeddb/indexedDBService";
+  getFields as getRemoteFields,
+  createField as createRemoteField,
+  updateField as updateRemoteField,
+  deleteField as deleteRemoteField,
+} from "@/repositories/server/fieldApi";
+import {
+  createField as createLocalField,
+  getAllFields as getAllLocalFields,
+  updateField as updateLocalField,
+  deleteField as deleteLocalField,
+} from "@/repositories/indexeddb/fieldRepository";
+import { getUnsyncedItems, saveUnsyncedItem } from "@/lib/db";
+import { v4 as uuidv4 } from "uuid";
 
-export function useFields() {
-  type LocalField = Omit<Field, "id"> & {
-    id?: string;
-    _syncStatus?: "pending" | "synced" | "error";
-  };
-  const [fields, setFields] = useState<LocalField[]>([]);
-  const [loading, setLoading] = useState(true);
+export function useFields(survey_id: string, survey_type: string) {
+  const [fields, setFields] = useState<Field[]>([]);
+  const [unsyncedFields, setUnsyncedFields] = useState<Field[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const data = await getAllItems("fields");
-        setFields(data);
-      } catch (err) {
-        setError("Erro ao carregar campos");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+    fetchUnsyncedFields();
+    fetchFields();
+  }, [survey_id, survey_type]);
 
-  const addField = async (field: Field) => {
-    const isOnline = typeof window !== "undefined" && navigator.onLine;
-    const newField: LocalField = {
-      ...field,
-      _syncStatus: isOnline ? "synced" : "pending",
-    };
-    setFields((prev) => [...prev, newField]);
-
+  const fetchUnsyncedFields = async () => {
     try {
-      await createItem("fields", newField);
-      if (isOnline) await createField(field);
-    } catch {
-      const errorField: LocalField = { ...field, _syncStatus: "error" };
-      await createItem("fields", errorField);
+      const unsynced = await getUnsyncedItems();
+      const filtered = unsynced
+        .filter((item) => item.store === "fields")
+        .map((item) => item.payload as Field);
+      setUnsyncedFields(filtered);
+    } catch (err) {
+      console.error("[Fields] Erro ao buscar pendentes:", err);
     }
   };
 
-  return { fields, loading, error, addField };
+  const fetchFields = async () => {
+    setLoading(true);
+    try {
+      const remoteFields = await getRemoteFields(survey_id, survey_type);
+      setFields(remoteFields);
+      await Promise.allSettled(remoteFields.map(createLocalField));
+    } catch (err) {
+      console.warn("[Fields] Falha ao buscar do servidor. Usando local.", err);
+      try {
+        const localFields = await getAllLocalFields();
+        setFields(localFields);
+      } catch (errLocal) {
+        console.error("[Fields] Falha ao buscar local:", errLocal);
+        setError("Erro ao buscar campos localmente");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addField = async (field: Omit<Field, "id">): Promise<Field> => {
+    const newId = uuidv4();
+    const localField: Field = { ...field, id: newId };
+    setFields((prev) => [...prev, localField]);
+
+    try {
+      const created = await createRemoteField(survey_id, survey_type, field);
+      await createLocalField(created);
+      return created;
+    } catch (err) {
+      console.error("[Fields] Falha ao criar remotamente. Salvo local.", err);
+      await saveUnsyncedItem("fields", localField);
+      setUnsyncedFields((prev) => [...prev, localField]);
+      await createLocalField(localField);
+      return localField;
+    }
+  };
+
+  const updateField = async (id: string, updates: Field) => {
+    await updateLocalField(id, updates);
+    setFields((prev) => prev.map((f) => (f.id === id ? { ...f, ...updates } : f)));
+
+    try {
+      await updateRemoteField(id, survey_id, survey_type, updates);
+    } catch (err) {
+      console.error("[Fields] Erro ao atualizar campo:", err);
+      await saveUnsyncedItem("fields", { ...updates, id });
+      setUnsyncedFields((prev) => [...prev, { ...updates, id }]);
+    }
+  };
+
+  const removeField = async (id: string) => {
+    await deleteLocalField(id);
+    setFields((prev) => prev.filter((f) => f.id !== id));
+
+    try {
+      await deleteRemoteField(id, survey_id, survey_type);
+    } catch (err) {
+      console.error("[Fields] Erro ao deletar campo:", err);
+      await saveUnsyncedItem("fields", { id });
+    }
+  };
+
+  return {
+    fields,
+    unsyncedFields,
+    loading,
+    error,
+    addField,
+    updateField,
+    removeField,
+  };
 }
