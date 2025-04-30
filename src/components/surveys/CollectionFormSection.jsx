@@ -184,6 +184,7 @@ export default function CollectionFormSection({
                   <CollaboratorSelector
                     availableCollaborators={users || []}
                     survey_id={form.id}
+                    survey_type={form.survey_type}
                   />
 
                   <FormBuilder

@@ -33,7 +33,7 @@ export default function MicroRegionEditor({ location, survey_id, survey_type }) 
   };
 
   useEffect(() => {
-    console.log("Survey Regions:", surveyRegions);
+    // console.log("Survey Regions:", surveyRegions);
   }, [surveyRegions]);
 
   return (

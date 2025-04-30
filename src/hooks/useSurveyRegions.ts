@@ -49,7 +49,7 @@ export function useSurveyRegions(survey_id: string) {
     setLoading(true);
     try {
       const remoteRegions = await getRemoteSurveyRegions(survey_id);
-      // console.log("[App] Regiões remotas:", remoteRegions);
+      
       setSurveyRegions(remoteRegions);
       await Promise.allSettled(
         remoteRegions.map((r) => createLocalSurveyRegion(r))
@@ -70,17 +70,14 @@ export function useSurveyRegions(survey_id: string) {
   };
 
   const addSurveyRegion = async (region: SurveyRegion): Promise<SurveyRegion> => {
-    const newId = uuidv4();
-    const localRegion: SurveyRegion = { ...region, id: newId };
-
-    setSurveyRegions((prev) => [...prev, localRegion]);
-
     try {
-      console.log("[App] Criando região local:", region);
       const created = await createRemoteSurveyRegion(region);
       await createLocalSurveyRegion(created);
+      setSurveyRegions((prev) => [...prev, created]);
       return created;
     } catch (error) {
+      const newId = uuidv4();
+      const localRegion: SurveyRegion = { ...region, id: newId };
       console.error("[App] Erro ao criar região:", error);
       await saveUnsyncedItem("survey_regions", localRegion);
       setUnSyncedRegions((prev) => [...prev, localRegion]);

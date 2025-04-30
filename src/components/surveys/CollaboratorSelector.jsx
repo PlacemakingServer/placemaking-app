@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Switch from "@/components/ui/Switch";
 import MultiSelect from "@/components/ui/Multiselect/Multiselect";
@@ -9,8 +9,11 @@ import { useSurveyContributors } from "@/hooks/useSurveyContributors";
 
 export default function CollaboratorSelector({
   availableCollaborators = [],
-  survey_id
+  survey_id,
+  survey_type,
 }) {
+  if (!Array.isArray(availableCollaborators) || !survey_id || !survey_type) return null;
+
   const {
     contributors,
     addSurveyContributor,
@@ -19,55 +22,73 @@ export default function CollaboratorSelector({
   } = useSurveyContributors(survey_id);
 
   const [useAllFromResearch, setUseAllFromResearch] = useState(true);
-  const [selectedCollaborators, setSelectedCollaborators] = useState([]);
+  const [processingIds, setProcessingIds] = useState(new Set());
 
-  useEffect(() => {
+  const selectedCollaborators = useMemo(() => {
+    return contributors.map((c) => {
+      const user = availableCollaborators.find((u) => u.value === c.user_id);
+      return {
+        value: c.user_id,
+        label: user?.label || c.user_id,
+        email: user?.email || "—",
+        role: user?.role || "—",
+        status: user?.status || "—",
+      };
+    });
+  }, [contributors, availableCollaborators]);
 
-    const transformed = contributors.map((c) => ({
-      value: c.contributor_id,
-      label: c.name,
-      email: c.email,
-      role: c.role,
-      status: c.status,
-    }));
-    setSelectedCollaborators(transformed);
-  }, [contributors]);
-
-  const handleToggleAll = (checked) => {
+  const handleToggleAll = async (checked) => {
     setUseAllFromResearch(checked);
-    if (!checked) {
-      setSelectedCollaborators([]);
+
+    if (checked && contributors.length > 0) {
+      const idsToRemove = contributors.map((c) => c.user_id);
+      setProcessingIds(new Set(idsToRemove));
+      await Promise.all(
+        idsToRemove.map((id) =>
+          removeSurveyContributor({ survey_id, contributor_id: id })
+        )
+      );
+      setProcessingIds(new Set());
     }
   };
-
-  useEffect(() => {
-    console.log("availableCollaborators", availableCollaborators);
-  }, [availableCollaborators]);
 
   const handleSelectChange = async (newSelected) => {
     const newIds = new Set(newSelected.map((c) => c.value));
-    const oldIds = new Set(selectedCollaborators.map((c) => c.value));
+    const currentIds = new Set(contributors.map((c) => c.user_id));
 
-    const toAdd = newSelected.filter((c) => !oldIds.has(c.value));
-    const toRemove = selectedCollaborators.filter((c) => !newIds.has(c.value));
+    const toAdd = [...newIds].filter((id) => !currentIds.has(id));
+    const toRemove = [...currentIds].filter((id) => !newIds.has(id));
 
-    for (const user of toAdd) {
-      await addSurveyContributor({
-        contributor_id: user.value,
-        survey_id,
-      });
-    }
+    setProcessingIds(new Set([...toAdd, ...toRemove]));
 
-    for (const user of toRemove) {
-      await removeSurveyContributor({
-        survey_id,
-        contributor_id: user.value,
-      });
-    }
+    await Promise.all([
+      ...toAdd.map((userId) =>
+        addSurveyContributor({
+          user_id: userId,
+          survey_id,
+          survey_type,
+          instruction: "Pesquisador",
+        })
+      ),
+      ...toRemove.map((userId) =>
+        removeSurveyContributor({ survey_id, contributor_id: userId })
+      ),
+    ]);
 
-    setSelectedCollaborators(newSelected);
+    setProcessingIds(new Set());
   };
 
+  const handleRemove = async (userId) => {
+    if (processingIds.has(userId)) return;
+    setProcessingIds((prev) => new Set(prev).add(userId));
+    await removeSurveyContributor({ survey_id, contributor_id: userId });
+    setProcessingIds((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(userId);
+      return newSet;
+    });
+  };
+  
   return (
     <div className="rounded-lg space-y-4">
       <div className="flex items-center justify-between px-4 py-3">
@@ -80,7 +101,7 @@ export default function CollaboratorSelector({
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                   <button>
-                    <HelpCircle size={16} className="text-gray-400 hover:text-gray-600 transition" />
+                    <HelpCircle className="text-gray-400 hover:text-gray-600 transition" size={16} />
                   </button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
@@ -121,9 +142,12 @@ export default function CollaboratorSelector({
               value={selectedCollaborators}
               onChange={handleSelectChange}
               placeholder="Selecione colaboradores"
+              closeMenuOnSelect
             />
 
-            {loading && <p className="text-sm text-gray-500">Carregando colaboradores...</p>}
+            {loading && (
+              <p className="text-sm text-gray-500">Carregando colaboradores...</p>
+            )}
 
             {selectedCollaborators.length > 0 && (
               <div className="mt-6 border-t pt-4 space-y-2">
@@ -133,7 +157,7 @@ export default function CollaboratorSelector({
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[14rem] overflow-y-auto">
                   {selectedCollaborators.map((user) => (
                     <UserCardCompact
-                      key={user.value}
+                      key={`${survey_id}-${user.value}`}
                       user={{
                         id: user.value,
                         name: user.label,
@@ -141,6 +165,10 @@ export default function CollaboratorSelector({
                         role: user.role,
                         status: user.status,
                       }}
+                      showRemoveButton
+                      borderColor="border-blue-500"
+                      onRemove={() => handleRemove(user.value)}
+                      disabled={processingIds.has(user.value)}
                     />
                   ))}
                 </div>
