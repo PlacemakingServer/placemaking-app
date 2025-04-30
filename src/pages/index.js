@@ -9,16 +9,25 @@ import Button from "@/components/ui/Button";
 import { VARIANTS } from "@/config/colors";
 import { useResearches } from "@/hooks/useResearches"; // << usando o hook certo!
 import { Info } from "lucide-react";
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 export default function Home() {
   const { researches, loading } = useResearches(); // << usando hook
   const [filters, setFilters] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [showCategory, setShowCategory] = useState({
-    completed: true,
+    completed: false,
     ongoing: true,
     future: true,
   });
+  const [selectedResearch, setSelectedResearch] = useState(null);
   const [page, setPage] = useState({ completed: 1, ongoing: 1, future: 1 });
   const perPage = 3;
   const { setIsLoading } = useLoading();
@@ -33,6 +42,88 @@ export default function Home() {
     future: [],
   };
 
+  // Mockando os dados para o gráfico
+
+  const charData = [
+    {
+      id: 1,
+      title: "Uso do espaço público",
+      description:
+        "Com que frequência você utiliza os espaços públicos da sua região?",
+      chartData: [
+        { label: "Diariamente", value: 40 },
+        { label: "Semanalmente", value: 30 },
+        { label: "Raramente", value: 20 },
+        { label: "Nunca", value: 10 },
+      ],
+    },
+    {
+      id: 2,
+      title: "Atividades preferidas",
+      description: "Quais atividades você mais realiza nos espaços públicos?",
+      chartData: [
+        { label: "Caminhada", value: 45 },
+        { label: "Lazer com crianças", value: 25 },
+        { label: "Encontros sociais", value: 20 },
+        { label: "Atividades físicas", value: 10 },
+      ],
+    },
+    {
+      id: 3,
+      title: "Sensação de segurança",
+      description:
+        "Como você avalia a segurança nos espaços públicos da sua área?",
+      chartData: [
+        { label: "Muito seguro", value: 15 },
+        { label: "Relativamente seguro", value: 50 },
+        { label: "Pouco seguro", value: 25 },
+        { label: "Inseguro", value: 10 },
+      ],
+    },
+    {
+      id: 4,
+      title: "Infraestrutura percebida",
+      description: "Como você avalia a infraestrutura dos espaços públicos?",
+      chartData: [
+        { label: "Excelente", value: 10 },
+        { label: "Boa", value: 35 },
+        { label: "Regular", value: 30 },
+        { label: "Ruim", value: 25 },
+      ],
+    },
+  ];
+
+  // Cores para os gráficos
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28EFF", "#FF6699"];
+
+  // Paginação das Researches do Footer
+  const itemsPerPage = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const totalPages = Math.ceil(researches.length / itemsPerPage);
+
+  const nextPage = () => {
+    if (endIndex < researches.length) setCurrentPage((prev) => prev + 1);
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
+  //Paginação dos gráficos
+
+  const [chartPage, setChartPage] = useState(0);
+  const totalChartPages = charData.length;
+
+  const nextChart = () => {
+    if (chartPage < totalChartPages - 1) setChartPage((prev) => prev + 1);
+  };
+
+  const prevChart = () => {
+    if (chartPage > 0) setChartPage((prev) => prev - 1);
+  };
+
   researches.forEach((research) => {
     const endDate = new Date(research.end_date);
     const startDate = new Date(research.release_date);
@@ -44,6 +135,10 @@ export default function Home() {
       categorizedResearches.ongoing.push(research);
     }
   });
+
+  const handleResearchClick = (research) => {
+    setSelectedResearch(research);
+  };
 
   const filterAndSortResearches = (list) => {
     return list
@@ -90,7 +185,7 @@ export default function Home() {
           >
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
               <h2 className="text-3xl font-bold text-gray-800">
-                Situação das Pesquisas
+                Suas Pesquisas
               </h2>
             </div>
 
@@ -253,6 +348,172 @@ export default function Home() {
                 );
               })
             )}
+            <div className="flex flex-col gap-2">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-row items-center gap-2 bg-slate-300 rounded-full px-2 py-1 text-sm text-gray-500 w-50"
+              >
+                <span className="material-symbols-outlined text-gray-500">
+                  search
+                </span>
+                <p className="text-sm text-gray-500">
+                  Busque aqui por título, descrição ou local
+                </p>
+              </motion.div>
+              <div className="grid grid-cols-2 gap-4 mt-10">
+                <div className="flex flex-col items-center gap-2">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full h-full bg-white shadow-md rounded-lg p-4 space-y-2"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-gray-700">
+                        Pesquisas
+                      </h3>
+                      <div className="flex flex-row items-center justify-between gap-4 px-2 py-3">
+                        <span className="material-symbols-outlined text-gray-500">
+                          info
+                        </span>
+                        <p className="text-sm text-gray-500">
+                          Clique em uma pesquisa para ver mais detalhes ou
+                          responder.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Lista de pesquisas */}
+                    <ul className="space-y-2 max-h-64 overflow-y-auto">
+                      {researches
+                        .slice(startIndex, endIndex)
+                        .map((research) => (
+                          <li
+                            key={research.id}
+                            className="p-3 border border-gray-200 rounded hover:bg-gray-100 cursor-pointer"
+                            onClick={() => handleResearchClick(research)}
+                          >
+                            <p className="font-medium">{research.title}</p>
+                            <p className="text-sm text-gray-500">
+                              {research.description}
+                            </p>
+                          </li>
+                        ))}
+                    </ul>
+
+                    {/* Paginação */}
+                    <div className="flex justify-between items-center pt-2 text-sm">
+                      <button
+                        onClick={prevPage}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 bg-slate-100 rounded disabled:opacity-50"
+                      >
+                        Anterior
+                      </button>
+                      <span className="text-gray-600">
+                        Página {currentPage} - {totalPages}
+                      </span>
+                      <button
+                        onClick={nextPage}
+                        disabled={endIndex >= researches.length}
+                        className="px-3 py-1 bg-slate-100 rounded disabled:opacity-50"
+                      >
+                        Próxima
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+                <div className="flex items-center gap-2 w-full h-full justify-center">
+                  {selectedResearch ? (
+                    <motion.div
+                      key={selectedResearch.id}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="w-full bg-white shadow-md rounded-lg p-4 space-y-4 h-full"
+                    >
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold text-gray-700">
+                          {selectedResearch.title}
+                        </h3>
+                        <button
+                          className="text-sm text-blue-600 underline"
+                          onClick={() => viewResponses(selectedResearch.id)}
+                        >
+                          Ver respostas
+                        </button>
+                      </div>
+                      <div className="w-full max-h-80 h-full flex flex-col items-center justify-center gap-2">
+                        {charData.length > 0 && (
+                          <>
+                            <h2 className="text-base font-semibold text-gray-700 mb-1">
+                              {charData[chartPage].title}
+                            </h2>
+                            <span className="text-sm text-gray-500">
+                              {charData[chartPage].description}
+                            </span>
+
+                            <div className="w-full h-60 my-2">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                  <Pie
+                                    data={charData[chartPage].chartData}
+                                    dataKey="value"
+                                    nameKey="label"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={60}
+                                    fill="#8884d8"
+                                    label
+                                  >
+                                    {charData[chartPage].chartData.map(
+                                      (_, index) => (
+                                        <Cell
+                                          key={`cell-${index}`}
+                                          fill={COLORS[index % COLORS.length]}
+                                        />
+                                      )
+                                    )}
+                                  </Pie>
+                                  <Tooltip />
+                                  <Legend verticalAlign="bottom" height={2} fontSize={1} />
+                                </PieChart>
+                              </ResponsiveContainer>
+                            </div>
+
+                            <div className="flex justify-between text-sm mt-2">
+                              <button
+                                onClick={prevChart}
+                                disabled={chartPage === 0}
+                                className="px-3 py-1 bg-slate-100 rounded disabled:opacity-50"
+                              >
+                                Anterior
+                              </button>
+                              <span className="text-gray-600">
+                                Gráfico {chartPage + 1} de {totalChartPages}
+                              </span>
+                              <button
+                                onClick={nextChart}
+                                disabled={chartPage >= totalChartPages - 1}
+                                className="px-3 py-1 bg-slate-100 rounded disabled:opacity-50"
+                              >
+                                Próximo
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <div className="text-sm text-gray-400 italic">
+                      Selecione uma pesquisa
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </motion.section>
         </main>
       </div>
