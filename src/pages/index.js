@@ -8,7 +8,7 @@ import ResearchCardDashboard from "@/components/ui/Research/ResearchCardDashboar
 import Button from "@/components/ui/Button";
 import { VARIANTS } from "@/config/colors";
 import { useResearches } from "@/hooks/useResearches"; // << usando o hook certo!
-import { Info } from "lucide-react"; 
+import { Info } from "lucide-react";
 
 export default function Home() {
   const { researches, loading } = useResearches(); // << usando hook
@@ -69,7 +69,7 @@ export default function Home() {
     >
       <div className="min-h-screen bg-transparent">
         <main className="p-4 md:p-8 max-w-8xl mx-auto">
-        <motion.div
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -77,8 +77,9 @@ export default function Home() {
           >
             <Info size={24} className="text-blue-500" />
             <div className="text-sm font-medium">
-              <strong>Aviso:</strong> Esta página ainda está em desenvolvimento. 
-              Em breve você verá aqui as pesquisas futuras e resumos de dados para resposta rápida.
+              <strong>Aviso:</strong> Esta página ainda está em desenvolvimento.
+              Em breve você verá aqui as pesquisas futuras e resumos de dados
+              para resposta rápida.
             </div>
           </motion.div>
           <motion.section
@@ -151,17 +152,25 @@ export default function Home() {
               onClear={() => {
                 setFilters("");
                 setSortOrder("asc");
-                setShowCategory({ completed: true, ongoing: true, future: true });
+                setShowCategory({
+                  completed: true,
+                  ongoing: true,
+                  future: true,
+                });
               }}
             />
 
             {loading ? (
-              <p className="text-center text-gray-500 mt-10">Carregando pesquisas...</p>
+              <p className="text-center text-gray-500 mt-10">
+                Carregando pesquisas...
+              </p>
             ) : (
               Object.entries(categorizedResearches).map(([key, list]) => {
                 if (!showCategory[key]) return null;
                 const filteredAndSorted = filterAndSortResearches(list);
-                const totalPages = Math.ceil(filteredAndSorted.length / perPage);
+                const totalPages = Math.ceil(
+                  filteredAndSorted.length / perPage
+                );
 
                 const handlePrevious = () => {
                   setPage((prev) => ({
@@ -206,7 +215,10 @@ export default function Home() {
                               animate={{ opacity: 1 }}
                               transition={{ duration: 0.3 }}
                             >
-                              <ResearchCardDashboard showButton={false} research={research} />
+                              <ResearchCardDashboard
+                                showButton={false}
+                                research={research}
+                              />
                             </motion.div>
                           ))}
                       </motion.div>
