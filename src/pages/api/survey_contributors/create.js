@@ -10,6 +10,7 @@ const handler = async (req, res) => {
     if (!token) {
       return res.status(401).json({ error: "Token não fornecido" });
     }
+    console.log("bodyyyy:", req.body);
 
     const { survey_id, survey_type, user_id, instruction } = req.body;
     if (!survey_id || !survey_type || !user_id || !instruction) {

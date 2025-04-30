@@ -181,7 +181,10 @@ export default function CollectionFormSection({
                     setTimeRanges={setTimeRanges}
                   />
 
-                  <CollaboratorSelector availableCollaborators={users || []} />
+                  <CollaboratorSelector
+                    availableCollaborators={users || []}
+                    survey_id={form.id}
+                  />
 
                   <FormBuilder
                     survey_id={form.id}
