@@ -62,9 +62,15 @@ export default function MicroRegionEditor({ location, survey_id, survey_type }) 
             </Tooltip.Provider>
           </div>
           {location_title && (
-            <p className="text-sm text-gray-600">
-              Localização: <strong>{location_title}</strong>
-            </p>
+           <p className="text-sm text-gray-600">
+           Localização:{" "}
+           <strong>
+             {location_title.length > 20
+               ? `${location_title.slice(0, 20)}...`
+               : location_title}
+           </strong>
+         </p>
+         
           )}
         </div>
         <Switch checked={showMicroRegions} onChange={setShowMicroRegions} type="arrow" />
