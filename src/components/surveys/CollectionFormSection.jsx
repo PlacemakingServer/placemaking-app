@@ -38,7 +38,6 @@ export default function CollectionFormSection({
     survey_type,
   });
   const [isEdit, setIsEdit] = useState(false);
-  const [timeRanges, setTimeRanges] = useState([]);
   const [showLocationForm, setShowLocationForm] = useState(false);
   const [showSurveyInformation, setShowSurveyInformation] = useState(false);
   const [showInitialInfo, setShowInitialInfo] = useState(true);
@@ -198,8 +197,8 @@ export default function CollectionFormSection({
                   survey_type={form.survey_type}
                 />
                 <TimeRanges
-                  timeRanges={timeRanges}
-                  setTimeRanges={setTimeRanges}
+                  survey_id={form.id}
+                  survey_type={form.survey_type}
                 />
               </motion.div>
             )}

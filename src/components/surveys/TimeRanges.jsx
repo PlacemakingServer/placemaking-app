@@ -1,29 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Switch from "@/components/ui/Switch";
 import { Clock, Plus, Trash2 } from "lucide-react";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import TimeSelectorModal from "@/components/surveys/TimeSelectorModal";
+import { useSurveyTimeRanges } from "@/hooks/useSurveyTimeRanges";
 
-export default function TimeRanges({ timeRanges = [], setTimeRanges }) {
+export default function TimeRanges({ survey_id, survey_type }) {
+  const {
+    ranges,
+    unSyncedRanges,
+    loading,
+    addSurveyTimeRange,
+    deleteSurveyTimeRange,
+  } = useSurveyTimeRanges(survey_id);
+
   const [showTimeRanges, setShowTimeRanges] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  const handleAddTime = (selectedTime) => {
-    if (!timeRanges.includes(selectedTime)) {
-      const sorted = [...timeRanges, selectedTime].sort();
-      setTimeRanges(sorted);
-    }
-    setShowModal(false);
+  const handleAddTime = async ({ start_time, end_time }) => {
+    await addSurveyTimeRange({
+      start_time,
+      end_time,
+      survey_id,
+      survey_type,
+    });
   };
 
-  const handleDelete = (time) => {
-    setTimeRanges(timeRanges.filter((t) => t !== time));
+  const handleDelete = async (id) => {
+    await deleteSurveyTimeRange(id);
   };
 
   return (
     <div className="rounded-lg space-y-4">
-      {/* Cabeçalho com tooltip e switch */}
       <div className="flex items-center justify-between px-4 py-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -46,7 +55,8 @@ export default function TimeRanges({ timeRanges = [], setTimeRanges }) {
                     className="z-50 px-3 py-2 text-sm bg-gray-800 text-white rounded-md shadow-lg max-w-xs"
                     sideOffset={6}
                   >
-                    Defina os horários exatos de atuação dos pesquisadores em campo.
+                    Defina os horários exatos de atuação dos pesquisadores em
+                    campo.
                     <Tooltip.Arrow className="fill-gray-800" />
                   </Tooltip.Content>
                 </Tooltip.Portal>
@@ -92,21 +102,24 @@ export default function TimeRanges({ timeRanges = [], setTimeRanges }) {
               </button>
             </div>
 
-            {/* Lista */}
-            {timeRanges.length > 0 ? (
+            {loading ? (
+              <p className="text-sm text-gray-400 text-center">
+                Carregando horários...
+              </p>
+            ) : ranges.length > 0 ? (
               <ul className="flex flex-wrap gap-2">
-                {timeRanges.map((time, idx) => (
+                {ranges.map((r) => (
                   <motion.li
-                    key={time + idx}
+                    key={r.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
                     className="flex items-center gap-2 px-3 py-1 bg-gray-100 border border-gray-300 rounded-full text-sm text-gray-800 shadow-sm"
                   >
-                    {time}
+                    {r.start_time} → {r.end_time}
                     <button
-                      onClick={() => handleDelete(time)}
+                      onClick={() => handleDelete(r.id)}
                       className="text-red-500 hover:text-red-600 transition"
                     >
                       <Trash2 size={14} />

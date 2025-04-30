@@ -4,28 +4,25 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
 export default function TimeSelectorModal({ isOpen, onClose, onSelectTime }) {
-  const [hour, setHour] = useState("09");
-  const [minute, setMinute] = useState("00");
+  const [startHour, setStartHour] = useState("09");
+  const [startMinute, setStartMinute] = useState("00");
+  const [endHour, setEndHour] = useState("10");
+  const [endMinute, setEndMinute] = useState("00");
 
   const handleConfirm = () => {
-    const formatted = `${hour}h${minute}`;
-    onSelectTime(formatted);
+    const start = `${startHour}:${startMinute}`;
+    const end = `${endHour}:${endMinute}`;
+    onSelectTime({ start_time: start, end_time: end });
+    onClose();
   };
 
-  const hours = Array.from({ length: 17 }, (_, i) =>
-    String(i + 6).padStart(2, "0")
-  );
+  const hours = Array.from({ length: 17 }, (_, i) => String(i + 6).padStart(2, "0"));
   const minutes = ["00", "15", "30", "45"];
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <Dialog
-          as="div"
-          open={isOpen}
-          onClose={onClose}
-          className="relative z-50"
-        >
+        <Dialog as="div" open={isOpen} onClose={onClose} className="relative z-50">
           {/* Fundo escurecido */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -45,7 +42,6 @@ export default function TimeSelectorModal({ isOpen, onClose, onSelectTime }) {
               className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl p-6 space-y-6"
             >
               <Dialog.Panel className="w-full space-y-6">
-                {/* Botão de Fechar */}
                 <button
                   onClick={onClose}
                   className="absolute top-3 right-3 bg-red-600 hover:bg-red-700 p-1.5 rounded-full shadow text-white transition"
@@ -54,36 +50,57 @@ export default function TimeSelectorModal({ isOpen, onClose, onSelectTime }) {
                   <X size={16} />
                 </button>
 
-                {/* Título */}
                 <Dialog.Title className="text-lg font-semibold text-gray-800 text-center">
-                  Selecione um horário
+                  Selecione um intervalo de horário
                 </Dialog.Title>
 
                 {/* Selects */}
-                <div className="flex justify-center gap-3 items-center">
-                  <select
-                    value={hour}
-                    onChange={(e) => setHour(e.target.value)}
-                    className="w-24 rounded-md border border-gray-300 px-3 py-2 text-center shadow-sm text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition"
-                  >
-                    {hours.map((h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-lg font-medium text-gray-600">:</span>
-                  <select
-                    value={minute}
-                    onChange={(e) => setMinute(e.target.value)}
-                    className="w-24 rounded-md border border-gray-300 px-3 py-2 text-center shadow-sm text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition"
-                  >
-                    {minutes.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-center gap-3 items-center">
+                    <label className="text-sm font-medium text-gray-600">Início:</label>
+                    <select
+                      value={startHour}
+                      onChange={(e) => setStartHour(e.target.value)}
+                      className="w-20 rounded-md border border-gray-300 px-3 py-2 text-center shadow-sm text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition"
+                    >
+                      {hours.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                    <span className="text-lg font-medium text-gray-600">:</span>
+                    <select
+                      value={startMinute}
+                      onChange={(e) => setStartMinute(e.target.value)}
+                      className="w-20 rounded-md border border-gray-300 px-3 py-2 text-center shadow-sm text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition"
+                    >
+                      {minutes.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex justify-center gap-3 items-center">
+                    <label className="text-sm font-medium text-gray-600">Fim:</label>
+                    <select
+                      value={endHour}
+                      onChange={(e) => setEndHour(e.target.value)}
+                      className="w-20 rounded-md border border-gray-300 px-3 py-2 text-center shadow-sm text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition"
+                    >
+                      {hours.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                    <span className="text-lg font-medium text-gray-600">:</span>
+                    <select
+                      value={endMinute}
+                      onChange={(e) => setEndMinute(e.target.value)}
+                      className="w-20 rounded-md border border-gray-300 px-3 py-2 text-center shadow-sm text-sm focus:ring-2 focus:ring-green-500 focus:outline-none transition"
+                    >
+                      {minutes.map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 {/* Botão de Adicionar */}
