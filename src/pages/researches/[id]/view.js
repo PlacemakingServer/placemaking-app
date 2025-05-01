@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { ChevronDown, ClipboardCopy, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/router";
-import { useLoading } from "@/context/LoadingContext";
-import { useMessage } from "@/context/MessageContext";
 import { VARIANTS } from "@/config/colors";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
@@ -118,19 +116,9 @@ export default function ResearchView() {
           <motion.p>
             <strong>Fim:</strong> {selectedResearch?.end_date}
           </motion.p>
-          <motion.div className="flex justify-between gap-2">
             <motion.p>
               <strong>Criada por:</strong> {author?.name}
             </motion.p>
-
-            <motion.p
-              className={`flex-shrink-0 truncate max-w-[58px] px-2 py-1 text-xs font-semibold rounded justify-end ${
-                VARIANTS[selectedResearch?._syncStatus] || VARIANTS.verde
-              }`}
-            >
-              {selectedResearch?._syncStatus}
-            </motion.p>
-          </motion.div>
         </div>
       </motion.div>
       {/* Seção Mapa com Toggle */}
@@ -277,7 +265,7 @@ export default function ResearchView() {
 
               return Object.entries(grouped).map(([type, group]) => (
                 <div className="flex flex-col items-center w-full" key={type}>
-                  <h3 className="text-sm font-semibold text-gray-800 capitalize mb-2">
+                  <h3 className="text-lg font-semibold text-gray-800 capitalize mb-2">
                     {type}
                   </h3>
                     {group.map((survey) => (

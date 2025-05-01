@@ -41,7 +41,6 @@ export default function ResearchSurvey() {
   const [imageUrl, setImageUrl] = useState("");
   const [copiedRangeId, setCopiedRangeId] = useState(null);
 
-
   const { surveyRegions } = useSurveyRegions(surveyid);
   const { ranges: surveyTimeRanges } = useSurveyTimeRanges(surveyid);
 
@@ -178,8 +177,7 @@ export default function ResearchSurvey() {
                           className="z-50 px-3 py-2 text-sm bg-gray-800 text-white rounded-md shadow-lg max-w-xs"
                           sideOffset={6}
                         >
-                          Divida a coleta em regiões como “Entrada Leste”,
-                          “Praça Central”, etc.
+                          Regiões onde a coleta de dados ocorrerá.
                           <Tooltip.Arrow className="fill-gray-800" />
                         </Tooltip.Content>
                       </Tooltip.Portal>
@@ -241,8 +239,7 @@ export default function ResearchSurvey() {
                           className="z-50 px-3 py-2 text-sm bg-gray-800 text-white rounded-md shadow-lg max-w-xs"
                           sideOffset={6}
                         >
-                          Defina os horários exatos de atuação dos pesquisadores
-                          em campo.
+                          Horários exatos de atuação dos pesquisadores em campo.
                           <Tooltip.Arrow className="fill-gray-800" />
                         </Tooltip.Content>
                       </Tooltip.Portal>
@@ -419,7 +416,7 @@ export default function ResearchSurvey() {
         }
         disabled={isLoading}
         variant="primary"
-        className="w-full sm:w-auto px-6 py-2 mt-4 flex items-center gap-2 text-sm"
+        className="w-fit sm:w-auto px-6 py-2 mt-4 flex items-center gap-2 text-sm"
       >
         <span className="material-symbols-outlined text-base">send</span>
         <span>Responder Pesquisa</span>

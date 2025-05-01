@@ -84,8 +84,8 @@ export default function SidebarDesktop({ userRole }) {
               <Image
                 src="/img/placemaking.png"
                 alt="Logo"
-                width={100}
-                height={40}
+                width={150}
+                height={60}
                 className="object-contain transition-all duration-300"
                 priority
               />

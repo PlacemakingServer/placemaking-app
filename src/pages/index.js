@@ -192,12 +192,11 @@ export default function Home() {
             transition={{ duration: 0.4 }}
             className="bg-transparent rounded-2xl p-6 md:p-8"
           >
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
               <h2 className="text-3xl font-bold text-gray-800">
                 Suas Pesquisas
               </h2>
-            </div>
-
+  
             <FiltersComponent
               showFilters={showFilters}
               setShowFilters={setShowFilters}
@@ -263,7 +262,7 @@ export default function Home() {
                 });
               }}
             />
-
+</div>
             {loading
               ? Array.from({ length: 6 }).map((_, index) => (
                   <ResearchCardSkeleton key={index} />
