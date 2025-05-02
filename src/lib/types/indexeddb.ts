@@ -16,7 +16,7 @@ export interface Field {
   id?: string;
   activity_id: string;
   title: string;
-  input_type: string;
+  input_type_id: string;
   description?: string;
   created_at?: string;
   updated_at?: string;
