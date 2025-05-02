@@ -2,11 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { ChevronDown, ClipboardCopy, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/router";
-import { useLoading } from "@/context/LoadingContext";
-import { useMessage } from "@/context/MessageContext";
 import { VARIANTS } from "@/config/colors";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
+import Switch from "@/components/ui/Switch";
 
 import { useDynamicSurveys } from "@/hooks/useDynamicSurveys";
 import { useFormSurveys } from "@/hooks/useFormSurveys";
@@ -117,19 +116,9 @@ export default function ResearchView() {
           <motion.p>
             <strong>Fim:</strong> {selectedResearch?.end_date}
           </motion.p>
-          <motion.div className="flex justify-between gap-2">
             <motion.p>
               <strong>Criada por:</strong> {author?.name}
             </motion.p>
-
-            <motion.p
-              className={`flex-shrink-0 truncate max-w-[58px] px-2 py-1 text-xs font-semibold rounded justify-end ${
-                VARIANTS[selectedResearch?._syncStatus] || VARIANTS.verde
-              }`}
-            >
-              {selectedResearch?._syncStatus}
-            </motion.p>
-          </motion.div>
         </div>
       </motion.div>
       {/* Seção Mapa com Toggle */}
@@ -139,20 +128,11 @@ export default function ResearchView() {
         transition={{ duration: 0.6 }}
         className="flex flex-col gap-4 p-6 md:p-8 bg-white rounded-lg shadow-md box-border border-2 mt-4 h-fit"
       >
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Mapa</h1>
-          <button
-            onClick={() => setShowMap((prev) => !prev)}
-            className="flex items-center gap-1 text-sm text-blue-600 underline hover:text-blue-800 transition"
-          >
-            <motion.div
-              animate={{ rotate: showMap ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown size={28} />
-            </motion.div>
-          </button>
-        </div>
+        <SectionToggle
+          title="Mapa"
+          isChecked={showMap}
+          onChange={() => setShowMap((prev) => !prev)}
+        />
 
         <AnimatePresence>
           {showMap && selectedResearch?.lat && selectedResearch?.long && (
@@ -181,24 +161,18 @@ export default function ResearchView() {
                   <motion.p>
                     <strong>Longitude:</strong> {selectedResearch?.long}
                   </motion.p>
+                  <button
+                    onClick={handleCopyCoords}
+                    className="flex items-center gap-2 text-sm text-blue-600 underline hover:text-blue-800 transition"
+                  >
+                    {copied ? (
+                      <Check size={16} className="text-green-600" />
+                    ) : (
+                      <ClipboardCopy size={20} />
+                    )}
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={handleCopyCoords}
-                className="flex items-center gap-2 text-sm text-blue-600 underline hover:text-blue-800 transition"
-              >
-                {copied ? (
-                  <>
-                    <Check size={16} className="text-green-600" />
-                    Copiado!
-                  </>
-                ) : (
-                  <>
-                    <ClipboardCopy size={20} />
-                    Copiar localização
-                  </>
-                )}
-              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -210,20 +184,11 @@ export default function ResearchView() {
         transition={{ duration: 0.6 }}
         className="flex flex-col gap-4 p-6 md:p-8 bg-white rounded-lg shadow-md box-border border-2 mt-4 h-fit"
       >
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Colaboradores</h1>
-          <button
-            onClick={() => setShowContributors((prev) => !prev)}
-            className="flex items-center gap-1 text-sm text-blue-600 underline hover:text-blue-800 transition"
-          >
-            <motion.div
-              animate={{ rotate: showContributors ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown size={28} />
-            </motion.div>
-          </button>
-        </div>
+        <SectionToggle
+          title="Colaboradores"
+          isChecked={showContributors}
+          onChange={() => setShowContributors((prev) => !prev)}
+        />
 
         <AnimatePresence>
           {showContributors && (
@@ -265,20 +230,11 @@ export default function ResearchView() {
         transition={{ duration: 0.6 }}
         className="flex flex-col gap-4 p-6 md:p-8 bg-white rounded-lg shadow-md box-border border-2 mt-4 h-fit"
       >
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Coletas</h1>
-          <button
-            onClick={() => setshowSurveys((prev) => !prev)}
-            className="flex items-center gap-1 text-sm text-blue-600 underline hover:text-blue-800 transition"
-          >
-            <motion.div
-              animate={{ rotate: showSurveys ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown size={28} />
-            </motion.div>
-          </button>
-        </div>
+        <SectionToggle
+          title="Coletas"
+          isChecked={showSurveys}
+          onChange={() => setshowSurveys((prev) => !prev)}
+        />
         {showSurveys && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -308,33 +264,38 @@ export default function ResearchView() {
               }, {});
 
               return Object.entries(grouped).map(([type, group]) => (
-                <div key={type}>
-                  <h3 className="text-sm font-semibold text-gray-800 capitalize mb-2">
+                <div className="flex flex-col items-center w-full" key={type}>
+                  <h3 className="text-lg font-semibold text-gray-800 capitalize mb-2">
                     {type}
                   </h3>
-                  <ul className="list-disc list-inside space-y-1">
                     {group.map((survey) => (
-                      <li key={survey.id}>
-                        {survey.title || `Survey ${survey.id}`}
-                        <span className="text-gray-500 text-xs ml-2">
-                          {survey.description}
-                        </span>
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/researches/${selectedResearch.id}/surveys/${survey.id}`
-                            )
-                          }
-                          className="text-blue-600 hover:text-blue-800 transition ml-2"
-                        >
-                          Ver detalhes
-                        </button>
-                        <span className="text-gray-500 text-xs ml-2">
-                          {survey._syncStatus}
-                        </span>
-                      </li>
+                      <div
+                        className="flex flex-row items-center justify-between w-full"
+                        key={survey.id}
+                      >
+                        <div className="flex flex-col w-full items-start justify-start gap-1">  
+                          {survey.title || `Survey ${survey.id}`}
+                          <span className="text-gray-500 text-xs">
+                            {survey.description}
+                          </span>
+                          </div>
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/researches/${selectedResearch.id}/surveys/${survey.id}`
+                              )
+                            }
+                            className="text-blue-600 hover:text-blue-800 transition ml-2"
+                          >
+                            <span className="material-symbols-outlined text-2xl">
+                              visibility
+                            </span>
+                          </button>
+                          <span className="text-gray-500 text-xs ml-2">
+                            {survey._syncStatus}
+                          </span>
+                      </div>
                     ))}
-                  </ul>
                 </div>
               ));
             })()}
@@ -342,6 +303,15 @@ export default function ResearchView() {
         )}
       </motion.div>
     </motion.section>
+  );
+}
+
+function SectionToggle({ title, isChecked, onChange }) {
+  return (
+    <div className="flex justify-between items-center">
+      <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
+      <Switch type="arrow" checked={isChecked} onChange={onChange} />
+    </div>
   );
 }
 

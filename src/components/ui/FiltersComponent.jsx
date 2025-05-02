@@ -115,7 +115,7 @@ export default function FiltersComponent({
   return (
     <div>
       {/* DESKTOP: botão de expandir/recolher */}
-      <div className="hidden lg:flex justify-start mb-2">
+      <div className="hidden lg:flex justify-end mb-2">
         <Button
           variant="light"
           onClick={() => setShowFilters((prev) => !prev)}
@@ -135,7 +135,7 @@ export default function FiltersComponent({
           showFilters ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
-        <section className="mb-6 border border-gray-200 rounded-xl shadow-sm p-4 bg-white">
+        <section className="mb-6 border border-gray-200 rounded-xl shadow-sm p-4 bg-white fixed right-10">
           {renderFilterContent()}
         </section>
       </div>
