@@ -7,9 +7,16 @@ import SelectedFormFields from "@/components/forms/SelectedFormFields";
 import MultipleChoiceEditor from "@/components/forms/MultipleChoiceEditor";
 import Switch from "@/components/ui/Switch";
 import { useInputTypes } from "@/hooks/useInputTypes";
+import { useFields } from "@/hooks/useFields";
 
 export default function FormBuilder({ survey_id, survey_type, onSubmit }) {
   const { types: inputTypes, loading } = useInputTypes();
+  const {
+    fields,
+    addField,
+    updateField,
+    deleteField,
+  } = useFields(survey_id, survey_type);
 
   const [formFields, setFormFields] = useState([]);
   const [newOptions, setNewOptions] = useState([]);
@@ -21,39 +28,14 @@ export default function FormBuilder({ survey_id, survey_type, onSubmit }) {
   });
 
   useEffect(() => {
-    // fetchFields();
-  }, []);
-
-  useEffect(() => {
-    if (inputTypes.length === 0 || formFields.length === 0) return;
-
-    const updatedFields = formFields.map((field) => {
+    const enriched = fields.map((field) => {
       const inputType = inputTypes.find((t) => t.id === field.input_type_id);
       return inputType
         ? { ...field, input_type_name: inputType.name, stored_as: inputType.stored_as }
         : field;
     });
-
-    setFormFields(updatedFields);
-  }, [inputTypes, formFields]);
-
-  const fetchFields = async () => {
-    try {
-      const res = await fetch(`/api/fields?survey_id=${survey_id}&survey_type=${survey_type}`);
-      const data = await res.json();
-      if (data.fields) {
-        const formattedFields = data.fields.map((field) => ({
-          ...field,
-          input_type: field.input_type_id,
-          input_type_name: null,
-          stored_as: null,
-        }));
-        setFormFields(formattedFields);
-      }
-    } catch (err) {
-      console.error("Erro ao buscar campos:", err);
-    }
-  };
+    setFormFields(enriched);
+  }, [fields, inputTypes]);
 
   const handleCreateOption = async (payload) => {
     try {
@@ -69,43 +51,47 @@ export default function FormBuilder({ survey_id, survey_type, onSubmit }) {
   const handleSaveQuestion = async () => {
     if (!newQuestion.title || !newQuestion.inputType) return;
 
+    const fieldPayload = {
+      title: newQuestion.title,
+      description: newQuestion.title,
+      input_type_id: newQuestion.inputType.value,
+      input_type: newQuestion.inputType.value,
+      survey_id,
+    };
+
+    // console.log("fieldPayload", fieldPayload);
+
     try {
-      const res = await fetch(`/api/fields/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          survey_id,
-          survey_type,
-          title: newQuestion.title,
-          description: newQuestion.title,
-          input_type_id: newQuestion.inputType.value,
-        }),
-      });
-
-      const resData = await res.json();
-      const fieldData = resData.field;
-
-      if (!res.ok || !fieldData?.id) throw new Error("Falha ao criar a pergunta");
-
-      if (newQuestion.inputType.stored_as === "array") {
-        const createdOptions = await Promise.all(
-          newOptions.map((opt) =>
-            handleCreateOption({
-              field_id: fieldData.id,
-              option_text: "-",
-              option_value: opt.option_df_value,
-            })
-          )
-        );
-        fieldData.options = createdOptions;
-      }
-
       if (editingIndex === null) {
-        setFormFields((prev) => [...prev, fieldData]);
+        const created = await addField(fieldPayload);
+
+        if (newQuestion.inputType.stored_as === "array") {
+          const createdOptions = await Promise.all(
+            newOptions.map((opt) =>
+              handleCreateOption({
+                field_id: created.id,
+                option_text: "-",
+                option_value: opt.option_df_value,
+              })
+            )
+          );
+          created.options = createdOptions;
+        }
+
+        setFormFields((prev) => [...prev, created]);
       } else {
-        const updated = [...formFields];
-        updated[editingIndex] = fieldData;
-        setFormFields(updated);
+        const updated = {
+          ...formFields[editingIndex],
+          ...fieldPayload,
+          input_type_id: newQuestion.inputType?.value ?? formFields[editingIndex].input_type_id,
+        };
+        
+        console.log("updated----", updated);
+        await updateField(updated.id, updated);
+        
+        const clone = [...formFields];
+        clone[editingIndex] = updated;
+        setFormFields(clone);
       }
 
       setNewQuestion({ title: "", inputType: null });
@@ -116,7 +102,9 @@ export default function FormBuilder({ survey_id, survey_type, onSubmit }) {
     }
   };
 
-  const handleRemoveQuestion = (index) => {
+  const handleRemoveQuestion = async (index) => {
+    const toDelete = formFields[index];
+    await deleteField(toDelete.id);
     const updated = [...formFields];
     updated.splice(index, 1);
     setFormFields(updated);
@@ -129,18 +117,27 @@ export default function FormBuilder({ survey_id, survey_type, onSubmit }) {
   const handleEditQuestion = (index) => {
     const item = formFields[index];
     if (!item) return;
-
+  
+    const foundInputType = inputTypes.find((t) => t.id === item.input_type_id);
+  
     setEditingIndex(index);
     setNewQuestion({
       title: item.title,
-      inputType: {
-        value: item.input_type,
-        label: item.input_type_name,
-        stored_as: item.stored_as,
-      },
+      inputType: foundInputType
+        ? {
+            value: foundInputType.id,
+            label: foundInputType.name,
+            stored_as: foundInputType.stored_as,
+          }
+        : {
+            value: item.input_type_id,
+            label: item.input_type_name,
+            stored_as: item.stored_as,
+          },
     });
     setNewOptions(item.options || []);
   };
+  
 
   const handleSaveForm = () => {
     const payload = {
@@ -205,10 +202,7 @@ export default function FormBuilder({ survey_id, survey_type, onSubmit }) {
             </div>
 
             {newQuestion.inputType?.stored_as === "array" && (
-              <MultipleChoiceEditor
-                options={newOptions}
-                setOptions={setNewOptions}
-              />
+              <MultipleChoiceEditor options={newOptions} setOptions={setNewOptions} />
             )}
 
             <div className="flex justify-center">

@@ -20,6 +20,8 @@ export interface Field {
   description?: string;
   created_at?: string;
   updated_at?: string;
+  survey_id?: string;
+  survey_type?: string;
 }
 
 export interface Research {

@@ -18,8 +18,8 @@ import { v4 as uuidv4 } from "uuid";
 export function useFields(survey_id: string, survey_type: string) {
   const [fields, setFields] = useState<Field[]>([]);
   const [unSyncedFields, setUnSyncedFields] = useState<Field[]>([]);
-  const [loadingFields, setLoadingFields] = useState(true);
-  const [loadingUnsynced, setLoadingUnsynced] = useState(true);
+  const [loadingFields, setLoadingFields] = useState<boolean>(true);
+  const [loadingUnsynced, setLoadingUnsynced] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,7 +27,9 @@ export function useFields(survey_id: string, survey_type: string) {
   }, []);
 
   useEffect(() => {
-    if (survey_id && survey_type) fetchFields();
+    if (survey_id && survey_type) {
+      fetchFields();
+    }
   }, [survey_id, survey_type]);
 
   const fetchUnsyncedFields = async () => {
@@ -48,10 +50,9 @@ export function useFields(survey_id: string, survey_type: string) {
     setLoadingFields(true);
     try {
       const remoteFields = await getRemoteFields(survey_id, survey_type);
+      // console.log("[App] Campos do servidor:", remoteFields);
       setFields(remoteFields);
-      await Promise.allSettled(
-        remoteFields.map((f) => createLocalField(f))
-      );
+      await Promise.allSettled(remoteFields.map((field) => createLocalField(field)));
     } catch (err) {
       console.warn("[App] Falha ao buscar campos do servidor. Usando IndexedDB local.", err);
       try {
@@ -67,16 +68,21 @@ export function useFields(survey_id: string, survey_type: string) {
   };
 
   const addField = async (field: Omit<Field, "id">): Promise<Field> => {
-    const newField: Field = { ...field, id: uuidv4(), survey_id };
+    const newField: Field = {
+      ...field,
+      id: uuidv4(),
+      survey_id,
+    };
+
     setFields((prev) => [...prev, newField]);
 
     try {
-      const created = await createRemoteField(survey_id, survey_type, newField);
+      const created = await createRemoteField(survey_id, survey_type, field);
       await createLocalField(created);
       return created;
     } catch (error) {
       console.error("[App] Erro ao criar campo remotamente:", error);
-      setError("Falha ao salvar no servidor. Salvo localmente.");
+      setError("Falha ao salvar no servidor. Salvo localmente para sincronizar depois.");
       await saveUnsyncedItem("fields", newField);
       setUnSyncedFields((prev) => [...prev, newField]);
       await createLocalField(newField);
@@ -84,34 +90,33 @@ export function useFields(survey_id: string, survey_type: string) {
     }
   };
 
-  const updateField = async (fieldId: string, updatedData: Partial<Field>) => {
-    const updated: Field = { ...updatedData, id: fieldId, survey_id } as Field;
-    await updateLocalField(fieldId, updated);
+  const updateField = async (id: string, updatedData: Field) => {
+    await updateLocalField(id, updatedData);
 
     setFields((prev) =>
-      prev.map((f) => (f.id === fieldId ? { ...f, ...updatedData } : f))
+      prev.map((f) => (f.id === id ? { ...f, ...updatedData } : f))
     );
 
     try {
-      await updateRemoteField(fieldId, survey_id, survey_type, updatedData);
+      await updateRemoteField(id, survey_id, survey_type, updatedData);
     } catch (error) {
-      console.error("[App] Erro ao atualizar campo remotamente:", error);
+      console.error("[App] Erro ao atualizar campo:", error);
       setError("Falha ao sincronizar atualização.");
-      await saveUnsyncedItem("fields", updated);
-      setUnSyncedFields((prev) => [...prev, updated]);
+      await saveUnsyncedItem("fields", { ...updatedData, id, survey_id });
+      setUnSyncedFields((prev) => [...prev, { ...updatedData, id, survey_id }]);
     }
   };
 
-  const deleteField = async (fieldId: string) => {
-    await deleteLocalField(fieldId);
-    setFields((prev) => prev.filter((f) => f.id !== fieldId));
+  const deleteField = async (id: string) => {
+    await deleteLocalField(id);
+    setFields((prev) => prev.filter((f) => f.id !== id));
 
     try {
-      await deleteRemoteField(fieldId, survey_id, survey_type);
+      await deleteRemoteField(id, survey_id, survey_type);
     } catch (error) {
-      console.error("[App] Erro ao deletar campo remotamente:", error);
+      console.error("[App] Erro ao deletar campo:", error);
       setError("Falha ao sincronizar exclusão.");
-      await saveUnsyncedItem("fields", { id: fieldId, survey_id });
+      await saveUnsyncedItem("fields", { id, survey_id });
     }
   };
 

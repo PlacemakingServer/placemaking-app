@@ -8,7 +8,7 @@ export async function getFields(survey_id: string, survey_type: string): Promise
   const res = await fetch(url);
   if (!res.ok) throw new Error('Erro ao buscar campos');
   const data = await res.json();
-  return data.fields || [];
+  return data || [];
 }
 
 export async function createField(
@@ -24,7 +24,7 @@ export async function createField(
   });
   if (!res.ok) throw new Error('Erro ao criar campo');
   const data = await res.json();
-  return data.field;
+  return data;
 }
 
 export async function updateField(
@@ -49,10 +49,14 @@ export async function deleteField(
   survey_id: string,
   survey_type: string
 ): Promise<{ message: string }> {
-  const params = new URLSearchParams({ field_id, survey_id, survey_type });
-  const res = await fetch(`${baseUrl}?${params}`, {
+  const url = `${baseUrl}?field_id=${field_id}&survey_id=${survey_id}&survey_type=${survey_type}`;
+  const res = await fetch(url, {
     method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
   if (!res.ok) throw new Error('Erro ao deletar campo');
   return res.json();
 }
+
