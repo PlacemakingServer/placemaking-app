@@ -1,45 +1,127 @@
-// src/hooks/useFieldOptions.ts
-import { useEffect, useState } from 'react';
-import { FieldOption } from '@/lib/types/indexeddb';
-import { getFieldOptions, createFieldOption } from '@/repositories/server/fieldOptionApi';
-import { createItem, getAllItems } from '@/repositories/indexeddb/indexedDBService';
+import { useEffect, useState } from "react";
+import { FieldOption } from "@/lib/types/indexeddb";
+import {
+  getFieldOptions as getRemoteOptions,
+  createFieldOption as createRemoteOption,
+  updateFieldOption as updateRemoteOption,
+  deleteFieldOption as deleteRemoteOption,
+} from "@/repositories/server/fieldOptionApi";
+import {
+  createFieldOption as createLocalOption,
+  getAllFieldOptions as getAllLocalOptions,
+  updateFieldOption as updateLocalOption,
+  deleteFieldOption as deleteLocalOption,
+} from "@/repositories/indexeddb/fieldOptionRepository";
+import { getUnsyncedItems, saveUnsyncedItem } from "@/lib/db";
+import { v4 as uuidv4 } from "uuid";
 
-export function useFieldOptions(fieldId: string) {
-  type LocalFieldOption = FieldOption & { _syncStatus?: 'pending' | 'synced' | 'error' };
-
-  const [options, setOptions] = useState<LocalFieldOption[]>([]);
-  const [loading, setLoading] = useState(true);
+export function useFieldOptions(field_id: string) {
+  const [options, setOptions] = useState<FieldOption[]>([]);
+  const [unSyncedOptions, setUnSyncedOptions] = useState<FieldOption[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(true);
+  const [loadingUnsynced, setLoadingUnsynced] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const isOnline = typeof window !== 'undefined' && navigator.onLine;
-        const data = isOnline ? await getFieldOptions(fieldId) : await getAllItems('field_options');
-        setOptions(data.filter(opt => opt.field_id === fieldId));
-      } catch (err) {
-        setError('Erro ao carregar opções do campo');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [fieldId]);
+    fetchUnsyncedOptions();
+  }, []);
 
-  const addFieldOption = async (option: FieldOption) => {
-    const isOnline = typeof window !== 'undefined' && navigator.onLine;
-    const newOption: LocalFieldOption = { ...option, _syncStatus: isOnline ? 'synced' : 'pending' };
-    setOptions(prev => [...prev, newOption]);
+  useEffect(() => {
+    if (field_id) fetchOptions();
+  }, [field_id]);
 
+  const fetchUnsyncedOptions = async () => {
     try {
-      await createItem('field_options', newOption);
-      if (isOnline) await createFieldOption(option);
-    } catch {
-      const errorOption: LocalFieldOption = { ...option, _syncStatus: 'error' };
-      await createItem('field_options', errorOption);
+      const unsynced = await getUnsyncedItems();
+      const pending = unsynced
+        .filter((item) => item.store === "field_options")
+        .map((item) => item.payload as FieldOption);
+      setUnSyncedOptions(pending);
+    } catch (error) {
+      console.error("[App] Erro ao carregar opções pendentes:", error);
+    } finally {
+      setLoadingUnsynced(false);
     }
   };
 
-  return { options, loading, error, addFieldOption };
+  const fetchOptions = async () => {
+    setLoadingOptions(true);
+    try {
+      const remoteOptions = await getRemoteOptions(field_id);
+      setOptions(remoteOptions);
+      await Promise.allSettled(remoteOptions.map((opt) => createLocalOption(opt)));
+    } catch (err) {
+      console.warn("[App] Falha ao buscar opções do servidor. Usando IndexedDB local.", err);
+      try {
+        const localOptions = await getAllLocalOptions();
+        setOptions(localOptions.filter((o) => o.field_id === field_id));
+      } catch (errLocal) {
+        console.error("[App] Falha ao carregar opções locais:", errLocal);
+        setError("Erro ao carregar opções locais");
+      }
+    } finally {
+      setLoadingOptions(false);
+    }
+  };
+
+  const addOption = async (option: Omit<FieldOption, "id">): Promise<FieldOption> => {
+    const newOption: FieldOption = { ...option, id: uuidv4(), field_id };
+    setOptions((prev) => [...prev, newOption]);
+
+    try {
+      const created = await createRemoteOption(field_id, option);
+      await createLocalOption(created);
+      return created;
+    } catch (error) {
+      console.error("[App] Erro ao criar opção remotamente:", error);
+      setError("Falha ao salvar no servidor. Salvo localmente.");
+      await saveUnsyncedItem("field_options", newOption);
+      setUnSyncedOptions((prev) => [...prev, newOption]);
+      await createLocalOption(newOption);
+      return newOption;
+    }
+  };
+
+  const updateOption = async (optionId: string, updatedData: Partial<FieldOption>) => {
+    const updated: FieldOption = { ...updatedData, id: optionId, field_id } as FieldOption;
+    await updateLocalOption(optionId, updated);
+
+    setOptions((prev) =>
+      prev.map((o) => (o.id === optionId ? { ...o, ...updatedData } : o))
+    );
+
+    try {
+      await updateRemoteOption(field_id, optionId, updatedData);
+    } catch (error) {
+      console.error("[App] Erro ao atualizar opção remotamente:", error);
+      setError("Falha ao sincronizar atualização.");
+      await saveUnsyncedItem("field_options", updated);
+      setUnSyncedOptions((prev) => [...prev, updated]);
+    }
+  };
+
+  const deleteOption = async (optionId: string) => {
+    await deleteLocalOption(optionId);
+    setOptions((prev) => prev.filter((o) => o.id !== optionId));
+
+    try {
+      await deleteRemoteOption(field_id, optionId);
+    } catch (error) {
+      console.error("[App] Erro ao deletar opção remotamente:", error);
+      setError("Falha ao sincronizar exclusão.");
+      await saveUnsyncedItem("field_options", { id: optionId, field_id });
+    }
+  };
+
+  return {
+    options,
+    unSyncedOptions,
+    loading: loadingOptions || loadingUnsynced,
+    loadingOptions,
+    loadingUnsynced,
+    error,
+    addOption,
+    updateOption,
+    deleteOption,
+  };
 }

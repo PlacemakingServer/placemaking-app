@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       }
 
       case "POST": {
-        console.log("Creating field with body:", body);
+
         const response = await fetch(`${baseURL}?survey_type=${survey_type}`, {
           method: "POST",
           headers: {
