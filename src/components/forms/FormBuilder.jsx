@@ -6,9 +6,11 @@ import MultiSelect from "@/components/ui/Multiselect/Multiselect";
 import SelectedFormFields from "@/components/forms/SelectedFormFields";
 import MultipleChoiceEditor from "@/components/forms/MultipleChoiceEditor";
 import Switch from "@/components/ui/Switch";
+import { useInputTypes } from "@/hooks/useInputTypes";
 
-export default function FormBuilder({ onSubmit, survey_id, survey_type }) {
-  const [inputTypes, setInputTypes] = useState([]);
+export default function FormBuilder({ survey_id, survey_type, onSubmit }) {
+  const { types: inputTypes, loading } = useInputTypes();
+
   const [formFields, setFormFields] = useState([]);
   const [newOptions, setNewOptions] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
@@ -19,8 +21,7 @@ export default function FormBuilder({ onSubmit, survey_id, survey_type }) {
   });
 
   useEffect(() => {
-    fetchInputTypes();
-    fetchFields();
+    // fetchFields();
   }, []);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function FormBuilder({ onSubmit, survey_id, survey_type }) {
     });
 
     setFormFields(updatedFields);
-  }, [inputTypes]);
+  }, [inputTypes, formFields]);
 
   const fetchFields = async () => {
     try {
@@ -51,16 +52,6 @@ export default function FormBuilder({ onSubmit, survey_id, survey_type }) {
       }
     } catch (err) {
       console.error("Erro ao buscar campos:", err);
-    }
-  };
-
-  const fetchInputTypes = async () => {
-    try {
-      const res = await fetch("/api/input_types");
-      const data = await res.json();
-      setInputTypes(data.input_types || []);
-    } catch (err) {
-      console.error("Erro ao buscar input types:", err);
     }
   };
 
@@ -169,7 +160,7 @@ export default function FormBuilder({ onSubmit, survey_id, survey_type }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Switch checked={showFormBuilder} onChange={setShowFormBuilder} type="arrow"/>
+          <Switch checked={showFormBuilder} onChange={setShowFormBuilder} type="arrow" />
         </div>
       </div>
 
@@ -209,6 +200,7 @@ export default function FormBuilder({ onSubmit, survey_id, survey_type }) {
                 placeholder="Selecione o tipo de resposta"
                 isMulti={false}
                 closeMenuOnSelect={true}
+                isDisabled={loading}
               />
             </div>
 

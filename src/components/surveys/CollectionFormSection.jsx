@@ -252,7 +252,6 @@ export default function CollectionFormSection({
                     <FormBuilder
                       survey_id={form.id}
                       survey_type={form.survey_type}
-                      onChange={() => {}}
                     />
                   </motion.div>
                 )}

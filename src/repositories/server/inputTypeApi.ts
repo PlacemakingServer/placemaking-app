@@ -1,7 +1,7 @@
 // src/repositories/server/inputTypeApi.ts
 import { InputType } from '@/lib/types/indexeddb';
 
-const baseUrl = '/api/input-types'; // ⚠️ Este endpoint ainda NÃO está implementado em /pages/api
+const baseUrl = '/api/input-types';
 
 export async function getInputTypes(): Promise<InputType[]> {
   const res = await fetch(baseUrl);

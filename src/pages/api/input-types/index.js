@@ -1,7 +1,7 @@
 
 import { parse } from "cookie";
-
 export default async function handler(req, res) {
+  
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    return res.status(200).json(data);
+    return res.status(200).json(data.input_types);
 
   } catch (err) {
     console.error("Erro ao buscar input_types:", err);
