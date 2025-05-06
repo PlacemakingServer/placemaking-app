@@ -31,7 +31,8 @@ export default async function handler(req, res) {
         });
 
         const data = await response.json();
-        return res.status(response.status).json(data);
+        
+        return res.status(response.status).json(data.field_options);
       }
 
       case "POST": {
@@ -43,9 +44,8 @@ export default async function handler(req, res) {
           },
           body: JSON.stringify(body),
         });
-
         const data = await response.json();
-        return res.status(response.status).json(data);
+        return res.status(response.status).json(data.field_option);
       }
 
       case "PUT": {
@@ -62,7 +62,8 @@ export default async function handler(req, res) {
         });
 
         const data = await response.json();
-        return res.status(response.status).json(data);
+        console.log("PUT response:", data);
+        return res.status(response.status).json(data.field_option);
       }
 
       case "DELETE": {
@@ -78,6 +79,7 @@ export default async function handler(req, res) {
         });
 
         const data = await response.json();
+        console.log("DELETE response:", data);
         return res.status(response.status).json(data);
       }
 

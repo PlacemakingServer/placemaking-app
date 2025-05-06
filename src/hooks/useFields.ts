@@ -68,19 +68,19 @@ export function useFields(survey_id: string, survey_type: string) {
   };
 
   const addField = async (field: Omit<Field, "id">): Promise<Field> => {
-    const newField: Field = {
-      ...field,
-      id: uuidv4(),
-      survey_id,
-    };
-
-    setFields((prev) => [...prev, newField]);
-
     try {
       const created = await createRemoteField(survey_id, survey_type, field);
       await createLocalField(created);
+      setFields((prev) => [...prev, created]);
       return created;
     } catch (error) {
+      const newField: Field = {
+        ...field,
+        id: uuidv4(),
+        survey_id,
+      };
+  
+      setFields((prev) => [...prev, newField]);
       console.error("[App] Erro ao criar campo remotamente:", error);
       setError("Falha ao salvar no servidor. Salvo localmente para sincronizar depois.");
       await saveUnsyncedItem("fields", newField);

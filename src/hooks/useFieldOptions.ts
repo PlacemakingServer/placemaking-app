@@ -64,23 +64,39 @@ export function useFieldOptions(field_id: string) {
     }
   };
 
-  const addOption = async (option: Omit<FieldOption, "id">): Promise<FieldOption> => {
-    const newOption: FieldOption = { ...option, id: uuidv4(), field_id };
-    setOptions((prev) => [...prev, newOption]);
 
+
+  const addOption = async (
+    option: Omit<FieldOption, "id">
+  ): Promise<FieldOption> => {
     try {
+      /* 1 ⎯ tenta criar no backend ----------------------------- */
       const created = await createRemoteOption(field_id, option);
+  
+      // persiste localmente com o id oficial
       await createLocalOption(created);
+  
+      // exibe na UI
+      setOptions((prev) => [...prev, created]);
+  
       return created;
     } catch (error) {
       console.error("[App] Erro ao criar opção remotamente:", error);
-      setError("Falha ao salvar no servidor. Salvo localmente.");
-      await saveUnsyncedItem("field_options", newOption);
-      setUnSyncedOptions((prev) => [...prev, newOption]);
-      await createLocalOption(newOption);
-      return newOption;
+      setError("Falha ao salvar no servidor. Sincronizará depois.");
+      const localOpt: FieldOption = {
+        ...option,
+        id: uuidv4(),
+        field_id,
+      };
+      await createLocalOption(localOpt);
+      await saveUnsyncedItem("field_options", localOpt);
+      setOptions((prev) => [...prev, localOpt]);
+      setUnSyncedOptions((prev) => [...prev, localOpt]);
+      return localOpt;
     }
   };
+  
+  
 
   const updateOption = async (optionId: string, updatedData: Partial<FieldOption>) => {
     const updated: FieldOption = { ...updatedData, id: optionId, field_id } as FieldOption;

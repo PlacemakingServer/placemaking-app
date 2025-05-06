@@ -22,6 +22,7 @@ export interface Field {
   updated_at?: string;
   survey_id?: string;
   survey_type?: string;
+  position?: number;
 }
 
 export interface Research {
