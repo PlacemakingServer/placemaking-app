@@ -120,6 +120,10 @@ export default function ResearchView() {
               <strong>Criada por:</strong> {author?.name}
             </motion.p>
         </div>
+
+        <div>
+          aqui irei colocar um botão para download de dados da pesquisa
+        </div>
       </motion.div>
       {/* Seção Mapa com Toggle */}
       <motion.div
