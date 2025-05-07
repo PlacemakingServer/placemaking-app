@@ -62,7 +62,7 @@ export default function BasicInformation({
         <div className="bg-transparent px-4 py-5 mt-2 space-y-5">
           <div className="flex flex-col gap-4">
             <FormField
-              legend="Título do Formulário"
+              legend="Título da Coleta"
               type="text"
               value={form.title}
               onChange={handleChange("title")}

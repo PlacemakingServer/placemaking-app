@@ -5,7 +5,8 @@ export async function getStaticSurvey(research_id: string, survey_type: string):
   const url = `${baseUrl}?research_id=${encodeURIComponent(research_id)}&survey_type=${encodeURIComponent(survey_type)}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Erro ao buscar surveys de Staticulário');
-  return res.json();
+  const data = await res.json();
+  return data;
 }
 
 export async function createStaticSurvey(data: StaticSurvey): Promise<StaticSurvey> {

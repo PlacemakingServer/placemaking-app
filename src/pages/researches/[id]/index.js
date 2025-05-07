@@ -38,7 +38,13 @@ export default function EditResearch() {
     ...SURVEY_TYPES,
   ];
 
+
+
   useEffect(() => {
+    console.log("Rendered Surveys:", renderedSurveys);
+    console.log("Form Survey:", formSurvey);
+    console.log("Static Survey:", staticSurvey);
+    console.log("Dynamic Survey:", dynamicSurvey);
     if (!id) return;
     const list = [];
     if (formSurvey) list.push(renderSurveyComponent("Formulário"));

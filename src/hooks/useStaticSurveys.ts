@@ -17,105 +17,114 @@ import {
 
 import { getUnsyncedItems, saveUnsyncedItem } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
-import { stat } from "fs";
 
+/**
+ * Hook de gerenciamento de coletas Estáticas
+ * – Mantém a mesma assinatura e fluxo de useFormSurveys
+ */
 export function useStaticSurveys(
   research_id?: string,
   especifico: boolean = true,
   survey_type: string = "Estática"
 ) {
-  const [staticSurvey, setStaticSurveyData] = useState<StaticSurvey | null>(null);
+  const [staticSurvey, setStaticSurvey] = useState<StaticSurvey | null>(null);
   const [unSyncedSurveys, setUnSyncedSurveys] = useState<StaticSurvey[]>([]);
   const [loadingSurveys, setLoadingSurveys] = useState(true);
   const [loadingUnsynced, setLoadingUnsynced] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  /* ───────────── sync pendentes ───────────── */
   useEffect(() => {
-    fetchUnsyncedSurveys();
+    (async () => {
+      try {
+        const unsynced = await getUnsyncedItems();
+        const pending = unsynced
+          .filter((i) => i.store === "static_surveys")
+          .map((i) => i.payload as StaticSurvey);
+        setUnSyncedSurveys(pending);
+      } catch (err) {
+        console.error("[App] Erro ao carregar pendentes:", err);
+      } finally {
+        setLoadingUnsynced(false);
+      }
+    })();
   }, []);
 
+  /* ───────────── busca principal ───────────── */
   useEffect(() => {
     if (especifico && research_id) {
-      fetchSurveyByResearch(research_id, survey_type);
+      fetchSurveyByResearchAndType(research_id, survey_type);
     } else {
-      setStaticSurveyData(null);
+      setStaticSurvey(null);
       setLoadingSurveys(false);
     }
   }, [especifico, research_id, survey_type]);
 
-  const fetchUnsyncedSurveys = async () => {
-    try {
-      const unsynced = await getUnsyncedItems();
-      const surveysPending = unsynced
-        .filter((item) => item.store === "static_surveys")
-        .map((item) => item.payload as StaticSurvey);
-      setUnSyncedSurveys(surveysPending);
-    } catch (error) {
-      console.error("[App] Erro ao carregar static surveys pendentes:", error);
-    } finally {
-      setLoadingUnsynced(false);
-    }
-  };
-
-  const fetchSurveyByResearch = async (researchId: string, type: string) => {
+  const fetchSurveyByResearchAndType = async (
+    researchId: string,
+    type: string
+  ) => {
     setLoadingSurveys(true);
     try {
       const remote = await getRemoteStaticSurvey(researchId, type);
-      const survey = remote?.[0] || null;
-      setStaticSurveyData(survey);
+      // A API pode retornar array; normalizamos para 1 registro
+      const survey = Array.isArray(remote) ? remote[0] : remote;
+      setStaticSurvey(survey || null);
       if (survey) await createLocalStaticSurvey(survey);
     } catch (err) {
-      console.warn("[App] Falha ao buscar do servidor, tentando local:", err);
+      console.warn("[App] Falha servidor, tentando local:", err);
       try {
         const local = await getLocalStaticSurvey(researchId);
-        setStaticSurveyData(local || null);
+        setStaticSurvey(local || null);
       } catch (errLocal) {
-        console.error("[App] Falha ao buscar local:", errLocal);
-        setError("Erro ao carregar static survey local");
+        console.error("[App] Falha local:", errLocal);
+        setError("Erro ao carregar coleta estática local");
       }
     } finally {
       setLoadingSurveys(false);
     }
   };
 
-  const addStaticSurvey = async (survey: StaticSurvey): Promise<StaticSurvey> => {
-    const newSurveyId = uuidv4();
-    const localSurvey = { ...survey, id: newSurveyId };
-    setStaticSurveyData(localSurvey);
+  /* ───────────── CRUD ───────────── */
+  const addStaticSurvey = async (survey: StaticSurvey) => {
+    const newSurvey: StaticSurvey = { ...survey, id: uuidv4() };
+    setStaticSurvey(newSurvey);
 
     try {
       const created = await createRemoteStaticSurvey(survey);
       await createLocalStaticSurvey(created);
       return created;
-    } catch (error) {
-      console.error("[App] Erro ao criar remotamente:", error);
-      await saveUnsyncedItem("static_surveys", localSurvey);
-      setUnSyncedSurveys((prev) => [...prev, localSurvey]);
-      return localSurvey;
+    } catch (err) {
+      console.error("[App] Falha ao criar remoto:", err);
+      setError("Falha ao salvar no servidor. Salvo localmente.");
+      await saveUnsyncedItem("static_surveys", newSurvey);
+      setUnSyncedSurveys((prev) => [...prev, newSurvey]);
+      return newSurvey;
     }
   };
 
   const updateStaticSurvey = async (id: string, updatedData: StaticSurvey) => {
     await updateLocalStaticSurvey(id, updatedData);
-    setStaticSurveyData((prev) => (prev ? { ...prev, ...updatedData } : updatedData));
+    setStaticSurvey((prev) => (prev ? { ...prev, ...updatedData } : updatedData));
 
     try {
       await updateRemoteStaticSurvey({ ...updatedData, id });
-    } catch (error) {
+    } catch (err) {
+      console.error("[App] Falha sync update:", err);
+      setError("Atualização pendente de sincronização.");
       await saveUnsyncedItem("static_surveys", { ...updatedData, id });
       setUnSyncedSurveys((prev) => [...prev, { ...updatedData, id }]);
     }
   };
 
-  const deleteStaticSurvey = async (id: string) => {
-    setStaticSurveyData(null);
-
+  const deleteStaticSurvey = async (survey: StaticSurvey) => {
+    setStaticSurvey(null);
     try {
-      await deleteLocalStaticSurvey(id);
-      await deleteRemoteStaticSurvey({ id } as StaticSurvey);
-    } catch (error) {
-      console.error("[App] Erro ao deletar static survey:", error);
-      await saveUnsyncedItem("static_surveys", { id, delete: true } as any);
+      await deleteLocalStaticSurvey(survey.id);
+      await deleteRemoteStaticSurvey(survey);
+    } catch (err) {
+      console.error("[App] Falha ao deletar:", err);
+      await saveUnsyncedItem("static_surveys", { ...survey, deleted: true });
     }
   };
 
