@@ -1,7 +1,7 @@
 importScripts('./vendor/idb.min.js');
 
 const DB_NAME = 'placemaking-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const storeSchema = [
   'auth',
   'users',

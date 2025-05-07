@@ -3,7 +3,7 @@ import { openDB, IDBPDatabase } from 'idb';
 import type { StoreTypes } from '@/lib/types/indexeddb';
 
 const DB_NAME = 'placemaking-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase<any>> | null = null;
 
@@ -42,6 +42,7 @@ export const storeSchema: Record<keyof StoreTypes, { keyPath: keyof any }> = {
   input_types: { keyPath: 'id' },
   field_options: { keyPath: 'id' },
   unsynced_data: { keyPath: 'id' },
+  map_tiles: { keyPath: 'id' },
 };
 
 export async function createItem<K extends keyof StoreTypes>(store: K, data: StoreTypes[K]): Promise<void> {

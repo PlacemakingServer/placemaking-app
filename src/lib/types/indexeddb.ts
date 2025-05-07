@@ -166,7 +166,10 @@ export type StoreTypes = {
   input_types: InputType;
   field_options: FieldOption;
   unsynced_data: UnsyncedData;
+  map_tiles: any; // Define this type based on your requirements
 };
+
+
 
 
 
