@@ -389,7 +389,7 @@ export default function ResearchSurvey() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-400">Nenhum colaborador encontrado.</p>
+                <p className="text-gray-400">Nenhum contribuidor atruibuído para essa coleta.</p>
               )}
             </motion.div>
           )}

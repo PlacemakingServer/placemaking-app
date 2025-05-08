@@ -115,10 +115,14 @@ export default function ResearchView() {
             <strong>Descrição:</strong> {selectedResearch?.description}
           </motion.p>
           <motion.p>
-            <strong>Início:</strong> {selectedResearch?.release_date}
+            <strong>Início:</strong>{" "}
+            {new Date(selectedResearch?.release_date).toLocaleDateString(
+              "pt-BR"
+            )}
           </motion.p>
           <motion.p>
-            <strong>Fim:</strong> {selectedResearch?.end_date}
+            <strong>Fim:</strong>{" "}
+            {new Date(selectedResearch?.end_date).toLocaleDateString("pt-BR")}
           </motion.p>
           <motion.p>
             <strong>Criada por:</strong> {author?.name}
@@ -128,7 +132,6 @@ export default function ResearchView() {
         <div className="px-6 pb-8 md:px-8">
           <button
             onClick={async () => {
-              
               if (!selectedResearch?.lat || !selectedResearch?.long) {
                 toast.error("Lat/Lon da pesquisa ainda não carregados.");
                 return;
@@ -136,7 +139,6 @@ export default function ResearchView() {
 
               setIsLoading(true);
               try {
-                
                 await syncResearchData(selectedResearch);
                 toast.success("Dados e mapa baixados para uso offline!");
               } catch (err) {
@@ -255,6 +257,8 @@ export default function ResearchView() {
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Seção de Coletas*/}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -272,7 +276,7 @@ export default function ResearchView() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="mt-4 text-sm text-gray-700 border rounded-md p-4 bg-gray-50 space-y-4"
+            className="mt-4 text-sm text-gray-700 px-2 w-full flex flex-col gap-4"
           >
             {(() => {
               const filteredSurveys = surveys.filter(
@@ -295,39 +299,57 @@ export default function ResearchView() {
               }, {});
 
               return Object.entries(grouped).map(([type, group]) => (
-                <div className="flex flex-col items-center w-full" key={type}>
-                  <h3 className="text-lg font-semibold text-gray-800 capitalize mb-2">
+                <motion.div
+                  key={type}
+                  className="w-full bg-white border border-gray-200 rounded-xl shadow-sm p-5 space-y-4"
+                >
+                  <h3 className="text-xl font-semibold text-gray-800 capitalize">
                     {type}
                   </h3>
-                  {group.map((survey) => (
+
+                  {group.map((survey, idx) => (
                     <div
-                      className="flex flex-row items-center justify-between w-full"
                       key={survey.id}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 border rounded-lg shadow-sm transition hover:shadow-md ${
+                        idx !== 0 ? "mt-2" : ""
+                      }`}
                     >
-                      <div className="flex flex-col w-full items-start justify-start gap-1">
-                        {survey.title || `Survey ${survey.id}`}
-                        <span className="text-gray-500 text-xs">
-                          {survey.description}
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-800">
+                          {survey.title || `Survey ${survey.id}`}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {survey.description || "Sem descrição"}
                         </span>
                       </div>
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/researches/${selectedResearch.id}/surveys/${survey.id}`
-                          )
-                        }
-                        className="text-blue-600 hover:text-blue-800 transition ml-2"
-                      >
-                        <span className="material-symbols-outlined text-2xl">
-                          visibility
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/researches/${selectedResearch.id}/surveys/${survey.id}`
+                            )
+                          }
+                          className="text-blue-600 hover:text-blue-800 transition"
+                        >
+                          <span className="material-symbols-outlined text-2xl">
+                            visibility
+                          </span>
+                        </button>
+
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${
+                            survey._syncStatus === "synced"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {survey._syncStatus}
                         </span>
-                      </button>
-                      <span className="text-gray-500 text-xs ml-2">
-                        {survey._syncStatus}
-                      </span>
+                      </div>
                     </div>
                   ))}
-                </div>
+                </motion.div>
               ));
             })()}
           </motion.div>
