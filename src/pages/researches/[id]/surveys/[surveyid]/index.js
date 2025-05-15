@@ -81,9 +81,9 @@ export default function ResearchSurvey() {
       user: userMap[contributor.user_id] || null,
     })) || [];
 
-  useEffect(() => {
-    console.log("Contributors", contributors);
-  }, [contributors]);
+  // useEffect(() => {
+  //   console.log("Contributors", contributors);
+  // }, [contributors]);
 
   useEffect(() => {
     const idx = Math.floor(Math.random() * 5);

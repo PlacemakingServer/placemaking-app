@@ -15,6 +15,7 @@ import { useMessage } from "@/context/MessageContext";
 import { useFields } from "@/hooks/useFields";
 import { useInputTypes } from "@/hooks/useInputTypes";
 import { useFieldOptions } from "@/hooks";
+import { useSurveyTimeRanges } from "@/hooks";
 
 export default function ResearchAnswers() {
   const router = useRouter();
@@ -30,12 +31,35 @@ export default function ResearchAnswers() {
 
   const { user } = useAuthentication();
   const { contributors: surveyContributors } = useSurveyContributors(surveyId);
+  const { ranges: surveyTimeRanges } = useSurveyTimeRanges(surveyId);
 
   // Filtra o contributor correspondente ao usuário logado
   const currentContributor = surveyContributors?.find(
     (c) => c.user_id === user?.id
   );
   const contributorId = currentContributor?.id;
+
+  // Função para pegar o survey_time_range_id atual
+  function getCurrentTimeRangeId() {
+    if (!surveyTimeRanges || !surveyTimeRanges.length) return "";
+    const now = new Date();
+    // Assume que start_time e end_time são strings no formato "HH:mm"
+    for (const range of surveyTimeRanges) {
+      const [startHour, startMinute] = range.start_time.split(":").map(Number);
+      const [endHour, endMinute] = range.end_time.split(":").map(Number);
+
+      const start = new Date(now);
+      start.setHours(startHour, startMinute, 0, 0);
+
+      const end = new Date(now);
+      end.setHours(endHour, endMinute, 59, 999);
+
+      if (now >= start && now <= end) {
+        return range.id;
+      }
+    }
+    return "";
+  }
 
   const handleChange = (fieldId, value) =>
     setAnswers((prev) => ({ ...prev, [fieldId]: value }));
@@ -59,21 +83,30 @@ export default function ResearchAnswers() {
     if (!validate()) return;
     setSubmitting(true);
 
+    // Pega o survey_time_range_id atual
+    const currentTimeRangeId = getCurrentTimeRangeId();
+
     // Monta o body completo
     const body = {
       survey_id: surveyId,
       survey_type: surveyType,
       contributor_id: contributorId,
-      answers: fields
-      .filter((f) => String(answers[f.id] ?? "") !== "")
-      .map((f) => ({
-        value: String(answers[f.id] ?? ""),
-        survey_group_id: f.survey_group_id,
-        survey_time_range_id: f.survey_time_range_id || "",
-        survey_region_id: f.survey_region_id || "",
-        registered_at: new Date().toISOString(),
+      answers: fields.map((f) => ({
+      value: String(answers[f.id] ?? ""),
+      survey_group_id: f.survey_group_id,
+      survey_time_range_id: f.survey_time_range_id || currentTimeRangeId || "",
+      survey_region_id: f.survey_region_id || "",
+      registered_at: new Date().toISOString(),
       })),
     };
+
+    // Verifica se algum value está vazio
+    const hasEmpty = body.answers.some((a) => a.value === "");
+    if (hasEmpty) {
+      showMessage("Preencha todos os campos obrigatórios.", "vermelho_claro");
+      setSubmitting(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/survey-answers", {
@@ -83,7 +116,7 @@ export default function ResearchAnswers() {
       });
       if (!res.ok) throw new Error();
       showMessage("Respostas enviadas com sucesso!", "verde_claro");
-      router.push(`/researches/${researchId}/view`);
+      router.push(`/researches/${researchId}/surveys/${surveyId}`);
     } catch {
       showMessage("Erro ao enviar respostas.", "vermelho_claro");
     } finally {
@@ -124,62 +157,59 @@ export default function ResearchAnswers() {
         return (
           <Card
             key={field.id}
-            className={field.required ? "border-l-4 border-blue-500" : ""}
+            className="border-l-4 border-blue-500"
           >
             <CardContent className="flex flex-col gap-2">
               {typeName !== "long_text" && typeName !== "Múltipla Escolha" && (
-                <div className="relative">
-                  <Input
-                    id={field.id}
-                    value={value}
-                    onChange={(e) => handleChange(field.id, e.target.value)}
-                    placeholder=" "
-                    className="peer h-10 w-full border-b-2 border-gray-300 focus:border-blue-500 transition"
-                  />
-                  <Label
-                    htmlFor={field.id}
-                    className="absolute left-0 -top-3.5 text-gray-700 text-sm transition-all 
-                      peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
-                      peer-focus:-top-3.5 peer-focus:scale-75 peer-focus:text-blue-500"
-                  >
-                    {field.title}
-                    {field.required && (
-                      <span className="text-red-500 ml-1">*</span>
-                    )}
-                  </Label>
-                </div>
+          <div className="relative">
+            <Input
+              id={field.id}
+              value={value}
+              onChange={(e) => handleChange(field.id, e.target.value)}
+              placeholder=" "
+              className="peer h-10 w-full border-b-2 border-gray-300 focus:border-blue-500 transition"
+              required
+            />
+            <Label
+              htmlFor={field.id}
+              className="absolute left-0 -top-3.5 text-gray-700 text-sm transition-all 
+                peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
+                peer-focus:-top-3.5 peer-focus:scale-75 peer-focus:text-blue-500"
+            >
+              {field.title}
+            </Label>
+          </div>
               )}
 
               {typeName === "long_text" && (
-                <div className="relative mt-4">
-                  <Textarea
-                    id={`${field.id}-ta`}
-                    value={value}
-                    onChange={(e) => handleChange(field.id, e.target.value)}
-                    rows={4}
-                    placeholder=" "
-                    className="peer w-full border-b-2 border-gray-300 focus:border-blue-500 transition"
-                  />
-                  <Label
-                    htmlFor={`${field.id}-ta`}
-                    className="absolute left-0 -top-3.5 text-gray-700 text-sm transition-all 
-                      peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
-                      peer-focus:-top-3.5 peer-focus:scale-75 peer-focus:text-blue-500"
-                  >
-                    {field.title}
-                    {field.required && (
-                      <span className="text-red-500 ml-1">*</span>
-                    )}
-                  </Label>
-                </div>
+          <div className="relative mt-4">
+            <Textarea
+              id={`${field.id}-ta`}
+              value={value}
+              onChange={(e) => handleChange(field.id, e.target.value)}
+              rows={4}
+              placeholder=" "
+              className="peer w-full border-b-2 border-gray-300 focus:border-blue-500 transition"
+              required
+            />
+            <Label
+              htmlFor={`${field.id}-ta`}
+              className="absolute left-0 -top-3.5 text-gray-700 text-sm transition-all 
+                peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
+                peer-focus:-top-3.5 peer-focus:scale-75 peer-focus:text-blue-500"
+            >
+              {field.title}
+            </Label>
+          </div>
               )}
 
-                            {typeName === "Múltipla Escolha" && (
-                <FieldOptions
-                  field={field}
-                  value={value}
-                  onChange={(val) => handleChange(field.id, val)}
-                />
+              {typeName === "Múltipla Escolha" && (
+          <FieldOptions
+            field={field}
+            value={value}
+            onChange={(val) => handleChange(field.id, val)}
+            required
+          />
               )}
             </CardContent>
           </Card>
@@ -238,11 +268,12 @@ export default function ResearchAnswers() {
       )}
 
       {/* Ações */}
-      <div className="flex justify-end gap-4 mt-6">
+      <div className="flex justify-between gap-4 mt-6">
         <Button
+          type="button"
           variant="outline"
           className="px-6 py-2 border-gray-400 text-gray-600 hover:border-gray-600"
-          onClick={() => router.push("/")}
+          onClick={() => router.push(`/researches/${researchId}/surveys/${surveyId}`)}
         >
           Cancelar
         </Button>
@@ -282,6 +313,7 @@ function FieldOptions({ field, value, onChange }) {
               checked={value === opt.option_value}
               onChange={() => onChange(opt.option_value)}
               className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+              required
             />
             <span className="ml-3 text-gray-800">{opt.option_text}</span>
           </label>
