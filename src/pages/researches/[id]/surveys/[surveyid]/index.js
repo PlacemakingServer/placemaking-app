@@ -13,6 +13,7 @@ import { useFormSurveys } from "@/hooks/useFormSurveys";
 import { useStaticSurveys } from "@/hooks/useStaticSurveys";
 import { useSurveyContributors } from "@/hooks/useSurveyContributors";
 import { useSurveyRegions } from "@/hooks/useSurveyRegions";
+import { useUsers } from "@/hooks/useUsers";
 import { useSurveyTimeRanges } from "@/hooks/useSurveyTimeRanges";
 import { useLoading } from "@/context/LoadingContext";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
@@ -40,6 +41,7 @@ export default function ResearchSurvey() {
   const [copied, setCopied] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [copiedRangeId, setCopiedRangeId] = useState(null);
+  const { users: allUsers } = useUsers() || null;
 
   const { surveyRegions } = useSurveyRegions(surveyid);
   const { ranges: surveyTimeRanges } = useSurveyTimeRanges(surveyid);
@@ -63,15 +65,25 @@ export default function ResearchSurvey() {
     navigator.clipboard.writeText(text);
   };
 
+  const userMap = allUsers
+    ? Object.fromEntries(allUsers.map((user) => [user.id, user]))
+    : {};
+
   const getShortAddress = (fullAddress) => {
     if (!fullAddress) return "";
     const parts = fullAddress.split(",");
     return parts.slice(0, 3).join(",").trim();
   };
 
+  const contributorsList =
+    contributors?.map((contributor) => ({
+      ...contributor,
+      user: userMap[contributor.user_id] || null,
+    })) || [];
+
   useEffect(() => {
-    console.log("surveyTimeRanges", surveyTimeRanges);
-  }, [surveyTimeRanges]);
+    console.log("Contributors", contributors);
+  }, [contributors]);
 
   useEffect(() => {
     const idx = Math.floor(Math.random() * 5);
@@ -375,21 +387,34 @@ export default function ResearchSurvey() {
                 <p className="text-gray-400">Carregando colaboradores...</p>
               ) : contributors?.length ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {contributors.map((contributor) => (
-                    <UserCardCompact
-                      key={contributor.id}
-                      user={{
-                        id: contributor.user.id,
-                        name: contributor.user.name,
-                        role: contributor.user.role,
-                        email: contributor.user.email,
-                        status: contributor.user.status,
-                      }}
-                    />
-                  ))}
+                  {contributorsList === null ? (
+                    <p className="text-gray-400">Carregando colaboradores...</p>
+                  ) : contributorsList.length === 0 ? (
+                    <p className="text-gray-400">
+                      Nenhum colaborador encontrado.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {contributorsList.map((user) => (
+                        <UserCardCompact
+                          key={user.id}
+                          user={{
+                            id: user.user?.id,
+                            name: user.user?.name,
+                            role: user.user?.role,
+                            status: user.user?.status,
+                            email: user.user?.email,
+                            instruction: user.instruction, // se o componente aceitar
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
-                <p className="text-gray-400">Nenhum contribuidor atruibuído para essa coleta.</p>
+                <p className="text-gray-400">
+                  Nenhum contribuidor atruibuído para essa coleta.
+                </p>
               )}
             </motion.div>
           )}

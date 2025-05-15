@@ -14,6 +14,7 @@ import Button from "@/components/ui/Button";
 import { useMessage } from "@/context/MessageContext";
 import { useFields } from "@/hooks/useFields";
 import { useInputTypes } from "@/hooks/useInputTypes";
+import { useFieldOptions } from "@/hooks";
 
 export default function ResearchAnswers() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function ResearchAnswers() {
   const [submitting, setSubmitting] = useState(false);
 
   const surveyId = router.query.surveyid;
+  const researchId = router.query.id;
   const surveyType = router.query.survey_type;
   const { fields } = useFields(surveyId, surveyType);
   const { types } = useInputTypes();
@@ -62,12 +64,14 @@ export default function ResearchAnswers() {
       survey_id: surveyId,
       survey_type: surveyType,
       contributor_id: contributorId,
-      answers: fields.map((f) => ({
-      value: String(answers[f.id] ?? ""),
-      survey_group_id: f.survey_group_id,
-      survey_time_range_id: f.survey_time_range_id || "",
-      survey_region_id: f.survey_region_id || "",
-      registered_at: new Date().toISOString(),
+      answers: fields
+      .filter((f) => String(answers[f.id] ?? "") !== "")
+      .map((f) => ({
+        value: String(answers[f.id] ?? ""),
+        survey_group_id: f.survey_group_id,
+        survey_time_range_id: f.survey_time_range_id || "",
+        survey_region_id: f.survey_region_id || "",
+        registered_at: new Date().toISOString(),
       })),
     };
 
@@ -79,7 +83,7 @@ export default function ResearchAnswers() {
       });
       if (!res.ok) throw new Error();
       showMessage("Respostas enviadas com sucesso!", "verde_claro");
-      router.push("/dashboard");
+      router.push(`/researches/${researchId}/view`);
     } catch {
       showMessage("Erro ao enviar respostas.", "vermelho_claro");
     } finally {
@@ -96,8 +100,8 @@ export default function ResearchAnswers() {
   const otherFields = fields.filter((f) => !counterFields.includes(f));
 
   useEffect(() => {
-    console.log("id_do_contribuidor:", user);
-  }, [user]);
+    console.log("id_do_contribuidor:", contributorId);
+  }, [contributorId]);
 
   return (
     <motion.form
@@ -170,30 +174,12 @@ export default function ResearchAnswers() {
                 </div>
               )}
 
-              {typeName === "Múltipla Escolha" && (
-                <fieldset className="mt-4">
-                  <legend className="text-gray-700 font-medium">
-                    {field.title}
-                  </legend>
-                  <div className="mt-2 space-y-2">
-                    {(field.options || []).map((opt) => (
-                      <label
-                        key={opt}
-                        className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500"
-                      >
-                        <input
-                          type="radio"
-                          name={field.id}
-                          value={opt}
-                          checked={value === opt}
-                          onChange={() => handleChange(field.id, opt)}
-                          className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
-                        />
-                        <span className="ml-3 text-gray-800">{opt}</span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
+                            {typeName === "Múltipla Escolha" && (
+                <FieldOptions
+                  field={field}
+                  value={value}
+                  onChange={(val) => handleChange(field.id, val)}
+                />
               )}
             </CardContent>
           </Card>
@@ -273,5 +259,36 @@ export default function ResearchAnswers() {
   );
 }
 
+function FieldOptions({ field, value, onChange }) {
+  const { options, loading } = useFieldOptions(field.id);
+
+  if (loading) {
+    return <p className="text-gray-400 italic">Carregando opções...</p>;
+  }
+
+  return (
+    <fieldset className="mt-4">
+      <legend className="text-gray-700 font-medium">{field.title}</legend>
+      <div className="mt-2 space-y-2">
+        {options.map((opt) => (
+          <label
+            key={opt.id}
+            className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500"
+          >
+            <input
+              type="radio"
+              name={field.id}
+              value={value}
+              checked={value === opt.option_value}
+              onChange={() => onChange(opt.option_value)}
+              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+            />
+            <span className="ml-3 text-gray-800">{opt.option_text}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
 ResearchAnswers.pageName = "Responder Pesquisa";
 ResearchAnswers.layout = "private";
