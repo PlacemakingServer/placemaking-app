@@ -2,11 +2,10 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLoading } from "@/context/LoadingContext";
 import FiltersComponent from "@/components/ui/FiltersComponent";
+import { useAuth } from '@/context/AuthContext';
 import { useMessage } from "@/context/MessageContext";
-import { useRouter } from "next/router";
 import ResearchCardDashboard from "@/components/ui/Research/ResearchCardDashboard";
 import ResearchCardSkeleton from "@/components/ui/Research/ResearchCardSkeleton";
-import Switch from "@/components/ui/Switch";
 import Button from "@/components/ui/Button";
 import { VARIANTS } from "@/config/colors";
 import { useResearches } from "@/hooks/useResearches"; // << usando o hook certo!
@@ -21,6 +20,7 @@ import {
 } from "recharts";
 
 export default function Home() {
+  const { userData } = useAuth();
   const { researches, loading } = useResearches(); // << usando hook
   const [filters, setFilters] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
@@ -35,7 +35,6 @@ export default function Home() {
   const { setIsLoading } = useLoading();
   const { showMessage } = useMessage();
   const [showFilters, setShowFilters] = useState(false);
-  const router = useRouter();
 
   const currentDate = new Date();
   const categorizedResearches = {
@@ -270,8 +269,18 @@ export default function Home() {
               : Object.entries(categorizedResearches).map(([key, list]) => {
                   if (!showCategory[key]) return null;
                   const filteredAndSorted = filterAndSortResearches(list);
+                  const visibleResearches = filteredAndSorted.filter((research) => {
+                    // admins veem tudo
+                    if (userData?.role === "admin") return true;
+                    console.log("chegou aqui:", research)
+                    // contribuidor: vê se seu id está em algum research_contributor.user_id
+                    return Array.isArray(research.research_contributors) &&
+                           research.research_contributors.some(
+                             (c) => c.user_id === userData.id
+                           );
+                  });
                   const totalPages = Math.ceil(
-                    filteredAndSorted.length / perPage
+                    visibleResearches.length / perPage
                   );
 
                   const handlePrevious = () => {
@@ -298,7 +307,7 @@ export default function Home() {
                           : "Pesquisas Futuras"}
                       </h3>
 
-                      {filteredAndSorted.length === 0 ? (
+                      {visibleResearches.length === 0 ? (
                         <p className="text-gray-500 text-sm">
                           Nenhuma pesquisa encontrada.
                         </p>
@@ -307,7 +316,7 @@ export default function Home() {
                           layout
                           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6"
                         >
-                          {filteredAndSorted
+                          {visibleResearches
                             .slice(
                               (page[key] - 1) * perPage,
                               page[key] * perPage
@@ -329,7 +338,7 @@ export default function Home() {
                         </motion.div>
                       )}
 
-                      {filteredAndSorted.length > perPage && (
+                      {visibleResearches.length > perPage && (
                         <div className="flex items-center justify-between gap-6 mt-6">
                           <Button
                             onClick={handlePrevious}
