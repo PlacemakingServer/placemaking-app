@@ -1,40 +1,129 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+---
 
-## Getting Started
+# 🎯 PredictFlow Frontend
 
-First, run the development server:
+**URL de Acesso:** [https://frontend-triunfantes.vercel.app](https://frontend-triunfantes.vercel.app)
+**Credenciais de Teste:**
+📧 **Usuário:** `teste@test.com`
+🔐 **Senha:** `z1x2c3v4`
+
+---
+
+## 📦 Visão Geral
+
+O **PredictFlow** é um sistema de gestão visual e colaborativa de ordens de compra, times e performance de pedidos. É focado em facilitar o acompanhamento, análise e controle de processos de vendas, com forte suporte a gráficos, filtros e dashboards.
+
+Essa aplicação frontend foi desenvolvida com **Next.js** e **Tailwind CSS**, e está integrada com uma API externa (via variável de ambiente `NEXT_PUBLIC_SERVER_URL`) para realizar operações como login, registro, listagem e criação de dados.
+
+---
+
+## ✨ Funcionalidades Principais
+
+### 🔐 Autenticação
+
+* Login com persistência de sessão via `cookies`.
+* Cadastro de novos usuários com cargo e time.
+* Esqueci minha senha (simulado).
+
+### 📊 Dashboard
+
+* Visão geral dos KPIs principais:
+
+  * Total de pedidos.
+  * Pedidos resolvidos.
+  * Pendentes e atrasados.
+* Gráficos:
+
+  * Barras (estágios dos pedidos).
+  * Pizza (distribuição por país).
+* Tabela dos 5 últimos pedidos com acesso detalhado.
+
+### 📁 Ordens de Compra (`/order`)
+
+* Listagem completa dos pedidos da base.
+* Filtro global por texto.
+* Importação de CSV.
+* Criação de novo pedido com validação de campos.
+* Paginação automática.
+
+### 👥 Equipe (`/team`)
+
+* Cadastro de novos colaboradores (listados ou não).
+* Pesquisa e paginação.
+* Exibição de membros com identificação de "não listados".
+* Visualização detalhada de cada membro:
+
+  * Informações pessoais.
+  * Pedidos atribuídos.
+  * Logs de atividade.
+
+### 📄 Página de Pedido (`/deal/[id]`)
+
+* Ficha técnica completa do pedido.
+* Campos de status, datas, país, cliente, responsáveis.
+* Linha do tempo interativa com base no `vis-timeline`.
+
+### 📄 Página de Usuário (`/user/[id]`)
+
+* Detalhes pessoais e profissionais.
+* Pedidos relacionados ao usuário.
+* Histórico de atividade por logs de modificação.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+* **Framework:** [Next.js](https://nextjs.org/)
+* **Estilo:** [Tailwind CSS](https://tailwindcss.com/)
+* **Gráficos:** `chart.js`, `react-chartjs-2`, `vis-timeline`
+* **HTTP:** `axios` + `js-cookie`
+* **Animações:** `framer-motion`
+
+---
+
+## 🚀 Executando Localmente
 
 ```bash
+git clone https://github.com/seu-usuario/predictflow-frontend.git
+cd predictflow-frontend
+npm install
+
+# Crie um .env.local com:
+NEXT_PUBLIC_SERVER_URL=http://localhost:8000
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+## 🔐 Observações de Segurança
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+* Autenticação baseada em token via `Bearer Token`.
+* Cookies são configurados com `Secure` e `SameSite=Strict`.
+* Tokens são interceptados automaticamente via `axios.interceptors`.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📄 Estrutura de Diretórios
 
-## Learn More
+```
+📂 components         → Componentes reutilizáveis (Input, Sidebar, Table, etc.)
+📂 pages              → Rotas da aplicação (auth, dashboard, deal, order, team, etc.)
+📂 services           → Integrações com API externa (axios)
+📂 styles             → Tailwind e customizações globais
+📂 repositories       → Funções de autenticação (login/register)
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+## 🧪 Acesso de Teste
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* Para testar a aplicação:
 
-## Deploy on Vercel
+  * Acesse [https://frontend-triunfantes.vercel.app](https://frontend-triunfantes.vercel.app)
+  * Faça login com:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    * **Email:** `teste@test.com`
+    * **Senha:** `z1x2c3v4`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+---

@@ -143,7 +143,6 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(caches.match(req).then((res) => res || fetch(req)));
 });
 
-/* ---------- SINCRONISMO OFFLINE ---------- */
 async function pushPending() {
   for (const store of ENTITIES) {
     try {
@@ -205,7 +204,6 @@ async function pullUpdates() {
   }
 }
 
-/* ---------- BACKGROUND / PERIODIC SYNC ---------- */
 self.addEventListener("periodicsync", (event) => {
   console.info("[SW] periodicSync", event.tag);
   if (event.tag === "pull-updates") {
@@ -224,7 +222,6 @@ self.addEventListener("sync", (event) => {
   }
 });
 
-/* ---------- MENSAGENS MANUAIS ---------- */
 self.addEventListener("message", (event) => {
   if (event.data === "TRIGGER_PULL") pullUpdates();
   if (event.data === "TRIGGER_PUSH") pushPending();
