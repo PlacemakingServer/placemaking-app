@@ -33,29 +33,26 @@ export default function ResearchAnswers() {
   const { contributors: surveyContributors } = useSurveyContributors(surveyId);
   const { ranges: surveyTimeRanges } = useSurveyTimeRanges(surveyId);
 
-  // Filtra o contributor correspondente ao usuário logado
+  // Acha o contributor do usuário logado
   const currentContributor = surveyContributors?.find(
     (c) => c.user_id === user?.id
   );
   const contributorId = currentContributor?.id;
 
-  // Função para pegar o survey_time_range_id atual
+  // Retorna o time range atual
   function getCurrentTimeRangeId() {
-    if (!surveyTimeRanges || !surveyTimeRanges.length) return "";
+    if (!surveyTimeRanges || surveyTimeRanges.length === 0) return "";
     const now = new Date();
     for (const range of surveyTimeRanges) {
-      const [startHour, startMinute] = range.start_time.split(":").map(Number);
-      const [endHour, endMinute] = range.end_time.split(":").map(Number);
+      const [sh, sm] = range.start_time.split(":").map(Number);
+      const [eh, em] = range.end_time.split(":").map(Number);
 
       const start = new Date(now);
-      start.setHours(startHour, startMinute, 0, 0);
-
+      start.setHours(sh, sm, 0, 0);
       const end = new Date(now);
-      end.setHours(endHour, endMinute, 59, 999);
+      end.setHours(eh, em, 59, 999);
 
-      if (now >= start && now <= end) {
-        return range.id;
-      }
+      if (now >= start && now <= end) return range.id;
     }
     return "";
   }
@@ -66,8 +63,8 @@ export default function ResearchAnswers() {
   const validate = () => {
     const missing = fields
       .filter((f) => f.required)
-      .filter((f) => answers[f.id] === undefined || answers[f.id] === "");
-    if (missing.length) {
+      .filter((f) => !answers[f.id]);
+    if (missing.length > 0) {
       showMessage(
         `Preencha: ${missing.map((f) => f.title).join(", ")}`,
         "vermelho_claro"
@@ -89,8 +86,8 @@ export default function ResearchAnswers() {
       survey_type: surveyType,
       contributor_id: contributorId,
       answers: fields.map((f) => ({
-        field_id: f.id, 
-        value: String(answers[f.id] ?? ""),
+        field_id: f.id,
+        value: String(answers[f.id] || ""),
         survey_group_id: f.survey_group_id,
         survey_time_range_id:
           f.survey_time_range_id || currentTimeRangeId || "",
@@ -99,8 +96,7 @@ export default function ResearchAnswers() {
       })),
     };
 
-    const hasEmpty = body.answers.some((a) => a.value === "");
-    if (hasEmpty) {
+    if (body.answers.some((a) => a.value === "")) {
       showMessage("Preencha todos os campos obrigatórios.", "vermelho_claro");
       setSubmitting(false);
       return;
@@ -124,11 +120,14 @@ export default function ResearchAnswers() {
 
   const getTypeName = (id) =>
     (types.find((t) => t.id === id) || {}).name || "Texto";
-  const isDynamic = surveyType === "Dinâmica";
-  const counterFields = isDynamic
-    ? fields.filter((f) => getTypeName(f.input_type_id) === "Contador")
-    : [];
-  const otherFields = fields.filter((f) => !counterFields.includes(f));
+
+  // Agora todos os campos de tipo "Contador" entram em counterFields
+  const counterFields = fields.filter(
+    (f) => getTypeName(f.input_type_id) === "Contador"
+  );
+  const otherFields = fields.filter(
+    (f) => getTypeName(f.input_type_id) !== "Contador"
+  );
 
   useEffect(() => {
     console.log("id_do_contribuidor:", contributorId);
@@ -170,7 +169,7 @@ export default function ResearchAnswers() {
           transition={{ duration: 0.5 }}
           className="space-y-6"
         >
-          {/* Survey Info Card */}
+          {/* Survey Info */}
           <Card className="bg-white shadow-sm border border-gray-200">
             <CardHeader className="pb-4">
               <div className="flex items-center space-x-3">
@@ -188,7 +187,7 @@ export default function ResearchAnswers() {
             </CardHeader>
           </Card>
 
-          {/* Form Fields */}
+          {/* Campos não-contador */}
           {otherFields.length > 0 && (
             <Card className="bg-white shadow-sm border border-gray-200">
               <CardHeader>
@@ -280,12 +279,12 @@ export default function ResearchAnswers() {
             </Card>
           )}
 
-          {/* Dynamic Counters */}
-          {isDynamic && counterFields.length > 0 && (
+          {/* Seção de Contadores */}
+          {counterFields.length > 0 && (
             <Card className="bg-white shadow-sm border border-gray-200">
               <CardHeader>
                 <h3 className="text-base font-medium text-gray-900">
-                  Contadores Dinâmicos
+                  Contadores
                 </h3>
                 <p className="text-sm text-gray-500">
                   Use os botões para ajustar os valores
@@ -344,7 +343,7 @@ export default function ResearchAnswers() {
             </Card>
           )}
 
-          {/* Action Buttons */}
+          {/* Botões de ação */}
           <Card className="bg-white shadow-sm border border-gray-200">
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
