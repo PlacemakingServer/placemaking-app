@@ -1,12 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { ChevronDown, ClipboardCopy, Check } from "lucide-react";
+"use client";
+
+import { useState, useEffect } from "react";
+import { ClipboardCopy, Check, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/router";
-import { VARIANTS } from "@/config/colors";
 import UserCardCompact from "@/components/ui/UserCardCompact";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
 import Switch from "@/components/ui/Switch";
+import Button from "@/components/ui/Button";
+import { ChevronLeft } from "lucide-react";
 import { useLoading } from "@/context/LoadingContext";
+import { useAuthentication } from "@/hooks";
 import { toast } from "react-hot-toast";
 import { syncResearchData } from "@/services/sync_data_service";
 
@@ -27,10 +31,13 @@ export default function ResearchView() {
   const { contributors: contributorsData } = useResearchContributors(id);
   const { researchData: selectedResearch } = useResearches(true, id);
   const { users: allUsers } = useUsers() || null;
+  const { user: currentUser } = useAuthentication();
+
   const [showContributors, setShowContributors] = useState(false);
   const [showSurveys, setshowSurveys] = useState(false);
   const [showMap, setShowMap] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [surveyContributors, setSurveyContributors] = useState({});
   const { setIsLoading } = useLoading();
 
   const [imageUrl, setImageUrl] = useState("");
@@ -51,6 +58,62 @@ export default function ResearchView() {
       ...contributor,
       user: userMap[contributor.user_id] || null,
     })) || [];
+
+  // Check if current user is admin
+  const isAdmin =
+    currentUser?.role === "admin" || currentUser?.role === "administrator";
+
+  // Fetch contributors for each survey to check access
+  useEffect(() => {
+    const fetchSurveyContributors = async () => {
+      if (!surveys.length || !currentUser) return;
+
+      const contributorsMap = {};
+
+      for (const survey of surveys) {
+        try {
+          const response = await fetch(
+            `/api/survey-contributors?survey_id=${survey.id}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            contributorsMap[survey.id] = data.contributors || [];
+          }
+        } catch (error) {
+          console.error(
+            `Error fetching contributors for survey ${survey.id}:`,
+            error
+          );
+          contributorsMap[survey.id] = [];
+        }
+      }
+
+      setSurveyContributors(contributorsMap);
+    };
+
+    fetchSurveyContributors();
+  }, [currentUser]);
+
+  // Check if user has access to a specific survey
+  const hasAccessToSurvey = () => {
+    // admins sempre True
+    if (isAdmin) return true;
+
+    // se ainda não veio o array, bate False
+    if (!Array.isArray(contributorsList)) return false;
+
+    // se algum contributor.user_id bate com currentUser.id → True
+    return contributorsList.some((c) => c.user_id === currentUser?.id);
+  };
+
+  const handleSurveyAccess = (survey) => {
+    if (!hasAccessToSurvey(survey.id)) {
+      toast.error("Você não tem permissão para acessar esta coleta.");
+      return;
+    }
+
+    router.push(`/researches/${selectedResearch.id}/surveys/${survey.id}`);
+  };
 
   const handleCopyCoords = () => {
     const name = selectedResearch?.location_title;
@@ -85,6 +148,30 @@ export default function ResearchView() {
       transition={{ duration: 0.4 }}
       className="max-w-screen-lg mx-auto p-6 md:p-8 box-border"
     >
+            {/* Header com botão de voltar */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="w-full flex items-center justify-between mb-4"
+      >
+        <Button
+          onClick={() => router.back()}
+          variant="outline"
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-gray-300"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Voltar</span>
+        </Button>
+        <div className="text-right">
+          <h1 className="text-xl font-semibold text-gray-900">
+            Detalhes da Pesquisa
+          </h1>
+          <p className="text-sm text-gray-500">
+            Visualizar informações e respostas
+          </p>
+        </div>
+      </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -154,6 +241,7 @@ export default function ResearchView() {
           </button>
         </div>
       </motion.div>
+
       {/* Seção Mapa com Toggle */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -210,6 +298,7 @@ export default function ResearchView() {
           )}
         </AnimatePresence>
       </motion.div>
+
       {/* Seção Colaboradores com Toggle */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -247,7 +336,7 @@ export default function ResearchView() {
                         role: user.user?.role,
                         status: user.user?.status,
                         email: user.user?.email,
-                        instruction: user.instruction, // se o componente aceitar
+                        instruction: user.instruction,
                       }}
                     />
                   ))}
@@ -258,7 +347,7 @@ export default function ResearchView() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Seção de Coletas*/}
+      {/* Seção de Coletas com Controle de Acesso */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -307,48 +396,69 @@ export default function ResearchView() {
                     {type}
                   </h3>
 
-                  {group.map((survey, idx) => (
-                    <div
-                      key={survey.id}
-                      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 border rounded-lg shadow-sm transition hover:shadow-md ${
-                        idx !== 0 ? "mt-2" : ""
-                      }`}
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-800">
-                          {survey.title || `Survey ${survey.id}`}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {survey.description || "Sem descrição"}
-                        </span>
-                      </div>
+                  {group.map((survey, idx) => {
+                    const hasAccess = hasAccessToSurvey();
 
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/researches/${selectedResearch.id}/surveys/${survey.id}`
-                            )
-                          }
-                          className="text-blue-600 hover:text-blue-800 transition"
-                        >
-                          <span className="material-symbols-outlined text-2xl">
-                            visibility
+                    return (
+                      <div
+                        key={survey.id}
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 border rounded-lg shadow-sm transition hover:shadow-md ${
+                          idx !== 0 ? "mt-2" : ""
+                        } ${!hasAccess ? "opacity-60" : ""}`}
+                      >
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-800">
+                              {survey.title || `Survey ${survey.id}`}
+                            </span>
+                            {!hasAccess && (
+                              <Lock
+                                className="w-4 h-4 text-gray-500"
+                                title="Acesso restrito"
+                              />
+                            )}
+                          </div>
+                          <span className="text-sm text-gray-500">
+                            {survey.description || "Sem descrição"}
                           </span>
-                        </button>
+                          {!hasAccess && !isAdmin && (
+                            <span className="text-xs text-red-500 mt-1">
+                              Você não é contribuidor desta coleta
+                            </span>
+                          )}
+                        </div>
 
-                        <span
-                          className={`text-xs font-medium px-2 py-1 rounded-full ${
-                            survey._syncStatus === "synced"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {survey._syncStatus}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleSurveyAccess(survey)}
+                            disabled={!hasAccess}
+                            className={`transition ${
+                              hasAccess
+                                ? "text-blue-600 hover:text-blue-800 cursor-pointer"
+                                : "text-gray-400 cursor-not-allowed"
+                            }`}
+                            title={
+                              hasAccess ? "Visualizar coleta" : "Acesso negado"
+                            }
+                          >
+                            <span className="material-symbols-outlined text-2xl">
+                              {hasAccess ? "visibility" : "visibility_off"}
+                            </span>
+                          </button>
+
+                          <span
+                            className={`text-xs font-medium px-2 py-1 rounded-full ${
+                              survey._syncStatus === "synced"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {survey._syncStatus}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </motion.div>
               ));
             })()}

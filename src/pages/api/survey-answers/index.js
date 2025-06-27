@@ -59,7 +59,7 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
       const response = await fetch(
-        `${process.env.SERVER_URL}/survey-answers`
+        `${process.env.SERVER_URL}/survey/${survey_id}/answers`
       );
       const data = await response.json();
       return res.status(200).json(data);

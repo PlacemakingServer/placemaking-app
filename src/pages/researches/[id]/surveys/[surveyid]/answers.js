@@ -89,6 +89,7 @@ export default function ResearchAnswers() {
       survey_type: surveyType,
       contributor_id: contributorId,
       answers: fields.map((f) => ({
+        field_id: f.id, 
         value: String(answers[f.id] ?? ""),
         survey_group_id: f.survey_group_id,
         survey_time_range_id:
