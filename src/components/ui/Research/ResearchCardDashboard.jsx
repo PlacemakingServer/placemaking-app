@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRouter } from "next/router";
 import Button from "@/components/ui/Button";
 import { VARIANTS } from "@/config/colors";
@@ -5,10 +6,10 @@ import { motion } from "framer-motion";
 
 export default function ResearchCard({ research, showButton = true }) {
   const router = useRouter();
-  const imageIndex = Math.floor(Math.random() * 5); // 0 a 4
-  const imageUrl = `/img/cards/img-${imageIndex}.jpg`;
 
-  console.log(research)
+  // Roda apenas na montagem e mantém o mesmo valor de imageIndex
+  const [imageIndex] = useState(() => Math.floor(Math.random() * 5));
+  const imageUrl = `/img/cards/img-${imageIndex}.jpg`;
 
   return (
     <motion.div
@@ -17,41 +18,41 @@ export default function ResearchCard({ research, showButton = true }) {
       className="rounded-2xl shadow-md bg-white overflow-hidden flex flex-col justify-between border hover:shadow-xl"
     >
       {/* Header com imagem de fundo */}
-        <div
-          className="relative h-14 bg-cover bg-center"
-          style={{ backgroundImage: `url('${imageUrl}')` }}
-        >
-          <div className="absolute inset-0 bg-black/30 rounded-t-2xl" />
-          <div className="absolute inset-0 flex items-center px-4">
-            <h3 className="text-white text-md font-semibold truncate drop-shadow-md z-10">
-          {research.title}
-            </h3>
-          </div>
+      <div
+        className="relative h-14 bg-cover bg-center"
+        style={{ backgroundImage: `url('${imageUrl}')` }}
+      >
+        <div className="absolute inset-0 bg-black/30 rounded-t-2xl" />
+        <div className="absolute inset-0 flex items-center px-4">
+          <h3 className="text-white text-md font-semibold truncate drop-shadow-md z-10">
+            {research.title}
+          </h3>
         </div>
+      </div>
 
-        {/* Conteúdo textual abaixo da imagem */}
-        <div className="p-4 space-y-2 text-sm">
-          <p className="text-gray-600 truncate">
-            <strong>Descrição:</strong> {research.description || "—"}
-          </p>
-          <p className="text-gray-600 truncate">
-            <strong>Local:</strong> {research.location_title || "—"}
-          </p>
-          <p className="text-gray-600 truncate">
-            <strong>Início:</strong>{" "}
-            {research.release_date
-          ? new Date(research.release_date).toLocaleDateString("pt-BR")
-          : "—"}
-          </p>
-          <p className="text-gray-600 truncate">
-            <strong>Fim:</strong>{" "}
-            {research.end_date
-          ? new Date(research.end_date).toLocaleDateString("pt-BR")
-          : "—"}
-          </p>
-        </div>
+      {/* Conteúdo textual abaixo da imagem */}
+      <div className="p-4 space-y-2 text-sm">
+        <p className="text-gray-600 truncate">
+          <strong>Descrição:</strong> {research.description || "—"}
+        </p>
+        <p className="text-gray-600 truncate">
+          <strong>Local:</strong> {research.location_title || "—"}
+        </p>
+        <p className="text-gray-600 truncate">
+          <strong>Início:</strong>{" "}
+          {research.release_date
+            ? new Date(research.release_date).toLocaleDateString("pt-BR")
+            : "—"}
+        </p>
+        <p className="text-gray-600 truncate">
+          <strong>Fim:</strong>{" "}
+          {research.end_date
+            ? new Date(research.end_date).toLocaleDateString("pt-BR")
+            : "—"}
+        </p>
+      </div>
 
-        {/* Rodapé com botões */}
+      {/* Rodapé com botões */}
       <div className="flex items-center justify-between gap-2 px-4 pb-4">
         {research._syncStatus && (
           <span
@@ -65,15 +66,17 @@ export default function ResearchCard({ research, showButton = true }) {
         <div className="flex items-center gap-2 ml-auto">
           {showButton && (
             <Button
-            variant="transparent_cinza"
-            className="p-2"
-            title="Ver Detalhes"
-            onClick={() => router.push(`/researches/${research.id}/view`)}
-          >
-            <span className="material-symbols-outlined text-base">
-              visibility
-            </span>
-          </Button>
+              variant="transparent_cinza"
+              className="p-2"
+              title="Ver Detalhes"
+              onClick={() =>
+                router.push(`/researches/${research.id}/view`)
+              }
+            >
+              <span className="material-symbols-outlined text-base">
+                visibility
+              </span>
+            </Button>
           )}
         </div>
       </div>

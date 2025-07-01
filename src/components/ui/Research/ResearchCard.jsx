@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRouter } from "next/router";
 import Button from "@/components/ui/Button";
 import { VARIANTS } from "@/config/colors";
@@ -5,7 +6,8 @@ import { motion } from "framer-motion";
 
 export default function ResearchCard({ research }) {
   const router = useRouter();
-  const imageIndex = Math.floor(Math.random() * 5); // 0 a 4
+
+  const [imageIndex] = useState(() => Math.floor(Math.random() * 5));
   const imageUrl = `/img/cards/img-${imageIndex}.jpg`;
 
   return (
@@ -30,13 +32,13 @@ export default function ResearchCard({ research }) {
       {/* Conteúdo textual abaixo da imagem */}
       <div className="p-4 space-y-2 text-sm">
         <p className="text-gray-600 truncate">
-          Descrição: {research.description || "—"}
+          <strong>Descrição:</strong> {research.description || "—"}
         </p>
         <p className="text-gray-600 truncate">
-          Local: {research.location_title || "—"}
+          <strong>Local:</strong> {research.location_title || "—"}
         </p>
         <p className="text-gray-600 truncate">
-          Início: {research.release_date || "—"}
+          <strong>Início:</strong> {research.release_date || "—"}
         </p>
       </div>
 
