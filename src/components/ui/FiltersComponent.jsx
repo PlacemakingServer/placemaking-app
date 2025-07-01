@@ -113,9 +113,10 @@ export default function FiltersComponent({
   );
 
   return (
-    <div>
-      {/* DESKTOP: botão de expandir/recolher */}
-      <div className="hidden lg:flex justify-end mb-2">
+    <div className="min-w-80">
+      {/* DESKTOP: botão + painel sobreposto */}
+      <div className="hidden lg:flex justify-end mb-6 relative">
+        {/* 1) Botão */}
         <Button
           variant="light"
           onClick={() => setShowFilters((prev) => !prev)}
@@ -126,18 +127,13 @@ export default function FiltersComponent({
           </span>
           {showFilters ? "Esconder filtros" : "Mostrar filtros"}
         </Button>
-      </div>
 
-      {/* DESKTOP: filtros inline */}
-      <div
-        className={clsx(
-          "transition-all overflow-hidden hidden lg:block",
-          showFilters ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+        {/* 2) Painel absolute sobreposto (aparece/desaparece) */}
+        {showFilters && (
+          <section className="absolute top-full right-0 mt-2 w-90 max-w-full border border-gray-200 rounded-xl shadow-sm p-4 bg-white z-50">
+            {renderFilterContent()}
+          </section>
         )}
-      >
-        <section className="mb-6 border border-gray-200 rounded-xl shadow-sm p-4 bg-white fixed right-10">
-          {renderFilterContent()}
-        </section>
       </div>
 
       {/* MOBILE: botão flutuante */}

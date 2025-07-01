@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLoading } from "@/context/LoadingContext";
 import FiltersComponent from "@/components/ui/FiltersComponent";
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from "@/context/AuthContext";
 import { useMessage } from "@/context/MessageContext";
 import ResearchCardDashboard from "@/components/ui/Research/ResearchCardDashboard";
 import ResearchCardSkeleton from "@/components/ui/Research/ResearchCardSkeleton";
@@ -104,73 +104,73 @@ export default function Home() {
               <h2 className="text-3xl font-bold text-gray-800">
                 Suas Pesquisas
               </h2>
-  
-            <FiltersComponent
-              showFilters={showFilters}
-              setShowFilters={setShowFilters}
-              variants={VARIANTS}
-              filters={[
-                {
-                  key: "filters",
-                  label: "Buscar por título, descrição ou local",
-                  icon: "search",
-                  type: "text",
-                  value: filters,
-                  defaultValue: "",
-                },
-                {
-                  key: "sortOrder",
-                  label: "Ordenação",
-                  icon: "sort",
-                  type: "button-group",
-                  value: sortOrder,
-                  defaultValue: "asc",
-                  options: [
-                    { label: "Mais Recentes", value: "asc" },
-                    { label: "Mais Antigos", value: "desc" },
-                  ],
-                },
-                {
-                  key: "showCategory",
-                  label: "Mostrar categorias",
-                  type: "switch-group",
-                  options: [
-                    {
-                      label: "Pesquisas Já Realizadas",
-                      value: "completed",
-                      checked: showCategory.completed,
-                    },
-                    {
-                      label: "Pesquisas em Andamento",
-                      value: "ongoing",
-                      checked: showCategory.ongoing,
-                    },
-                    {
-                      label: "Pesquisas Futuras",
-                      value: "future",
-                      checked: showCategory.future,
-                    },
-                  ],
-                },
-              ]}
-              onChange={(key, value) => {
-                if (key === "filters") setFilters(value);
-                if (key === "sortOrder") setSortOrder(value);
-                if (key === "showCategory") {
-                  setShowCategory((prev) => ({ ...prev, ...value }));
-                }
-              }}
-              onClear={() => {
-                setFilters("");
-                setSortOrder("asc");
-                setShowCategory({
-                  completed: true,
-                  ongoing: true,
-                  future: true,
-                });
-              }}
-            />
-</div>
+
+              <FiltersComponent
+                showFilters={showFilters}
+                setShowFilters={setShowFilters}
+                variants={VARIANTS}
+                filters={[
+                  {
+                    key: "filters",
+                    label: "Buscar por título, descrição ou local",
+                    icon: "search",
+                    type: "text",
+                    value: filters,
+                    defaultValue: "",
+                  },
+                  {
+                    key: "sortOrder",
+                    label: "Ordenação",
+                    icon: "sort",
+                    type: "button-group",
+                    value: sortOrder,
+                    defaultValue: "asc",
+                    options: [
+                      { label: "Mais Recentes", value: "asc" },
+                      { label: "Mais Antigos", value: "desc" },
+                    ],
+                  },
+                  {
+                    key: "showCategory",
+                    label: "Mostrar categorias",
+                    type: "switch-group",
+                    options: [
+                      {
+                        label: "Pesquisas Já Realizadas",
+                        value: "completed",
+                        checked: showCategory.completed,
+                      },
+                      {
+                        label: "Pesquisas em Andamento",
+                        value: "ongoing",
+                        checked: showCategory.ongoing,
+                      },
+                      {
+                        label: "Pesquisas Futuras",
+                        value: "future",
+                        checked: showCategory.future,
+                      },
+                    ],
+                  },
+                ]}
+                onChange={(key, value) => {
+                  if (key === "filters") setFilters(value);
+                  if (key === "sortOrder") setSortOrder(value);
+                  if (key === "showCategory") {
+                    setShowCategory((prev) => ({ ...prev, ...value }));
+                  }
+                }}
+                onClear={() => {
+                  setFilters("");
+                  setSortOrder("asc");
+                  setShowCategory({
+                    completed: true,
+                    ongoing: true,
+                    future: true,
+                  });
+                }}
+              />
+            </div>
             {loading
               ? Array.from({ length: 6 }).map((_, index) => (
                   <ResearchCardSkeleton key={index} />
@@ -178,16 +178,20 @@ export default function Home() {
               : Object.entries(categorizedResearches).map(([key, list]) => {
                   if (!showCategory[key]) return null;
                   const filteredAndSorted = filterAndSortResearches(list);
-                  const visibleResearches = filteredAndSorted.filter((research) => {
-                    // admins veem tudo
-                    if (userData?.role === "admin") return true;
-                    console.log("chegou aqui:", research)
-                    // contribuidor: vê se seu id está em algum research_contributor.user_id
-                    return Array.isArray(research.research_contributors) &&
-                           research.research_contributors.some(
-                             (c) => c.user_id === userData.id
-                           );
-                  });
+                  const visibleResearches = filteredAndSorted.filter(
+                    (research) => {
+                      // admins veem tudo
+                      if (userData?.role === "admin") return true;
+                      console.log("chegou aqui:", research);
+                      // contribuidor: vê se seu id está em algum research_contributor.user_id
+                      return (
+                        Array.isArray(research.research_contributors) &&
+                        research.research_contributors.some(
+                          (c) => c.user_id === userData.id
+                        )
+                      );
+                    }
+                  );
                   const totalPages = Math.ceil(
                     visibleResearches.length / perPage
                   );
