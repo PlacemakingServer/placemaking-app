@@ -227,7 +227,7 @@ export default function ResearchSurvey() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="bg-white border border-gray-200 overflow-hidden mb-12 rounded-lg"
+          className="bg-white border border-gray-200 overflow-hidden mb-12 rounded-lg shadow-lg"
         >
           <div
             className="relative h-48 overflow-hidden"
@@ -288,6 +288,7 @@ export default function ResearchSurvey() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
+                className="shadow-lg"
               >
                 <Alert className="border-red-200 bg-red-50">
                   <AlertCircle className="h-5 w-5 text-red-600" />
@@ -305,6 +306,7 @@ export default function ResearchSurvey() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
+              className="shadow-lg"
             >
               <Alert
                 className={`${
@@ -526,7 +528,7 @@ export default function ResearchSurvey() {
             }`}
           >
             <span className="material-symbols-outlined text-xl mr-3">send</span>
-            <span>
+            <span className="text-lg">
               {!isWithinDateRange
                 ? "Fora do período de coleta"
                 : !isWithinTimeRange
@@ -623,7 +625,7 @@ function DetailSection({ title, icon, isOpen, onToggle, children }) {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-white border border-gray-200 overflow-hidden"
+      className="bg-white border border-gray-200 overflow-hidden shadow-lg"
     >
       <div className="flex justify-between items-center p-8 border-b border-gray-100">
         <div className="flex items-center gap-4">
@@ -668,7 +670,7 @@ function LoadingPlaceholder() {
 function EmptyState({ message }) {
   return (
     <div className="text-center py-12">
-      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
         <AlertCircle className="w-8 h-8 text-gray-400" />
       </div>
       <p className="text-gray-500 text-lg font-light">{message}</p>
@@ -679,7 +681,7 @@ function EmptyState({ message }) {
 function NoAnswers() {
   return (
     <div className="text-center py-16">
-      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
         <MessageSquare className="w-10 h-10 text-gray-400" />
       </div>
       <h3 className="text-xl font-light text-gray-900 mb-2">
@@ -699,7 +701,7 @@ function AnswerGroup({ data, fields, ranges, formatDateTime }) {
   const timestamp = first?.registered_at;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all duration-200">
+    <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-all duration-200 shadow-lg">
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
         <div className="flex items-center space-x-4">
           <div className="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -730,7 +732,7 @@ function AnswerGroup({ data, fields, ranges, formatDateTime }) {
           return (
             <div
               key={idx}
-              className="bg-gray-50 rounded-lg p-4 border border-gray-100"
+              className="bg-gray-50 rounded-lg p-4 border border-gray-100shadow-lg"
             >
               <div className="flex justify-between items-start mb-3">
                 <span className="text-sm font-medium text-gray-700 uppercase tracking-wider">
