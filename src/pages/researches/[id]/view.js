@@ -186,10 +186,10 @@ export default function ResearchView() {
             <strong>Descrição:</strong> {selectedResearch?.description}
           </motion.p>
           <motion.p>
-            <strong>Início:</strong> {new Date(selectedResearch?.release_date).toLocaleDateString("pt-BR")}
+            <strong>Início:</strong> {selectedResearch?.release_date ? new Date(selectedResearch.release_date + 'T00:00:00').toLocaleDateString("pt-BR") : ''}
           </motion.p>
           <motion.p>
-            <strong>Fim:</strong> {new Date(selectedResearch?.end_date).toLocaleDateString("pt-BR")}
+            <strong>Fim:</strong> {selectedResearch?.end_date ? new Date(selectedResearch.end_date + 'T00:00:00').toLocaleDateString("pt-BR") : ''}
           </motion.p>
           <motion.p>
             <strong>Criada por:</strong> {author?.name}
@@ -313,7 +313,7 @@ export default function ResearchView() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Seção de Coletas com Controle de Acesso - MELHORADA */}
+      {/* Seção de Coletas com Controle de Acesso */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

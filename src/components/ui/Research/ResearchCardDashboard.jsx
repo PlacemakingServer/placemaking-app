@@ -41,13 +41,13 @@ export default function ResearchCard({ research, showButton = true }) {
         <p className="text-gray-600 truncate">
           <strong>Início:</strong>{" "}
           {research.release_date
-            ? new Date(research.release_date).toLocaleDateString("pt-BR")
+            ? new Date(research.release_date + 'T00:00:00').toLocaleDateString("pt-BR")
             : "—"}
         </p>
         <p className="text-gray-600 truncate">
           <strong>Fim:</strong>{" "}
           {research.end_date
-            ? new Date(research.end_date).toLocaleDateString("pt-BR")
+            ? new Date(research.end_date + 'T00:00:00').toLocaleDateString("pt-BR")
             : "—"}
         </p>
       </div>

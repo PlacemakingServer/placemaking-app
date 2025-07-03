@@ -113,8 +113,18 @@ export default function Profile() {
     { label: "Nome", value: form.name, icon: User },
     { label: "E-mail", value: form.email, icon: Mail },
     { label: "ID", value: form.id, icon: Hash },
-    { label: "Status", value: form.status, icon: Shield },
-    { label: "Papel", value: form.role, icon: Shield },
+    { 
+      label: "Status", 
+      value: form.status === "active" ? "Ativo" : 
+             form.status === "deactive" ? "Desativado" : form.status, 
+      icon: Shield 
+    },
+    { 
+      label: "Papel", 
+      value: form.role === "admin" ? "Administrador" : 
+             form.role === "researcher" ? "Pesquisador" : form.role, 
+      icon: Shield 
+    },
     { label: "Criado em", value: form.created_at, icon: Calendar },
     { label: "Atualizado em", value: form.updated_at, icon: Calendar },
   ];

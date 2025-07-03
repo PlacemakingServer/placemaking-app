@@ -38,7 +38,16 @@ export default function ResearchCard({ research }) {
           <strong>Local:</strong> {research.location_title || "—"}
         </p>
         <p className="text-gray-600 truncate">
-          <strong>Início:</strong> {research.release_date || "—"}
+          <strong>Início:</strong>{" "}
+          {research.release_date
+            ? new Date(research.release_date + 'T00:00:00').toLocaleDateString("pt-BR")
+            : "—"}
+        </p>
+        <p className="text-gray-600 truncate">
+          <strong>Fim:</strong>{" "}
+          {research.end_date
+            ? new Date(research.end_date + 'T00:00:00').toLocaleDateString("pt-BR")
+            : "—"}
         </p>
       </div>
 

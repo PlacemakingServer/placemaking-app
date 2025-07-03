@@ -26,6 +26,7 @@ export default function ResearchAnswers() {
   const surveyId = router.query.surveyid;
   const researchId = router.query.id;
   const surveyType = router.query.survey_type;
+
   const { fields } = useFields(surveyId, surveyType);
   const { types } = useInputTypes();
 
@@ -33,26 +34,26 @@ export default function ResearchAnswers() {
   const { contributors: surveyContributors } = useSurveyContributors(surveyId);
   const { ranges: surveyTimeRanges } = useSurveyTimeRanges(surveyId);
 
-  // Acha o contributor do usuário logado
   const currentContributor = surveyContributors?.find(
     (c) => c.user_id === user?.id
   );
   const contributorId = currentContributor?.id;
 
-  // Retorna o time range atual
   function getCurrentTimeRangeId() {
-    if (!surveyTimeRanges || surveyTimeRanges.length === 0) return "";
+    if (!surveyTimeRanges || surveyTimeRanges.length === 0) {
+      return "";
+    }
     const now = new Date();
     for (const range of surveyTimeRanges) {
       const [sh, sm] = range.start_time.split(":").map(Number);
       const [eh, em] = range.end_time.split(":").map(Number);
-
       const start = new Date(now);
       start.setHours(sh, sm, 0, 0);
       const end = new Date(now);
       end.setHours(eh, em, 59, 999);
-
-      if (now >= start && now <= end) return range.id;
+      if (now >= start && now <= end) {
+        return range.id;
+      }
     }
     return "";
   }
@@ -118,10 +119,110 @@ export default function ResearchAnswers() {
     }
   };
 
-  const getTypeName = (id) =>
-    (types.find((t) => t.id === id) || {}).name || "Texto";
+  const getTypeName = (id) => types.find((t) => t.id === id)?.name || "Texto";
 
-  // Agora todos os campos de tipo "Contador" entram em counterFields
+  function renderField(field) {
+    const typeName = getTypeName(field.input_type_id);
+    const value = answers[field.id] || "";
+
+    switch (typeName) {
+      case "Data":
+        return (
+          <div className="space-y-2">
+            <Label
+              htmlFor={field.id}
+              className="text-sm font-medium text-gray-700"
+            >
+              {field.title}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Input
+              id={field.id}
+              type="date"
+              value={value}
+              onChange={(e) => handleChange(field.id, e.target.value)}
+              className="w-full"
+              required={field.required}
+            />
+          </div>
+        );
+      case "Texto":
+        return (
+          <div className="space-y-2">
+            <Label
+              htmlFor={field.id}
+              className="text-sm font-medium text-gray-700"
+            >
+              {field.title}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Textarea
+              id={field.id}
+              rows={3}
+              value={value}
+              onChange={(e) => handleChange(field.id, e.target.value)}
+              className="w-full"
+              required={field.required}
+            />
+          </div>
+        );
+      case "long_text":
+        return (
+          <div className="space-y-2">
+            <Label
+              htmlFor={`${field.id}-ta`}
+              className="text-sm font-medium text-gray-700"
+            >
+              {field.title}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Textarea
+              id={`${field.id}-ta`}
+              rows={5}
+              value={value}
+              onChange={(e) => handleChange(field.id, e.target.value)}
+              className="w-full"
+              required={field.required}
+            />
+          </div>
+        );
+      case "Múltipla Escolha":
+        return (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-700">
+              {field.title}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <FieldOptions
+              field={field}
+              value={value}
+              onChange={(val) => handleChange(field.id, val)}
+              required={field.required}
+            />
+          </div>
+        );
+      default:
+        return (
+          <div className="space-y-2">
+            <Label
+              htmlFor={field.id}
+              className="text-sm font-medium text-gray-700"
+            >
+              {field.title}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Input
+              id={field.id}
+              value={value}
+              onChange={(e) => handleChange(field.id, e.target.value)}
+              className="w-full"
+              required={field.required}
+            />
+          </div>
+        );
+    }
+  }
+
   const counterFields = fields.filter(
     (f) => getTypeName(f.input_type_id) === "Contador"
   );
@@ -135,7 +236,6 @@ export default function ResearchAnswers() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -160,7 +260,6 @@ export default function ResearchAnswers() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.form
           onSubmit={handleSubmit}
@@ -169,11 +268,10 @@ export default function ResearchAnswers() {
           transition={{ duration: 0.5 }}
           className="space-y-6"
         >
-          {/* Survey Info */}
           <Card className="bg-white shadow-sm border border-gray-200">
             <CardHeader className="pb-4">
               <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
                 <div>
                   <h2 className="text-lg font-medium text-gray-900">
                     {surveyType}: Formulário de Respostas
@@ -187,7 +285,6 @@ export default function ResearchAnswers() {
             </CardHeader>
           </Card>
 
-          {/* Campos não-contador */}
           {otherFields.length > 0 && (
             <Card className="bg-white shadow-sm border border-gray-200">
               <CardHeader>
@@ -196,90 +293,20 @@ export default function ResearchAnswers() {
                 </h3>
               </CardHeader>
               <CardContent className="space-y-6">
-                {otherFields.map((field) => {
-                  const typeName = getTypeName(field.input_type_id);
-                  const value = answers[field.id] || "";
-
-                  return (
-                    <motion.div
-                      key={field.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="space-y-2"
-                    >
-                      {typeName !== "long_text" &&
-                        typeName !== "Múltipla Escolha" && (
-                          <div className="space-y-2">
-                            <Label
-                              htmlFor={field.id}
-                              className="text-sm font-medium text-gray-700"
-                            >
-                              {field.title}
-                              {field.required && (
-                                <span className="text-red-500 ml-1">*</span>
-                              )}
-                            </Label>
-                            <Input
-                              id={field.id}
-                              value={value}
-                              onChange={(e) =>
-                                handleChange(field.id, e.target.value)
-                              }
-                              className="w-full"
-                              required={field.required}
-                            />
-                          </div>
-                        )}
-
-                      {typeName === "long_text" && (
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor={`${field.id}-ta`}
-                            className="text-sm font-medium text-gray-700"
-                          >
-                            {field.title}
-                            {field.required && (
-                              <span className="text-red-500 ml-1">*</span>
-                            )}
-                          </Label>
-                          <Textarea
-                            id={`${field.id}-ta`}
-                            value={value}
-                            onChange={(e) =>
-                              handleChange(field.id, e.target.value)
-                            }
-                            rows={4}
-                            className="w-full"
-                            required={field.required}
-                          />
-                        </div>
-                      )}
-
-                      {typeName === "Múltipla Escolha" && (
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700">
-                            {field.title}
-                            {field.required && (
-                              <span className="text-red-500 ml-1">*</span>
-                            )}
-                          </Label>
-                          <FieldOptions
-                            field={field}
-                            value={value}
-                            onChange={(val) => handleChange(field.id, val)}
-                            required={field.required}
-                          />
-                        </div>
-                      )}
-                    </motion.div>
-                  );
-                })}
+                {otherFields.map((field) => (
+                  <motion.div
+                    key={field.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    {renderField(field)}
+                  </motion.div>
+                ))}
               </CardContent>
             </Card>
           )}
 
-          {/* Seção de Contadores */}
           {counterFields.length > 0 && (
             <Card className="bg-white shadow-sm border border-gray-200">
               <CardHeader>
@@ -343,7 +370,6 @@ export default function ResearchAnswers() {
             </Card>
           )}
 
-          {/* Botões de ação */}
           <Card className="bg-white shadow-sm border border-gray-200">
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
@@ -362,7 +388,6 @@ export default function ResearchAnswers() {
                   type="submit"
                   disabled={submitting}
                   className="flex items-center justify-center space-x-2 bg-slate-900 hover:bg-black"
-                  onClick={handleSubmit}
                 >
                   <Send className="w-4 h-4" />
                   <span>{submitting ? "Enviando..." : "Enviar Respostas"}</span>
