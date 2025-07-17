@@ -45,30 +45,43 @@ export default function Researches() {
     return cat;
   }, [researches, currentDate]);
 
-  const filterAndSortResearches = useCallback((list) => {
-    return list
-      .filter(
-        (research) =>
-          research.title?.toLowerCase().includes(filters.toLowerCase()) ||
-          research.description?.toLowerCase().includes(filters.toLowerCase()) ||
-          research.location_title?.toLowerCase().includes(filters.toLowerCase())
-      )
-      .sort((a, b) => {
-        const aDate = a?.created_at ?? "";
-        const bDate = b?.created_at ?? "";
-        return sortOrder === "asc"
-          ? aDate.localeCompare(bDate)
-          : bDate.localeCompare(aDate);
-      });
-  }, [filters, sortOrder]);
+  const filterAndSortResearches = useCallback(
+    (list) => {
+      return list
+        .filter(
+          (research) =>
+            research.title?.toLowerCase().includes(filters.toLowerCase()) ||
+            research.description
+              ?.toLowerCase()
+              .includes(filters.toLowerCase()) ||
+            research.location_title
+              ?.toLowerCase()
+              .includes(filters.toLowerCase())
+        )
+        .sort((a, b) => {
+          const aDate = a?.created_at ?? "";
+          const bDate = b?.created_at ?? "";
+          return sortOrder === "asc"
+            ? aDate.localeCompare(bDate)
+            : bDate.localeCompare(aDate);
+        });
+    },
+    [filters, sortOrder]
+  );
 
-  const paginatedResearches = useCallback((list, category) => {
-    const filteredAndSorted = filterAndSortResearches(list);
-    const totalPages = Math.ceil(filteredAndSorted.length / perPage);
-    const currentPage = page[category] ?? 1;
-    const sliced = filteredAndSorted.slice((currentPage - 1) * perPage, currentPage * perPage);
-    return { sliced, totalPages };
-  }, [filterAndSortResearches, page]);
+  const paginatedResearches = useCallback(
+    (list, category) => {
+      const filteredAndSorted = filterAndSortResearches(list);
+      const totalPages = Math.ceil(filteredAndSorted.length / perPage);
+      const currentPage = page[category] ?? 1;
+      const sliced = filteredAndSorted.slice(
+        (currentPage - 1) * perPage,
+        currentPage * perPage
+      );
+      return { sliced, totalPages };
+    },
+    [filterAndSortResearches, page]
+  );
 
   const handleSync = async () => {
     try {
@@ -107,7 +120,7 @@ export default function Researches() {
           </div>
 
           {/* Se existirem pesquisas não sincronizadas */}
-          {(unSyncedResearchs.length > 0) && (
+          {unSyncedResearchs.length > 0 && (
             <div className="mb-10">
               <h3 className="text-2xl font-semibold mb-4 text-orange-600">
                 Pesquisas Não Sincronizadas
@@ -171,16 +184,29 @@ export default function Researches() {
                 label: "Mostrar categorias",
                 type: "switch-group",
                 options: [
-                  { label: "Pesquisas Já Realizadas", value: "completed", checked: showCategory.completed },
-                  { label: "Pesquisas em Andamento", value: "ongoing", checked: showCategory.ongoing },
-                  { label: "Pesquisas Futuras", value: "future", checked: showCategory.future },
+                  {
+                    label: "Pesquisas Já Realizadas",
+                    value: "completed",
+                    checked: showCategory.completed,
+                  },
+                  {
+                    label: "Pesquisas em Andamento",
+                    value: "ongoing",
+                    checked: showCategory.ongoing,
+                  },
+                  {
+                    label: "Pesquisas Futuras",
+                    value: "future",
+                    checked: showCategory.future,
+                  },
                 ],
               },
             ]}
             onChange={(key, value) => {
               if (key === "filters") setFilters(value);
               if (key === "sortOrder") setSortOrder(value);
-              if (key === "showCategory") setShowCategory((prev) => ({ ...prev, ...value }));
+              if (key === "showCategory")
+                setShowCategory((prev) => ({ ...prev, ...value }));
             }}
             onClear={() => {
               setFilters("");
@@ -190,9 +216,10 @@ export default function Researches() {
           />
 
           {/* Renderização das Categorias */}
-          {Object.entries(categorizedResearches).map(([key, list]) => {
+          {["ongoing", "future", "completed"].map((key) => {
             if (!showCategory[key]) return null;
 
+            const list = categorizedResearches[key];
             const { sliced, totalPages } = paginatedResearches(list, key);
 
             const handlePrevious = () => {
@@ -218,6 +245,7 @@ export default function Researches() {
                     ? "Pesquisas em Andamento"
                     : "Pesquisas Futuras"}
                 </h3>
+
                 {loading ? (
                   <motion.div
                     layout
@@ -278,6 +306,7 @@ export default function Researches() {
                     </Button>
                   </div>
                 )}
+
                 <hr className="my-6 border-gray-200" />
               </div>
             );

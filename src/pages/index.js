@@ -175,15 +175,13 @@ export default function Home() {
               ? Array.from({ length: 6 }).map((_, index) => (
                   <ResearchCardSkeleton key={index} />
                 ))
-              : Object.entries(categorizedResearches).map(([key, list]) => {
+              : ["ongoing", "future", "completed"].map((key) => {
                   if (!showCategory[key]) return null;
+                  const list = categorizedResearches[key];
                   const filteredAndSorted = filterAndSortResearches(list);
                   const visibleResearches = filteredAndSorted.filter(
                     (research) => {
-                      // admins veem tudo
                       if (userData?.role === "admin") return true;
-                      console.log("chegou aqui:", research);
-                      // contribuidor: vê se seu id está em algum research_contributor.user_id
                       return (
                         Array.isArray(research.research_contributors) &&
                         research.research_contributors.some(
@@ -192,6 +190,7 @@ export default function Home() {
                       );
                     }
                   );
+
                   const totalPages = Math.ceil(
                     visibleResearches.length / perPage
                   );

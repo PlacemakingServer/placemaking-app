@@ -237,7 +237,7 @@ export default function ResearchSurvey() {
               backgroundPosition: "center",
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30" />
+            <div className="absolute inset-0 from-black/60 to-black/30" />
             <div className="absolute inset-0 flex items-center px-8">
               <div className="text-white">
                 <h2 className="text-4xl font-bold mb-2 tracking-wide drop-shadow-lg">

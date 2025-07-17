@@ -10,11 +10,11 @@ export const TABS = {
   Pesquisas: {
     icon: "app_registration",
     subTabs: {
-      "Pesquisas": {
+      "Gerenciar Pesquisas": {
         link: "/researches",
         icon: "pending_actions",
       },
-      "Criar pesquisa": {
+      "Criar Pesquisa": {
         link: "/researches/create",
         icon: "add",
       },
