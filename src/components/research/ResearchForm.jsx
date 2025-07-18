@@ -5,7 +5,7 @@ import FormField from "@/components/forms/FormField";
 import Button from "@/components/ui/Button";
 import MapPreview from "@/components/map/MapPreviewNoSSR";
 import Switch from "@/components/ui/Switch";
-import Contributors from "@/components/research/Contributors"; 
+import Contributors from "@/components/research/Contributors";
 import { useRouter } from "next/router";
 
 const OfflineMapButton = dynamic(
@@ -28,10 +28,13 @@ export default function ResearchForm({
     lat: "",
     long: "",
     location_title: "",
-    status: undefined,
     created_by: "",
     ...initialData,
   });
+
+  const [status, setStatus] = useState(
+    typeof initialData.status === "boolean" ? initialData.status : true
+  );
 
   const [showBasicInfo, setShowBasicInfo] = useState(false);
   const [showDates, setShowDates] = useState(false);
@@ -48,18 +51,15 @@ export default function ResearchForm({
       ...prev,
       lat: data.lat,
       long: data.lng,
-      location_title: data.location || ""
+      location_title: data.location || "",
     }));
   };
 
   const handleChangeStatus = () => {
-    const action = form.status ? "desativar" : "ativar";
+    const action = status ? "desativar" : "ativar";
     if (window.confirm(`Tem certeza que deseja ${action} a pesquisa?`)) {
-      const newStatus = !form.status;
-      setForm((prev) => ({
-        ...prev,
-        status: newStatus,
-      }));
+      const newStatus = !status;
+      setStatus(newStatus);
       const payload = { ...form, status: newStatus };
       onSubmit?.(payload);
       router.push(`/researches`);
@@ -68,7 +68,7 @@ export default function ResearchForm({
 
   const handleSubmit = () => {
     if (window.confirm("Tem certeza que deseja salvar as alterações?")) {
-      const payload = { ...form };
+      const payload = { ...form, status };
       onSubmit?.(payload);
     }
   };
@@ -106,11 +106,11 @@ export default function ResearchForm({
 
             {isEdit && (
               <Button
-                variant={form.status ? "warning" : "verde"}
+                variant={status ? "warning" : "verde"}
                 onClick={handleChangeStatus}
                 className="active:scale-95 mt-2 sm:mt-0"
               >
-                {form.status ? "Desativar Pesquisa" : "Ativar Pesquisa"}
+                {status ? "Desativar Pesquisa" : "Ativar Pesquisa"}
               </Button>
             )}
           </div>
@@ -118,36 +118,87 @@ export default function ResearchForm({
       </motion.div>
 
       <div className="p-6 space-y-6">
-        <SectionToggle title="Informações Básicas" isChecked={showBasicInfo} onChange={setShowBasicInfo} />
+        <SectionToggle
+          title="Informações Básicas"
+          isChecked={showBasicInfo}
+          onChange={setShowBasicInfo}
+        />
         {showBasicInfo && (
           <div className="space-y-4">
-            <FormField legend="Título" type="text" value={form.title} onChange={handleChange("title")} />
-            <FormField legend="Descrição" type="textarea" value={form.description} onChange={handleChange("description")} />
+            <FormField
+              legend="Título"
+              type="text"
+              value={form.title}
+              onChange={handleChange("title")}
+            />
+            <FormField
+              legend="Descrição"
+              type="textarea"
+              value={form.description}
+              onChange={handleChange("description")}
+            />
           </div>
         )}
 
         <hr className="my-6 border-gray-200" />
 
-        <SectionToggle title="Período da Pesquisa" isChecked={showDates} onChange={setShowDates} />
+        <SectionToggle
+          title="Período da Pesquisa"
+          isChecked={showDates}
+          onChange={setShowDates}
+        />
         {showDates && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField legend="Data de Início" type="date" value={form.release_date || ""} onChange={handleChange("release_date")} />
-            <FormField legend="Data de Fim" type="date" value={form.end_date || ""} onChange={handleChange("end_date")} />
+            <FormField
+              legend="Data de Início"
+              type="date"
+              value={form.release_date || ""}
+              onChange={handleChange("release_date")}
+            />
+            <FormField
+              legend="Data de Fim"
+              type="date"
+              value={form.end_date || ""}
+              onChange={handleChange("end_date")}
+            />
           </div>
         )}
 
         <hr className="my-6 border-gray-200" />
 
-        <SectionToggle title="Localização" isChecked={showLocation} onChange={setShowLocation} />
+        <SectionToggle
+          title="Localização"
+          isChecked={showLocation}
+          onChange={setShowLocation}
+        />
         {showLocation && (
           <>
             <div className="p-4 rounded-lg space-y-4 bg-gray-50 border">
-              <p className="text-sm text-gray-600">Defina manualmente ou pelo mapa interativo.</p>
+              <p className="text-sm text-gray-600">
+                Defina manualmente ou pelo mapa interativo.
+              </p>
               <div className="grid grid-cols-2 gap-4">
-                <FormField legend="Latitude" type="text" value={form.lat} onChange={handleChange("lat")} disabled />
-                <FormField legend="Longitude" type="text" value={form.long} onChange={handleChange("long")} disabled />
+                <FormField
+                  legend="Latitude"
+                  type="text"
+                  value={form.lat}
+                  onChange={handleChange("lat")}
+                  disabled
+                />
+                <FormField
+                  legend="Longitude"
+                  type="text"
+                  value={form.long}
+                  onChange={handleChange("long")}
+                  disabled
+                />
               </div>
-              <FormField legend="Localização (Título)" type="text" value={form.location_title} onChange={handleChange("location_title")} />
+              <FormField
+                legend="Localização (Título)"
+                type="text"
+                value={form.location_title}
+                onChange={handleChange("location_title")}
+              />
               <div className="flex flex-col items-center border-t pt-4 gap-2">
                 <OfflineMapButton onLocationSelect={handleLocationSelect} />
                 <p className="text-xs text-gray-500 text-center">
@@ -162,7 +213,7 @@ export default function ResearchForm({
                   lng={form.long}
                   className="w-full h-48 sm:h-64 rounded-lg shadow-md"
                 />
-                </div>  
+              </div>
             </div>
           </>
         )}
@@ -173,8 +224,14 @@ export default function ResearchForm({
             <Contributors researchId={form.id} allUsers={users} />
           </>
         )}
+
         <div className="flex justify-center pt-4 gap-6">
-          <Button type="submit" variant="dark" className="text-lg py-3 active:scale-95" onClick={handleSubmit}>
+          <Button
+            type="submit"
+            variant="dark"
+            className="text-lg py-3 active:scale-95"
+            onClick={handleSubmit}
+          >
             {isEdit ? "Salvar Alterações" : "Criar Pesquisa"}
           </Button>
         </div>

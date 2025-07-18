@@ -1,4 +1,4 @@
-// FormBuilder.jsx 
+// FormBuilder.jsx
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Button from "@/components/ui/Button";
 import FormField from "@/components/forms/FormField";
@@ -44,6 +44,14 @@ export default function FormBuilder({ survey_id, survey_type, onSubmit }) {
     survey_id,
     survey_type
   );
+
+  const allowedInputTypeNames = [
+    "Contador",
+    "Texto",
+    "Número Inteiro",
+    "Data",
+    "Múltipla Escolha",
+  ];
 
   // Locais
   const [formFields, setFormFields] = useState([]);
@@ -107,25 +115,19 @@ export default function FormBuilder({ survey_id, survey_type, onSubmit }) {
     await deleteField(f.id);
     const rest = formFields.filter((_, i) => i !== index);
     await Promise.all(
-       rest.map((fld, idx) =>
-         updateField(fld.id, {...fld, position: idx })
-       )
-     );
-     resetBuilder();
+      rest.map((fld, idx) => updateField(fld.id, { ...fld, position: idx }))
+    );
+    resetBuilder();
   };
 
   /* Reorder ------------------------------------------------------- */
   const handleReorder = async (newOrder) => {
-    
     setFormFields(newOrder);
 
-    
     await Promise.all(
-      newOrder.map(
-        (f, idx) =>{ 
-          updateField(f.id, {...f, position: idx })
-        }
-      )
+      newOrder.map((f, idx) => {
+        updateField(f.id, { ...f, position: idx });
+      })
     );
   };
 
@@ -195,6 +197,13 @@ function QuestionCard({
   isEditing,
   fieldId,
 }) {
+  const allowedInputTypeNames = [
+    "Contador",
+    "Texto",
+    "Número Inteiro",
+    "Data",
+    "Múltipla Escolha",
+  ];
   return (
     <div className="bg-gray-100 p-5 rounded-lg border space-y-4">
       <h3 className="text-md font-semibold text-gray-700">
@@ -215,7 +224,9 @@ function QuestionCard({
           Tipo de Resposta
         </label>
         <MultiSelect
-          options={inputTypes.map(toSelectOption)}
+          options={inputTypes
+            .filter((t) => allowedInputTypeNames.includes(t.name))
+            .map(toSelectOption)}
           value={question.inputType}
           onChange={(sel) =>
             setQuestion((prev) => ({ ...prev, inputType: sel || null }))
